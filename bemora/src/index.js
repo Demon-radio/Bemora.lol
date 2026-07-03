@@ -69,6 +69,10 @@ import * as kanye from './providers/kanye.js';
 import * as randomuser from './providers/randomuser.js';
 import * as thesaurus from './providers/thesaurus.js';
 import * as currencyhistory from './providers/currencyhistory.js';
+import * as markdown from './providers/markdown.js';
+import * as techdb from './providers/techdb.js';
+import * as websites from './providers/websites.js';
+import * as fakedb from './providers/fakedb.js';
 import * as religion from './providers/religion.js';
 import * as islamic from './providers/islamic.js';
 import * as gaming from './providers/gaming.js';
@@ -198,6 +202,10 @@ export class Bemora {
     this.randomuser = this._buildRandomUser();
     this.thesaurus = this._buildThesaurus();
     this.currencyHistory = this._buildCurrencyHistory();
+    this.markdown  = this._buildMarkdown();
+    this.techdb    = this._buildTechDB();
+    this.websites  = this._buildWebsites();
+    this.fakedb    = this._buildFakeDB();
     this.religion  = this._buildReligion();
     this.islamic   = this._buildIslamic();
     this.gaming    = this._buildGaming();
@@ -400,6 +408,10 @@ export class Bemora {
   _buildRandomUser() { return { single: this._wrap('randomuser', (p) => randomuser.getRandomUser(p)), many: this._wrap('randomuser', (p) => randomuser.getRandomUsers(p)) }; }
   _buildThesaurus() { return { synonyms: this._wrap('datamuse', (p) => thesaurus.getSynonyms(p)), antonyms: this._wrap('datamuse', (p) => thesaurus.getAntonyms(p)), rhymes: this._wrap('datamuse', (p) => thesaurus.getRhymes(p)), suggest: this._wrap('datamuse', (p) => thesaurus.suggest(p)) }; }
   _buildCurrencyHistory() { return { latest: this._wrap('frankfurter', (p) => currencyhistory.getLatestRates(p)), historical: this._wrap('frankfurter', (p) => currencyhistory.getHistoricalRates(p)), timeSeries: this._wrap('frankfurter', (p) => currencyhistory.getTimeSeries(p)) }; }
+  _buildMarkdown() { return { render: this._wrap('github-markdown', (p) => markdown.render(p)), renderGfm: this._wrap('github-markdown', (p) => markdown.renderGfm(p)), analyze: this._wrap('local', (p) => markdown.analyze(p)) }; }
+  _buildTechDB() { return { listDevices: this._wrap('restful-api-dev', () => techdb.listDevices()), getDevice: this._wrap('restful-api-dev', (p) => techdb.getDevice(p)), searchDevices: this._wrap('restful-api-dev', (p) => techdb.searchDevices(p)), compareDevices: this._wrap('restful-api-dev', (p) => techdb.compareDevices(p)) }; }
+  _buildWebsites() { return { status: this._wrap('website-fetch', (p) => websites.status(p)), detectTechStack: this._wrap('website-fetch', (p) => websites.detectTechStack(p)), getMeta: this._wrap('website-fetch', (p) => websites.getMeta(p)) }; }
+  _buildFakeDB() { return { getPosts: this._wrap('jsonplaceholder', (p) => fakedb.getPosts(p)), getComments: this._wrap('jsonplaceholder', (p) => fakedb.getComments(p)), getUser: this._wrap('jsonplaceholder', (p) => fakedb.getUser(p)), getUsers: this._wrap('jsonplaceholder', () => fakedb.getUsers()), getTodos: this._wrap('jsonplaceholder', (p) => fakedb.getTodos(p)), getAlbums: this._wrap('jsonplaceholder', (p) => fakedb.getAlbums(p)), getPhotos: this._wrap('jsonplaceholder', (p) => fakedb.getPhotos(p)), create: this._wrap('jsonplaceholder', (p) => fakedb.create(p)) }; }
   _buildReligion() { return { randomVerse: this._wrap('bibleapi', () => religion.getRandomVerse()), getVerse: this._wrap('bibleapi', (p) => religion.getVerse(p)) }; }
   _buildIslamic() { return { quranChapters: this._wrap('alquran', () => islamic.getQuranChapters()), quranChapter: this._wrap('alquran', (p) => islamic.getQuranChapter(p)), randomVerse: this._wrap('alquran', () => islamic.getRandomVerse()), azkar: this._wrap('hisnmuslim', (p) => islamic.getAzkar(p)), prayerTimes: this._wrap('aladhan', (p) => islamic.getPrayerTimes(p)) }; }
   _buildGaming() { return {
@@ -466,7 +478,25 @@ export class Bemora {
   }
 
   _buildPrayer() { return { today: this._wrap('aladhan', (p) => prayer.timingsByCity(p)), byCoords: this._wrap('aladhan', (p) => prayer.timingsByCoords(p)), monthly: this._wrap('aladhan', (p) => prayer.monthlyTimings(p)), methods: () => prayer.CALCULATION_METHODS }; }
-  _buildAnime() { return { search: this._wrap('jikan', (p) => anime.searchAnime(p)), details: this._wrap('jikan', (p) => anime.getAnime(p)), top: this._wrap('jikan', (p) => anime.topAnime(p)), nowAiring: this._wrap('jikan', () => anime.currentSeason()), random: this._wrap('jikan', () => anime.randomAnime()), manga: this._wrap('jikan', (p) => anime.searchManga(p)) }; }
+  _buildAnime() { return {
+    search: this._wrap('jikan', (p) => anime.searchAnime(p)),
+    details: this._wrap('jikan', (p) => anime.getAnime(p)),
+    top: this._wrap('jikan', (p) => anime.topAnime(p)),
+    nowAiring: this._wrap('jikan', () => anime.currentSeason()),
+    random: this._wrap('jikan', () => anime.randomAnime()),
+    manga: this._wrap('jikan', (p) => anime.searchManga(p)),
+    mangaDetails: this._wrap('jikan', (p) => anime.getManga(p)),
+    episodes: this._wrap('jikan', (p) => anime.getEpisodes(p)),
+    episode: this._wrap('jikan', (p) => anime.getEpisode(p)),
+    characters: this._wrap('jikan', (p) => anime.getCharacters(p)),
+    character: this._wrap('jikan', (p) => anime.getCharacter(p)),
+    videos: this._wrap('jikan', (p) => anime.getVideos(p)),
+    pictures: this._wrap('jikan', (p) => anime.getPictures(p)),
+    recommendations: this._wrap('jikan', (p) => anime.getRecommendations(p)),
+    news: this._wrap('jikan', (p) => anime.getNews(p)),
+    quote: this._wrap('animechan', (p) => anime.getQuote(p)),
+    quotesByCharacter: this._wrap('yurippe', (p) => anime.getQuotesByCharacter(p)),
+  }; }
   _buildFun() { return { joke: this._wrap('jokeapi', (p) => fun.getJoke(p)), jokes: this._wrap('jokeapi', (p) => fun.getJokes(p)), catFact: this._wrap('catfact', () => fun.catFact()), catFacts: this._wrap('catfact', (p) => fun.catFacts(p)), catImage: this._wrap('thecatapi', () => fun.catImage()), dogImage: this._wrap('dogceo', () => fun.dogImage()), dogBreeds: this._wrap('dogceo', () => fun.dogBreeds()), numberFact: this._wrap('numbersapi', (p) => fun.numberFact(p)), uselessFact: this._wrap('uselessfacts', () => fun.uselessFact()), fakeUser: this._wrap('randomuser', (p) => fun.randomUser(p)), affirmation: this._wrap('affirmations', () => fun.affirmation()), advice: this._wrap('adviceslip', () => fun.advice()) }; }
   _buildFlights() { return { live: this._wrap('aviationstack', (p) => flights.getLiveFlights(p, this._require('flights', 'flights'))), airport: this._wrap('aviationstack', (p) => flights.getAirport(p, this._require('flights', 'flights'))), airline: this._wrap('aviationstack', (p) => flights.getAirline(p, this._require('flights', 'flights'))) }; }
   _buildArt() { return { search: this._wrap('artic', (p) => art.searchArtworks(p)), details: this._wrap('artic', (p) => art.getArtwork(p)), searchMet: this._wrap('metmuseum', (p) => art.searchMet(p)), metDetails: this._wrap('metmuseum', (p) => art.getMetArtwork(p)) }; }
