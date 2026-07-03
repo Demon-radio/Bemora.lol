@@ -44,12 +44,14 @@ import { withRetry } from './core/retry.js';
 import { fallbackChain, aggregate } from './core/fallback.js';
 import { BemoraMonitor } from './core/monitor.js';
 import * as exportUtils from './core/export.js';
+import { BemoraError, ConfigurationError, ProviderError, ValidationError } from './core/errors.js';
 
 export { batch } from './core/batch.js';
 export { staleWhileRevalidate } from './core/stale.js';
 export { BinanceStream, KrakenStream, getRealtimePrice } from './providers/realtime.js';
 export { BemoraMonitor } from './core/monitor.js';
 export { fallbackChain, aggregate } from './core/fallback.js';
+export { BemoraError, ConfigurationError, ProviderError, ValidationError } from './core/errors.js';
 
 /**
  * Bemora — The only API library your AI agent will ever need.

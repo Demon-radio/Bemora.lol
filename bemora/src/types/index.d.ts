@@ -1,4 +1,20 @@
 
+export declare class BemoraError extends Error {
+  constructor(message: string, options?: { code?: string; provider?: string; cause?: any });
+  code: string;
+  provider?: string;
+  cause?: any;
+  timestamp: string;
+  toJSON(): { name: string; message: string; code: string; provider?: string; timestamp: string; stack?: string };
+}
+export declare class ConfigurationError extends BemoraError {}
+export declare class ProviderError extends BemoraError {}
+export declare class ValidationError extends BemoraError {
+  constructor(message: string, options?: { code?: string; provider?: string; cause?: any; errors?: any[] });
+  errors: any[];
+  toJSON(): { name: string; message: string; code: string; provider?: string; timestamp: string; stack?: string; errors: any[] };
+}
+
 export interface BemoraKeys {
   weatherKey?: string;
   currencyKey?: string;
@@ -160,8 +176,6 @@ export interface BooksResult {
   _cached: boolean;
 }
 
-// --- New Utility Interfaces ---
-
 export interface QRResult {
   text: string;
   qr_url: string;
@@ -215,75 +229,91 @@ export interface HttpStatusResult {
 
 export declare class Bemora {
   constructor(keys?: BemoraKeys, options?: BemoraOptions);
-
   weather: {
-    current(params: { city: string; units?: 'metric' | 'imperial' | 'standard' }): Promise<WeatherResult>;
-    forecast(params: { city: string; units?: string }): Promise<ForecastResult>;
+    current: (params: { city: string; units?: 'metric' | 'imperial' | 'standard' }) => Promise<WeatherResult>;
+    forecast: (params: { city: string; units?: string }) => Promise<ForecastResult>;
   };
-
   currency: {
-    rates(params: { base?: string; symbols?: string[] }): Promise<CurrencyRatesResult>;
-    convert(params: { from: string; to: string; amount: number }): Promise<ConvertResult>;
+    rates: (params?: { base?: string; symbols?: string[] }) => Promise<CurrencyRatesResult>;
+    convert: (params: { from: string; to: string; amount: number }) => Promise<ConvertResult>;
   };
-
   news: {
-    headlines(params?: { country?: string; category?: string; q?: string; pageSize?: number }): Promise<NewsResult>;
-    search(params: { q: string; language?: string; sortBy?: string; pageSize?: number }): Promise<NewsResult>;
+    headlines: (params?: { country?: string; category?: string; q?: string; pageSize?: number }) => Promise<NewsResult>;
+    search: (params: { q: string; language?: string; sortBy?: string; pageSize?: number }) => Promise<NewsResult>;
   };
-
   images: {
-    search(params: { query: string; perPage?: number; orientation?: string }): Promise<ImagesResult>;
-    random(params?: { query?: string; orientation?: string }): Promise<Photo>;
-    pexels(params: { query: string; perPage?: number }): Promise<ImagesResult>;
+    search: (params: { query: string; perPage?: number; orientation?: string }) => Promise<ImagesResult>;
+    random: (params?: { query?: string; orientation?: string }) => Promise<Photo>;
+    pexels: (params: { query: string; perPage?: number }) => Promise<ImagesResult>;
   };
-
   football: {
-    fixtures(params?: { league?: number; date?: string }): Promise<FootballFixturesResult>;
-    standings(params: { league: number; season: number }): Promise<any>;
-    teams(params: { name: string }): Promise<any>;
+    fixtures: (params?: { league?: number; date?: string }) => Promise<FootballFixturesResult>;
+    standings: (params: { league: number; season: number }) => Promise<any>;
+    teams: (params: { name: string }) => Promise<any>;
   };
-
   crypto: {
-    price(params: { coins: string | string[]; currency?: string }): Promise<CryptoPriceResult>;
-    trending(): Promise<any>;
-    top(params?: { currency?: string; limit?: number }): Promise<any>;
+    price: (params: { coins: string | string[]; currency?: string }) => Promise<CryptoPriceResult>;
+    trending: () => Promise<any>;
+    top: (params?: { currency?: string; limit?: number }) => Promise<any>;
   };
-
   gold: {
-    price(params?: { currency?: string }): Promise<GoldPriceResult>;
-    silver(params?: { currency?: string }): Promise<any>;
+    price: (params?: { currency?: string }) => Promise<GoldPriceResult>;
+    silver: (params?: { currency?: string }) => Promise<any>;
   };
-
   research: {
-    wikipedia(params: { query: string; language?: string; limit?: number }): Promise<WikipediaResult>;
-    article(params: { title: string; language?: string }): Promise<any>;
-    books(params: { query: string; limit?: number }): Promise<BooksResult>;
+    wikipedia: (params: { query: string; language?: string; limit?: number }) => Promise<WikipediaResult>;
+    article: (params: { title: string; language?: string }) => Promise<any>;
+    books: (params: { query: string; limit?: number }) => Promise<BooksResult>;
   };
-
-  // --- New Utilities ---
   utils: {
-    qr(params: { text: string; size?: number; format?: 'png' | 'svg' }): QRResult;
-    uuid(): string;
-    passwordStrength(params: { password: string }): PasswordStrengthResult;
-    hash(params: { text: string; algorithm?: 'md5' | 'sha1' | 'sha256' | 'sha512' }): HashResult;
-    base64Encode(params: { text: string }): Base64Result;
-    base64Decode(params: { encoded: string }): Base64Result;
-    loremIpsum(params?: { type?: 'words' | 'sentences' | 'paragraphs'; count?: number }): LoremIpsumResult;
-    emojiSearch(params?: { query?: string; category?: string; limit?: number }): EmojiSearchResult;
-    randomEmoji(params?: { category?: string }): Emoji;
-    hexToRgb(params: { hex: string }): HexToRgbResult;
-    rgbToHex(params: { r: number; g: number; b: number }): { hex: string };
-    httpStatus(params: { code: number }): HttpStatusResult;
-    shorten(params: { url: string }): Promise<any>;
-    time(params: { timezone: string }): Promise<any>;
-    timezones(): Promise<string[]>;
-    holidays(params: { country: string; year?: number }): Promise<any>;
-    quote(params?: { tag?: string }): Promise<any>;
-    quotes(params?: { limit?: number; tag?: string }): Promise<any>;
-    define(params: { word: string; language?: string }): Promise<any>;
-    trivia(params?: { amount?: number; category?: number; difficulty?: 'easy' | 'medium' | 'hard'; type?: 'multiple' | 'boolean' }): Promise<any>;
-    color(params: { hex: string }): Promise<any>;
+    qr: (params: { text: string; size?: number; format?: 'png' | 'svg' }) => QRResult;
+    uuid: () => string;
+    passwordStrength: (params: { password: string }) => PasswordStrengthResult;
+    hash: (params: { text: string; algorithm?: 'md5' | 'sha1' | 'sha256' | 'sha512' }) => HashResult;
+    base64Encode: (params: { text: string }) => Base64Result;
+    base64Decode: (params: { encoded: string }) => Base64Result;
+    loremIpsum: (params?: { type?: 'words' | 'sentences' | 'paragraphs'; count?: number }) => LoremIpsumResult;
+    emojiSearch: (params?: { query?: string; category?: string; limit?: number }) => EmojiSearchResult;
+    randomEmoji: (params?: { category?: string }) => Emoji;
+    hexToRgb: (params: { hex: string }) => HexToRgbResult;
+    rgbToHex: (params: { r: number; g: number; b: number }) => { hex: string };
+    httpStatus: (params: { code: number }) => HttpStatusResult;
+    shorten: (params: { url: string }) => Promise<any>;
+    time: (params: { timezone: string }) => Promise<any>;
+    timezones: () => Promise<string[]>;
+    holidays: (params: { country: string; year?: number }) => Promise<any>;
+    quote: (params?: { tag?: string }) => Promise<any>;
+    quotes: (params?: { limit?: number; tag?: string }) => Promise<any>;
+    define: (params: { word: string; language?: string }) => Promise<any>;
+    trivia: (params?: { amount?: number; category?: number; difficulty?: 'easy' | 'medium' | 'hard'; type?: 'multiple' | 'boolean' }) => Promise<any>;
+    color: (params: { hex: string }) => Promise<any>;
   };
+  free: any;
+  rss: any;
+  realtime: any;
+  smart: any;
+  monitor: any;
+  export: any;
+  prayer: any;
+  anime: any;
+  fun: any;
+  flights: any;
+  art: any;
+  dev: any;
+  podcasts: any;
+  health: any;
+  enriched: any;
+  combined: any;
+  cache: any;
+  batch: (calls: any[]) => Promise<any[]>;
+  use: (plugin: any) => this;
+  plugins: () => any[];
+  on: (event: string, fn: Function) => this;
+  off: (event: string, fn: Function) => this;
+  health: () => Promise<any>;
+  healthOf: (name: string) => Promise<any>;
+  rateLimits: () => any;
+  rateLimit: (provider: string) => any;
 }
 
 export default Bemora;
