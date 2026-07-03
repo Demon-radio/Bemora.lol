@@ -23,6 +23,7 @@ export class BemoraMonitor extends EventEmitter {
   constructor() {
     super();
     this._watchers = new Map();
+    this._running = new Set();
   }
 
   /**
@@ -41,6 +42,12 @@ export class BemoraMonitor extends EventEmitter {
     if (this._watchers.has(id)) this.stop(id);
 
     const run = async () => {
+      if (this._running.has(id)) {
+        logger.debug(`Monitor "${id}" already running, skipping this check`);
+        return;
+      }
+
+      this._running.add(id);
       try {
         const data = await fetch();
         const triggered = condition ? condition(data) : true;
@@ -54,6 +61,8 @@ export class BemoraMonitor extends EventEmitter {
         this.emit('error', { id, error: err.message });
         if (onError) onError(err);
         else logger.error(`Monitor "${id}" error: ${err.message}`);
+      } finally {
+        this._running.delete(id);
       }
     };
 
@@ -68,6 +77,7 @@ export class BemoraMonitor extends EventEmitter {
   stop(id) {
     const timer = this._watchers.get(id);
     if (timer) { clearInterval(timer); this._watchers.delete(id); }
+    this._running.delete(id);
     return this;
   }
 
@@ -75,6 +85,7 @@ export class BemoraMonitor extends EventEmitter {
   stopAll() {
     this._watchers.forEach((timer) => clearInterval(timer));
     this._watchers.clear();
+    this._running.clear();
     return this;
   }
 

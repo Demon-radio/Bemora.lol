@@ -2,6 +2,8 @@
  * Lightweight event emitter for Bemora lifecycle events.
  * Events: 'cache:hit', 'cache:miss', 'error', 'request', 'response', 'retry'
  */
+import { logger } from './logger.js';
+
 export class BemoraEvents {
   constructor() {
     this._handlers = {};
@@ -36,10 +38,14 @@ export class BemoraEvents {
    */
   emit(event, payload) {
     (this._handlers[event] || []).forEach((h) => {
-      try { h(payload); } catch (_) {}
+      try { h(payload); } catch (e) {
+        logger.error(`Event handler for "${event}" failed: ${e.message}", e);
+      }
     });
     (this._handlers['*'] || []).forEach((h) => {
-      try { h({ event, payload }); } catch (_) {}
+      try { h({ event, payload }); } catch (e) {
+        logger.error(`Event handler for "*" failed: ${e.message}", e);
+      }
     });
   }
 }

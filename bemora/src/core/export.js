@@ -1,4 +1,4 @@
-import { writeFileSync, mkdirSync } from 'fs';
+import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 
 /**
@@ -9,9 +9,9 @@ import { join } from 'path';
  * Export data as JSON file
  * @param {{ data: any, path: string, pretty?: boolean }} opts
  */
-export function toJSON({ data, path, pretty = true }) {
+export async function toJSON({ data, path, pretty = true }) {
   const content = pretty ? JSON.stringify(data, null, 2) : JSON.stringify(data);
-  writeFileSync(path, content, 'utf8');
+  await writeFile(path, content, 'utf8');
   return { format: 'json', path, size: Buffer.byteLength(content) };
 }
 
@@ -20,7 +20,7 @@ export function toJSON({ data, path, pretty = true }) {
  * Works on arrays of objects.
  * @param {{ data: any[], path: string, columns?: string[] }} opts
  */
-export function toCSV({ data, path, columns }) {
+export async function toCSV({ data, path, columns }) {
   const rows = Array.isArray(data) ? data : [data];
   const cols = columns || Object.keys(rows[0] || {});
 
@@ -38,7 +38,7 @@ export function toCSV({ data, path, columns }) {
   ];
 
   const content = lines.join('\n');
-  writeFileSync(path, content, 'utf8');
+  await writeFile(path, content, 'utf8');
   return { format: 'csv', path, rows: rows.length, columns: cols };
 }
 
@@ -46,7 +46,7 @@ export function toCSV({ data, path, columns }) {
  * Export data as Markdown table
  * @param {{ data: any[], path: string, title?: string }} opts
  */
-export function toMarkdown({ data, path, title }) {
+export async function toMarkdown({ data, path, title }) {
   const rows = Array.isArray(data) ? data : [data];
   const cols = Object.keys(rows[0] || {});
 
@@ -65,7 +65,7 @@ export function toMarkdown({ data, path, title }) {
   });
 
   const content = lines.join('\n');
-  writeFileSync(path, content, 'utf8');
+  await writeFile(path, content, 'utf8');
   return { format: 'markdown', path, rows: rows.length };
 }
 
@@ -73,7 +73,7 @@ export function toMarkdown({ data, path, title }) {
  * Export data as HTML table
  * @param {{ data: any[], path: string, title?: string }} opts
  */
-export function toHTML({ data, path, title = 'Bemora Export' }) {
+export async function toHTML({ data, path, title = 'Bemora Export' }) {
   const rows = Array.isArray(data) ? data : [data];
   const cols = Object.keys(rows[0] || {});
 
@@ -113,7 +113,7 @@ export function toHTML({ data, path, title = 'Bemora Export' }) {
 </body>
 </html>`;
 
-  writeFileSync(path, html, 'utf8');
+  await writeFile(path, html, 'utf8');
   return { format: 'html', path, rows: rows.length };
 }
 
@@ -121,17 +121,17 @@ export function toHTML({ data, path, title = 'Bemora Export' }) {
  * Export data in multiple formats at once
  * @param {{ data: any, dir: string, name: string, formats: string[] }} opts
  */
-export function exportAll({ data, dir = '.', name = 'bemora-export', formats = ['json', 'csv', 'html'] }) {
-  mkdirSync(dir, { recursive: true });
+export async function exportAll({ data, dir = '.', name = 'bemora-export', formats = ['json', 'csv', 'html'] }) {
+  await mkdir(dir, { recursive: true });
   const results = [];
 
   for (const format of formats) {
     const path = join(dir, `${name}.${format}`);
     try {
-      if (format === 'json')     results.push(toJSON({ data, path }));
-      if (format === 'csv')      results.push(toCSV({ data: Array.isArray(data) ? data : [data], path }));
-      if (format === 'html')     results.push(toHTML({ data: Array.isArray(data) ? data : [data], path, title: name }));
-      if (format === 'md')       results.push(toMarkdown({ data: Array.isArray(data) ? data : [data], path, title: name }));
+      if (format === 'json')     results.push(await toJSON({ data, path }));
+      if (format === 'csv')      results.push(await toCSV({ data: Array.isArray(data) ? data : [data], path }));
+      if (format === 'html')     results.push(await toHTML({ data: Array.isArray(data) ? data : [data], path, title: name }));
+      if (format === 'md')       results.push(await toMarkdown({ data: Array.isArray(data) ? data : [data], path, title: name }));
     } catch (err) {
       results.push({ format, path, error: err.message });
     }
