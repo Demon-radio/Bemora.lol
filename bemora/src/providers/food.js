@@ -1,86 +1,12 @@
+
 import axios from 'axios';
 import * as cache from '../core/cache.js';
 
-const BASE = 'https://www.themealdb.com/api/json/v1/1';
+const BASE_THEMEALDB = 'https://www.themealdb.com/api/json/v1/1';
+const BASE_SPOONACULAR = 'https://api.spoonacular.com';
+const BASE_EDAMAM = 'https://api.edamam.com';
 
-/**
- * Search meals by name (Free, no key)
- * @param {{ name: string }} params
- */
-export async function searchMeals({ name }) {
-  const cacheKey = `food:search:${name}`;
-  const cached = cache.get(cacheKey);
-  if (cached) return { ...cached, _cached: true };
-
-  const { data } = await axios.get(`${BASE}/search.php`, { params: { s: name } });
-  const result = { meals: (data.meals || []).map(formatMeal), _cached: false };
-  cache.set(cacheKey, result, 3600);
-  return result;
-}
-
-/**
- * Get a random meal (Free, no key)
- */
-export async function getRandomMeal() {
-  const { data } = await axios.get(`${BASE}/random.php`);
-  return { meal: formatMeal(data.meals[0]), _cached: false };
-}
-
-/**
- * Get meal by ID
- * @param {{ id: string }} params
- */
-export async function getMeal({ id }) {
-  const cacheKey = `food:meal:${id}`;
-  const cached = cache.get(cacheKey);
-  if (cached) return { ...cached, _cached: true };
-
-  const { data } = await axios.get(`${BASE}/lookup.php`, { params: { i: id } });
-  const result = { meal: formatMeal(data.meals[0]), _cached: false };
-  cache.set(cacheKey, result, 86400);
-  return result;
-}
-
-/**
- * Get meals by category (Seafood, Chicken, Beef, Vegetarian ...)
- * @param {{ category: string }} params
- */
-export async function byCategory({ category }) {
-  const cacheKey = `food:category:${category}`;
-  const cached = cache.get(cacheKey);
-  if (cached) return { ...cached, _cached: true };
-
-  const { data } = await axios.get(`${BASE}/filter.php`, { params: { c: category } });
-  const result = {
-    category,
-    meals: (data.meals || []).map((m) => ({
-      id: m.idMeal, name: m.strMeal, thumbnail: m.strMealThumb,
-    })),
-    _cached: false,
-  };
-  cache.set(cacheKey, result, 3600);
-  return result;
-}
-
-/**
- * List all meal categories
- */
-export async function categories() {
-  const cacheKey = 'food:categories';
-  const cached = cache.get(cacheKey);
-  if (cached) return { ...cached, _cached: true };
-
-  const { data } = await axios.get(`${BASE}/categories.php`);
-  const result = {
-    categories: data.categories.map((c) => ({
-      id: c.idCategory, name: c.strCategory, description: c.strCategoryDescription?.slice(0, 100),
-      thumbnail: c.strCategoryThumb,
-    })),
-    _cached: false,
-  };
-  cache.set(cacheKey, result, 86400);
-  return result;
-}
+// ========== TheMealDB (Free, no key) ==========
 
 function formatMeal(m) {
   if (!m) return null;
@@ -102,3 +28,108 @@ function formatMeal(m) {
     tags: m.strTags?.split(',').map((t) => t.trim()).filter(Boolean),
   };
 }
+
+export async function searchMeals({ name }) {
+  const cacheKey = `food:search:${name}`;
+  const cached = cache.get(cacheKey);
+  if (cached) return { ...cached, _cached: true };
+  const { data } = await axios.get(`${BASE_THEMEALDB}/search.php`, { params: { s: name } });
+  const result = { meals: (data.meals || []).map(formatMeal), _cached: false };
+  cache.set(cacheKey, result, 3600);
+  return result;
+}
+
+export async function getRandomMeal() {
+  const { data } = await axios.get(`${BASE_THEMEALDB}/random.php`);
+  return { meal: formatMeal(data.meals[0]), _cached: false };
+}
+
+export async function getMeal({ id }) {
+  const cacheKey = `food:meal:${id}`;
+  const cached = cache.get(cacheKey);
+  if (cached) return { ...cached, _cached: true };
+  const { data } = await axios.get(`${BASE_THEMEALDB}/lookup.php`, { params: { i: id } });
+  const result = { meal: formatMeal(data.meals[0]), _cached: false };
+  cache.set(cacheKey, result, 86400);
+  return result;
+}
+
+export async function byCategory({ category }) {
+  const cacheKey = `food:category:${category}`;
+  const cached = cache.get(cacheKey);
+  if (cached) return { ...cached, _cached: true };
+  const { data } = await axios.get(`${BASE_THEMEALDB}/filter.php`, { params: { c: category } });
+  const result = {
+    category,
+    meals: (data.meals || []).map((m) => ({
+      id: m.idMeal, name: m.strMeal, thumbnail: m.strMealThumb,
+    })),
+    _cached: false,
+  };
+  cache.set(cacheKey, result, 3600);
+  return result;
+}
+
+export async function categories() {
+  const cacheKey = 'food:categories';
+  const cached = cache.get(cacheKey);
+  if (cached) return { ...cached, _cached: true };
+  const { data } = await axios.get(`${BASE_THEMEALDB}/categories.php`);
+  const result = {
+    categories: data.categories.map((c) => ({
+      id: c.idCategory, name: c.strCategory, description: c.strCategoryDescription?.slice(0, 100),
+      thumbnail: c.strCategoryThumb,
+    })),
+    _cached: false,
+  };
+  cache.set(cacheKey, result, 86400);
+  return result;
+}
+
+// ========== Spoonacular (API key needed) ==========
+
+export async function searchSpoonacular({ query, apiKey, number = 10 }) {
+  const cacheKey = `food:spoonacular:${query}:${number}`;
+  const cached = cache.get(cacheKey);
+  if (cached) return { ...cached, _cached: true };
+  const { data } = await axios.get(`${BASE_SPOONACULAR}/recipes/complexSearch`, {
+    params: { query, number, apiKey }
+  });
+  const result = { recipes: data.results, totalResults: data.totalResults, _cached: false };
+  cache.set(cacheKey, result, 3600);
+  return result;
+}
+
+export async function getSpoonacularRecipe({ id, apiKey }) {
+  const cacheKey = `food:spoonacular:recipe:${id}`;
+  const cached = cache.get(cacheKey);
+  if (cached) return { ...cached, _cached: true };
+  const { data } = await axios.get(`${BASE_SPOONACULAR}/recipes/${id}/information`, {
+    params: { includeNutrition: true, apiKey }
+  });
+  const result = { recipe: data, _cached: false };
+  cache.set(cacheKey, result, 86400);
+  return result;
+}
+
+// ========== Edamam (API key + app ID needed) ==========
+
+export async function searchEdamam({ query, appId, appKey, from = 0, to = 10 }) {
+  const cacheKey = `food:edamam:${query}:${from}:${to}`;
+  const cached = cache.get(cacheKey);
+  if (cached) return { ...cached, _cached: true };
+  const { data } = await axios.get(`${BASE_EDAMAM}/search`, {
+    params: { q: query, app_id: appId, app_key: appKey, from, to }
+  });
+  const result = { hits: data.hits, count: data.count, _cached: false };
+  cache.set(cacheKey, result, 3600);
+  return result;
+}
+
+export async function analyzeEdamam({ ingredients, appId, appKey }) {
+  const { data } = await axios.post(`${BASE_EDAMAM}/api/nutrition-data`, null, {
+    params: { app_id: appId, app_key: appKey, ingr: ingredients }
+  });
+  return { nutrition: data };
+}
+
