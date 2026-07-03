@@ -387,7 +387,7 @@ const trimResponse = (data) => {
 };
 
 const server = new Server(
-  { name: 'bemora', version: '3.2.0' },
+  { name: 'bemora', version: '3.2.1' },
   { capabilities: { tools: {} } }
 );
 
@@ -454,5 +454,5 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 const transport = new StdioServerTransport();
 await server.connect(transport);
 logger.info('✨ Bemora MCP server running!');
-logger.info('📦 Version: 3.2.0');
+logger.info('📦 Version: 3.2.1');
 logger.info(`🔧 ${allTools.length} tools available!`);
