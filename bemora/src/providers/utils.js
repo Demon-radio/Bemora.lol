@@ -1,14 +1,10 @@
+
 import axios from 'axios';
 import * as cache from '../core/cache.js';
 import crypto from 'crypto';
 
 // ─── QR Code ──────────────────────────────────────────────────────────────────
 
-/**
- * Generate a QR code URL for any text/URL (Free, no key)
- * @param {{ text: string, size?: number, format?: 'png'|'svg' }} params
- * @returns {{ url: string, text: string }}
- */
 export function generateQR({ text, size = 200, format = 'png' }) {
   const encoded = encodeURIComponent(text);
   return {
@@ -21,10 +17,6 @@ export function generateQR({ text, size = 200, format = 'png' }) {
 
 // ─── UUID Generator ───────────────────────────────────────────────────────────
 
-/**
- * Generate a UUID v4 (no API needed)
- * @returns {string}
- */
 export function uuid() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     const r = Math.random() * 16 | 0;
@@ -35,67 +27,33 @@ export function uuid() {
 
 // ─── Password Strength Checker ────────────────────────────────────────────────
 
-/**
- * Check password strength (no API needed)
- * @param {{ password: string }} params
- * @returns {{ score: number, label: string, suggestions: string[] }}
- */
 export function passwordStrength({ password }) {
   let score = 0;
   const suggestions = [];
-
   if (password.length >= 8) score++;
   else suggestions.push('Use at least 8 characters');
-
   if (/[a-z]/.test(password)) score++;
   else suggestions.push('Add lowercase letters');
-
   if (/[A-Z]/.test(password)) score++;
   else suggestions.push('Add uppercase letters');
-
   if (/[0-9]/.test(password)) score++;
   else suggestions.push('Add numbers');
-
   if (/[^a-zA-Z0-9]/.test(password)) score++;
   else suggestions.push('Add special characters (!@#$%^&*)');
-
   const labels = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong', 'Excellent'];
   return { score, label: labels[score], suggestions };
 }
 
 // ─── Hash Functions ───────────────────────────────────────────────────────────
 
-/**
- * Generate hash of a string (no API needed)
- * @param {{ text: string, algorithm?: 'md5'|'sha1'|'sha256'|'sha512' }} params
- * @returns {{ hash: string, algorithm: string }}
- */
 export function hash({ text, algorithm = 'sha256' }) {
-  return {
-    hash: crypto.createHash(algorithm).update(text).digest('hex'),
-    algorithm,
-  };
+  return { hash: crypto.createHash(algorithm).update(text).digest('hex'), algorithm };
 }
 
 // ─── Base64 Encode/Decode ─────────────────────────────────────────────────────
 
-/**
- * Base64 encode string (no API needed)
- * @param {{ text: string }} params
- * @returns {{ encoded: string }}
- */
-export function base64Encode({ text }) {
-  return { encoded: Buffer.from(text).toString('base64') };
-}
-
-/**
- * Base64 decode string (no API needed)
- * @param {{ encoded: string }} params
- * @returns {{ text: string }}
- */
-export function base64Decode({ encoded }) {
-  return { text: Buffer.from(encoded, 'base64').toString('utf8') };
-}
+export function base64Encode({ text }) { return { encoded: Buffer.from(text).toString('base64') }; }
+export function base64Decode({ encoded }) { return { text: Buffer.from(encoded, 'base64').toString('utf8') }; }
 
 // ─── Lorem Ipsum Generator ────────────────────────────────────────────────────
 
@@ -111,16 +69,9 @@ const LOREM_WORDS = [
   'est', 'laborum'
 ];
 
-/**
- * Generate Lorem Ipsum text (no API needed)
- * @param {{ type?: 'words'|'sentences'|'paragraphs', count?: number }} params
- */
 export function loremIpsum({ type = 'words', count = 5 }) {
   const words = [];
-  for (let i = 0; i < count * 20; i++) {
-    words.push(LOREM_WORDS[Math.floor(Math.random() * LOREM_WORDS.length)]);
-  }
-
+  for (let i = 0; i < count * 20; i++) words.push(LOREM_WORDS[Math.floor(Math.random() * LOREM_WORDS.length)]);
   let result;
   if (type === 'words') {
     result = words.slice(0, count).join(' ');
@@ -149,7 +100,6 @@ export function loremIpsum({ type = 'words', count = 5 }) {
     }
     result = paragraphs.join('\n\n');
   }
-
   return { type, count, text: result };
 }
 
@@ -178,13 +128,8 @@ const EMOJIS = [
   { emoji: '📚', name: 'books', category: 'education' },
 ];
 
-/**
- * Search emojis (no API needed)
- * @param {{ query?: string, category?: string, limit?: number }} params
- */
 export function emojiSearch({ query, category, limit = 10 }) {
   let results = [...EMOJIS];
-
   if (query) {
     const q = query.toLowerCase();
     results = results.filter(e => 
@@ -192,46 +137,23 @@ export function emojiSearch({ query, category, limit = 10 }) {
       e.category.toLowerCase().includes(q)
     );
   }
-
-  if (category) {
-    results = results.filter(e => e.category.toLowerCase() === category.toLowerCase());
-  }
-
-  return { 
-    count: results.length, 
-    emojis: results.slice(0, limit) 
-  };
+  if (category) results = results.filter(e => e.category.toLowerCase() === category.toLowerCase());
+  return { count: results.length, emojis: results.slice(0, limit) };
 }
 
-/**
- * Get random emoji (no API needed)
- * @param {{ category?: string }} params
- */
 export function randomEmoji({ category }) {
   let pool = [...EMOJIS];
   if (category) pool = pool.filter(e => e.category === category);
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
-// ─── Color Conversion (No API needed) ─────────────────────────────────────────
+// ─── Color Conversion ───────────────────────────────────────────────────────
 
-/**
- * Convert HEX to RGB (no API needed)
- * @param {{ hex: string }} params
- */
 export function hexToRgb({ hex }) {
   const h = hex.replace('#', '');
-  return {
-    r: parseInt(h.substring(0, 2), 16),
-    g: parseInt(h.substring(2, 4), 16),
-    b: parseInt(h.substring(4, 6), 16),
-  };
+  return { r: parseInt(h.substring(0, 2), 16), g: parseInt(h.substring(2, 4), 16), b: parseInt(h.substring(4, 6), 16) };
 }
 
-/**
- * Convert RGB to HEX (no API needed)
- * @param {{ r: number, g: number, b: number }} params
- */
 export function rgbToHex({ r, g, b }) {
   return '#' + [r, g, b].map(x => {
     const hex = x.toString(16);
@@ -239,7 +161,7 @@ export function rgbToHex({ r, g, b }) {
   }).join('');
 }
 
-// ─── HTTP Status Codes (No API needed) ────────────────────────────────────────
+// ─── HTTP Status Codes ─────────────────────────────────────────────────────
 
 const HTTP_STATUS_CODES = {
   200: 'OK', 201: 'Created', 202: 'Accepted', 204: 'No Content',
@@ -250,35 +172,20 @@ const HTTP_STATUS_CODES = {
   503: 'Service Unavailable'
 };
 
-export function httpStatus({ code }) {
-  return { code, message: HTTP_STATUS_CODES[code] || 'Unknown' };
-}
+export function httpStatus({ code }) { return { code, message: HTTP_STATUS_CODES[code] || 'Unknown' }; }
 
-// ─── URL Shortener ────────────────────────────────────────────────────────────
+// ─── URL Shortener ─────────────────────────────────────────────────────────
 
-/**
- * Shorten a URL using is.gd (Free, no key)
- * @param {{ url: string }} params
- */
 export async function shortenURL({ url }) {
-  const { data } = await axios.get('https://is.gd/create.php', {
-    params: { format: 'json', url },
-  });
+  const { data } = await axios.get('https://is.gd/create.php', { params: { format: 'json', url } });
   if (data.errorcode) throw new Error(data.errormessage);
   return { original: url, short: data.shorturl };
 }
 
-// ─── Timezone ─────────────────────────────────────────────────────────────────
+// ─── Timezone ───────────────────────────────────────────────────────────────
 
-/**
- * Get current time for a timezone (Free, no key)
- * @param {{ timezone: string }} params — e.g. 'Africa/Cairo', 'America/New_York'
- */
 export async function getTime({ timezone }) {
-  const cacheKey = `utils:time:${timezone}`;
-  const { data } = await axios.get(
-    `https://worldtimeapi.org/api/timezone/${encodeURIComponent(timezone)}`
-  );
+  const { data } = await axios.get(`https://worldtimeapi.org/api/timezone/${encodeURIComponent(timezone)}`);
   return {
     timezone: data.timezone,
     datetime: data.datetime,
@@ -290,9 +197,6 @@ export async function getTime({ timezone }) {
   };
 }
 
-/**
- * List all available timezones
- */
 export async function listTimezones() {
   const cacheKey = 'utils:timezones';
   const cached = cache.get(cacheKey);
@@ -302,22 +206,14 @@ export async function listTimezones() {
   return data;
 }
 
-// ─── Public Holidays ──────────────────────────────────────────────────────────
+// ─── Public Holidays ─────────────────────────────────────────────────────────
 
-/**
- * Get public holidays for a country and year (Free, no key)
- * @param {{ country: string, year?: number }} params — country: ISO 2-letter code
- */
 export async function getHolidays({ country, year }) {
   const y = year || new Date().getFullYear();
   const cacheKey = `utils:holidays:${country}:${y}`;
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
-
-  const { data } = await axios.get(
-    `https://date.nager.at/api/v3/PublicHolidays/${y}/${country.toUpperCase()}`
-  );
-
+  const { data } = await axios.get(`https://date.nager.at/api/v3/PublicHolidays/${y}/${country.toUpperCase()}`);
   const result = {
     country,
     year: y,
@@ -330,57 +226,32 @@ export async function getHolidays({ country, year }) {
     })),
     _cached: false,
   };
-
   cache.set(cacheKey, result, 86400);
   return result;
 }
 
-// ─── Quotes ──────────────────────────────────────────────────────────────────
+// ─── Quotes ───────────────────────────────────────────────────────────────────
 
-/**
- * Get a random quote (Free, no key)
- * @param {{ tag?: string }} params
- */
 export async function getQuote({ tag } = {}) {
   const params = tag ? { tags: tag } : {};
   const { data } = await axios.get('https://api.quotable.io/random', { params });
-  return {
-    content: data.content,
-    author: data.author,
-    tags: data.tags,
-    length: data.length,
-  };
+  return { content: data.content, author: data.author, tags: data.tags, length: data.length };
 }
 
-/**
- * Get multiple quotes
- * @param {{ limit?: number, tag?: string }} params
- */
 export async function getQuotes({ limit = 5, tag } = {}) {
   const params = { limit };
   if (tag) params.tags = tag;
   const { data } = await axios.get('https://api.quotable.io/quotes', { params });
-  return {
-    total: data.totalCount,
-    quotes: data.results.map((q) => ({ content: q.content, author: q.author, tags: q.tags })),
-  };
+  return { total: data.totalCount, quotes: data.results.map((q) => ({ content: q.content, author: q.author, tags: q.tags })) };
 }
 
-// ─── Dictionary ──────────────────────────────────────────────────────────────
+// ─── Dictionary ───────────────────────────────────────────────────────────────
 
-/**
- * Look up a word definition (Free, no key)
- * @param {{ word: string, language?: string }} params
- */
 export async function define({ word, language = 'en' }) {
   const cacheKey = `utils:define:${language}:${word}`;
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
-
-  const { data } = await axios.get(
-    `https://api.dictionaryapi.dev/api/v2/entries/${language}/${encodeURIComponent(word)}`
-  );
-
+  const { data } = await axios.get(`https://api.dictionaryapi.dev/api/v2/entries/${language}/${encodeURIComponent(word)}`);
   const entry = data[0];
   const result = {
     word: entry.word,
@@ -397,27 +268,19 @@ export async function define({ word, language = 'en' }) {
     })),
     _cached: false,
   };
-
   cache.set(cacheKey, result, 86400);
   return result;
 }
 
-// ─── Trivia ──────────────────────────────────────────────────────────────────
+// ─── Trivia ─────────────────────────────────────────────────────────────────
 
-/**
- * Get trivia questions (Free, no key)
- * @param {{ amount?: number, category?: number, difficulty?: 'easy'|'medium'|'hard', type?: 'multiple'|'boolean' }} params
- */
 export async function getTrivia({ amount = 10, category, difficulty, type } = {}) {
   const params = { amount };
   if (category) params.category = category;
   if (difficulty) params.difficulty = difficulty;
   if (type) params.type = type;
-
   const { data } = await axios.get('https://opentdb.com/api.php', { params });
-
   if (data.response_code !== 0) throw new Error('Trivia API failed');
-
   return {
     questions: data.results.map((q) => ({
       question: q.question.replace(/&quot;/g, '"').replace(/&#039;/g, "'"),
@@ -430,20 +293,14 @@ export async function getTrivia({ amount = 10, category, difficulty, type } = {}
   };
 }
 
-// ─── Color ────────────────────────────────────────────────────────────────────
+// ─── Color Info ───────────────────────────────────────────────────────────────
 
-/**
- * Get color info from HEX (Free, no key)
- * @param {{ hex: string }} params — e.g. 'ff5733' or '#ff5733'
- */
 export async function getColor({ hex }) {
   const clean = hex.replace('#', '');
   const cacheKey = `utils:color:${clean}`;
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
-
   const { data } = await axios.get(`https://www.thecolorapi.com/id?hex=${clean}&format=json`);
-
   const result = {
     hex: data.hex.value,
     name: data.name.value,
@@ -453,7 +310,63 @@ export async function getColor({ hex }) {
     image: `https://www.thecolorapi.com/id?hex=${clean}&format=svg`,
     _cached: false,
   };
-
   cache.set(cacheKey, result, 86400);
   return result;
 }
+
+// ─── Additional Awesome Utilities ─────────────────────────────────────────────
+
+export function randomNumber({ min = 0, max = 100 }) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+export function formatDate({ date = new Date(), format = 'short' }) {
+  const d = new Date(date);
+  if (isNaN(d.getTime())) throw new Error('Invalid date');
+  if (format === 'iso') return d.toISOString();
+  if (format === 'relative') {
+    const now = new Date();
+    const diff = now - d;
+    const seconds = Math.floor(diff / 1000);
+    if (seconds < 60) return `${seconds} seconds ago`;
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes} minutes ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} hours ago`;
+    const days = Math.floor(hours / 24);
+    return `${days} days ago`;
+  }
+  if (format === 'long') return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  return d.toLocaleDateString();
+}
+
+export function validateJSON({ json }) {
+  try {
+    const parsed = JSON.parse(json);
+    return { valid: true, parsed };
+  } catch (e) {
+    return { valid: false, error: e.message };
+  }
+}
+
+export function parseURL({ url }) {
+  const u = new URL(url);
+  return {
+    protocol: u.protocol,
+    hostname: u.hostname,
+    port: u.port,
+    pathname: u.pathname,
+    search: u.search,
+    hash: u.hash,
+  };
+}
+
+export function slugify({ text }) {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+

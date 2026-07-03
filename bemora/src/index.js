@@ -35,6 +35,9 @@ import * as dev from './providers/dev.js';
 import * as podcasts from './providers/podcasts.js';
 import * as healthProv from './providers/health.js';
 import * as fandom from './providers/fandom.js';
+import * as spotify from './providers/spotify.js';
+import * as stackexchange from './providers/stackexchange.js';
+import * as steam from './providers/steam.js';
 import { logger } from './core/logger.js';
 import * as cache from './core/cache.js';
 import { batch } from './core/batch.js';
@@ -75,6 +78,9 @@ export class Bemora {
       spoonacular: keys.spoonacularKey  || process.env.BEMORA_SPOONACULAR_KEY,
       edamamAppId: keys.edamamAppId     || process.env.BEMORA_EDAMAM_APP_ID,
       edamamAppKey:keys.edamamAppKey    || process.env.BEMORA_EDAMAM_APP_KEY,
+      spotifyClientId: keys.spotifyClientId || process.env.BEMORA_SPOTIFY_CLIENT_ID,
+      spotifyClientSecret: keys.spotifyClientSecret || process.env.BEMORA_SPOTIFY_CLIENT_SECRET,
+      steam:       keys.steamKey        || process.env.BEMORA_STEAM_KEY,
     };
 
     this._options = { retries: 2, ...options };
@@ -106,6 +112,9 @@ export class Bemora {
     this.ai        = this._buildAI();
     this.utils     = this._buildUtils();
     this.fandom    = this._buildFandom();
+    this.spotify   = this._buildSpotify();
+    this.stackexchange = this._buildStackExchange();
+    this.steam     = this._buildSteam();
 
     this.free      = this._buildFree();
     this.rss       = this._buildRSS();
@@ -203,9 +212,50 @@ export class Bemora {
     };
   }
 
-  _buildUtils() { return { qr: utils.generateQR, uuid: utils.uuid, passwordStrength: utils.passwordStrength, hash: utils.hash, base64Encode: utils.base64Encode, base64Decode: utils.base64Decode, loremIpsum: utils.loremIpsum, emojiSearch: utils.emojiSearch, randomEmoji: utils.randomEmoji, hexToRgb: utils.hexToRgb, rgbToHex: utils.rgbToHex, httpStatus: utils.httpStatus, shorten: this._wrap('isgd', (p) => utils.shortenURL(p)), time: this._wrap('worldtime', (p) => utils.getTime(p)), timezones: this._wrap('worldtime', () => utils.listTimezones()), holidays: this._wrap('nager', (p) => utils.getHolidays(p)), quote: this._wrap('quotable', (p) => utils.getQuote(p)), quotes: this._wrap('quotable', (p) => utils.getQuotes(p)), define: this._wrap('dictionary', (p) => utils.define(p)), trivia: this._wrap('opentdb', (p) => utils.getTrivia(p)), color: this._wrap('colorapi', (p) => utils.getColor(p)) }; }
+  _buildUtils() { 
+    return { 
+      qr: utils.generateQR, 
+      uuid: utils.uuid, 
+      passwordStrength: utils.passwordStrength, 
+      hash: utils.hash, 
+      base64Encode: utils.base64Encode, 
+      base64Decode: utils.base64Decode, 
+      loremIpsum: utils.loremIpsum, 
+      emojiSearch: utils.emojiSearch, 
+      randomEmoji: utils.randomEmoji, 
+      hexToRgb: utils.hexToRgb, 
+      rgbToHex: utils.rgbToHex, 
+      httpStatus: utils.httpStatus, 
+      shorten: this._wrap('isgd', (p) => utils.shortenURL(p)), 
+      time: this._wrap('worldtime', (p) => utils.getTime(p)), 
+      timezones: this._wrap('worldtime', () => utils.listTimezones()), 
+      holidays: this._wrap('nager', (p) => utils.getHolidays(p)), 
+      quote: this._wrap('quotable', (p) => utils.getQuote(p)), 
+      quotes: this._wrap('quotable', (p) => utils.getQuotes(p)), 
+      define: this._wrap('dictionary', (p) => utils.define(p)), 
+      trivia: this._wrap('opentdb', (p) => utils.getTrivia(p)), 
+      color: this._wrap('colorapi', (p) => utils.getColor(p)),
+      randomNumber: utils.randomNumber,
+      formatDate: utils.formatDate,
+      validateJSON: utils.validateJSON,
+      parseURL: utils.parseURL,
+      slugify: utils.slugify,
+    }; 
+  }
 
   _buildFandom() { return { search: this._wrap('fandom', (p) => fandom.search(p)), getPage: this._wrap('fandom', (p) => fandom.getPage(p)), recentActivity: this._wrap('fandom', (p) => fandom.recentActivity(p)) }; }
+
+  _buildSpotify() { 
+    return { 
+      searchTracks: this._wrap('spotify', (p) => spotify.searchTracks({ ...p, clientId: this._require('spotifyClientId', 'spotify client id'), clientSecret: this._require('spotifyClientSecret', 'spotify client secret') })),
+      getArtist: this._wrap('spotify', (p) => spotify.getArtist({ ...p, clientId: this._require('spotifyClientId', 'spotify client id'), clientSecret: this._require('spotifyClientSecret', 'spotify client secret') })),
+      getArtistTopTracks: this._wrap('spotify', (p) => spotify.getArtistTopTracks({ ...p, clientId: this._require('spotifyClientId', 'spotify client id'), clientSecret: this._require('spotifyClientSecret', 'spotify client secret') })),
+    }; 
+  }
+
+  _buildStackExchange() { return { searchQuestions: this._wrap('stackexchange', (p) => stackexchange.searchQuestions(p)), getQuestion: this._wrap('stackexchange', (p) => stackexchange.getQuestion(p)), getTopUsers: this._wrap('stackexchange', (p) => stackexchange.getTopUsers(p)) }; }
+
+  _buildSteam() { return { getPlayerSummaries: this._wrap('steam', (p) => steam.getPlayerSummaries({ ...p, apiKey: this._require('steam', 'steam') })), getOwnedGames: this._wrap('steam', (p) => steam.getOwnedGames({ ...p, apiKey: this._require('steam', 'steam') })), searchApps: this._wrap('steam', (p) => steam.searchApps(p)) }; }
 
   _buildFree() { return { weather: this._wrap('open-meteo', (p) => pub.openMeteoWeather(p)), wttr: this._wrap('wttr', (p) => pub.wttrWeather(p)), exchangeRates: this._wrap('exchangerate.host', (p) => pub.freeExchangeRates(p)), binanceTicker: this._wrap('binance', (p) => pub.binanceTicker(p)), binanceTickers: this._wrap('binance', (p) => pub.binanceTickers(p)), football: this._wrap('openligadb', (p) => pub.openLigaFixtures(p)) }; }
   _buildRSS() { return { fetch: this._wrap('rss', (p) => rss.fetchFeed(p)), custom: this._wrap('rss', (p) => rss.fetchCustomFeed(p)), aggregate: this._wrap('rss', (p) => rss.aggregateFeeds(p)), sources: () => rss.AVAILABLE_SOURCES }; }
