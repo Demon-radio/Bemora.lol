@@ -1,7 +1,7 @@
 {
   "name": "bemora",
-  "version": "1.5.0",
-  "description": "The only API library your AI agent will ever need — 50+ categories, smart fallback, RSS, real-time WebSocket, zero-key free tier, MCP server, and a powerful CLI with utilities!",
+  "version": "1.6.0",
+  "description": "The ultimate API library for AI agents and developers — 50+ categories, smart fallback chains, RSS aggregation, real-time WebSockets, zero-key free tier, MCP server, and a powerful CLI with utilities!",
   "main": "src/index.js",
   "types": "src/types/index.d.ts",
   "type": "module",
@@ -25,7 +25,13 @@
     "movies", "food", "space", "stocks", "music", "github",
     "smart-fallback", "aggregator", "real-time", "monitor",
     "uuid", "password-strength", "hash", "base64", "lorem-ipsum",
-    "emoji"
+    "emoji", "ai", "llm", "chatgpt", "openai", "groq",
+    "real-time-data", "websockets", "binance-websocket",
+    "kraken-websocket", "price-stream", "crypto-prices",
+    "npm-package", "nodejs", "typescript", "types", "cli",
+    "command-line", "developer-tools", "productivity",
+    "enterprise", "software-development", "ai-integration",
+    "model-context-protocol", "mcp-server"
   ],
   "author": "bemora",
   "license": "MIT",
