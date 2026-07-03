@@ -12,245 +12,188 @@ import { logger } from '../core/logger.js';
 const api = new Bemora({}, { logLevel: 'error' });
 
 const server = new Server(
-  { name: 'bemora', version: '1.0.0' },
+  { name: 'bemora', version: '3.1.0' },
   { capabilities: { tools: {} } }
 );
 
-const tools = [
-  {
-    name: 'getWeather',
-    description: 'Get current weather for a city',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        city: { type: 'string', description: 'City name' },
-        units: { type: 'string', enum: ['metric', 'imperial'], description: 'Temperature units' },
-      },
-      required: ['city'],
-    },
-  },
-  {
-    name: 'getWeatherForecast',
-    description: 'Get 5-day weather forecast for a city',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        city: { type: 'string' },
-        units: { type: 'string', enum: ['metric', 'imperial'] },
-      },
-      required: ['city'],
-    },
-  },
-  {
-    name: 'convertCurrency',
-    description: 'Convert amount between currencies',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        from: { type: 'string', description: 'Source currency code (e.g. USD)' },
-        to: { type: 'string', description: 'Target currency code (e.g. EGP)' },
-        amount: { type: 'number', description: 'Amount to convert' },
-      },
-      required: ['from', 'to', 'amount'],
-    },
-  },
-  {
-    name: 'getExchangeRates',
-    description: 'Get exchange rates for a base currency',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        base: { type: 'string', description: 'Base currency (default: USD)' },
-        symbols: { type: 'array', items: { type: 'string' }, description: 'Filter currencies' },
-      },
-    },
-  },
-  {
-    name: 'getNews',
-    description: 'Get top news headlines',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        country: { type: 'string', description: 'Country code (e.g. us, eg, gb)' },
-        category: { type: 'string', enum: ['business','entertainment','health','science','sports','technology'] },
-        q: { type: 'string', description: 'Search query' },
-        pageSize: { type: 'number' },
-      },
-    },
-  },
-  {
-    name: 'searchNews',
-    description: 'Search news articles by keyword',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        q: { type: 'string', description: 'Search query' },
-        language: { type: 'string' },
-        pageSize: { type: 'number' },
-      },
-      required: ['q'],
-    },
-  },
-  {
-    name: 'searchImages',
-    description: 'Search photos on Unsplash',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        query: { type: 'string' },
-        perPage: { type: 'number' },
-        orientation: { type: 'string', enum: ['landscape','portrait','squarish'] },
-      },
-      required: ['query'],
-    },
-  },
-  {
-    name: 'searchPexels',
-    description: 'Search photos on Pexels',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        query: { type: 'string' },
-        perPage: { type: 'number' },
-      },
-      required: ['query'],
-    },
-  },
-  {
-    name: 'getFootballFixtures',
-    description: 'Get live or scheduled football fixtures',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        league: { type: 'number', description: 'League ID' },
-        date: { type: 'string', description: 'Date (YYYY-MM-DD)' },
-      },
-    },
-  },
-  {
-    name: 'getFootballStandings',
-    description: 'Get league standings',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        league: { type: 'number' },
-        season: { type: 'number', description: 'Season year (e.g. 2024)' },
-      },
-      required: ['league', 'season'],
-    },
-  },
-  {
-    name: 'getCryptoPrice',
-    description: 'Get cryptocurrency price(s)',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        coins: { description: 'Coin id or array of ids (e.g. bitcoin, ethereum)' },
-        currency: { type: 'string', description: 'Target currency (default: usd)' },
-      },
-      required: ['coins'],
-    },
-  },
-  {
-    name: 'getTrendingCrypto',
-    description: 'Get trending cryptocurrencies',
-    inputSchema: { type: 'object', properties: {} },
-  },
-  {
-    name: 'getTopCrypto',
-    description: 'Get top coins by market cap',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        currency: { type: 'string' },
-        limit: { type: 'number' },
-      },
-    },
-  },
-  {
-    name: 'getGoldPrice',
-    description: 'Get current gold price',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        currency: { type: 'string', description: 'Currency code (default: USD)' },
-      },
-    },
-  },
-  {
-    name: 'searchWikipedia',
-    description: 'Search Wikipedia articles',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        query: { type: 'string' },
-        language: { type: 'string', description: 'Language code (default: en)' },
-        limit: { type: 'number' },
-      },
-      required: ['query'],
-    },
-  },
-  {
-    name: 'getWikipediaArticle',
-    description: 'Get Wikipedia article summary',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        title: { type: 'string' },
-        language: { type: 'string' },
-      },
-      required: ['title'],
-    },
-  },
-  {
-    name: 'searchBooks',
-    description: 'Search books via Open Library',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        query: { type: 'string' },
-        limit: { type: 'number' },
-      },
-      required: ['query'],
-    },
-  },
-];
+const allTools = [];
 
-server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools }));
+// Helper to guess input schema from provider method
+function createInputSchema(providerName, methodName) {
+  // Base schema
+  const schema = {
+    type: 'object',
+    properties: {},
+    required: [],
+  };
+
+  // Common params by provider/method
+  const commonParams = {
+    weather: {
+      current: { city: 'string', units: { type: 'string', enum: ['metric', 'imperial'] } },
+      forecast: { city: 'string', units: { type: 'string', enum: ['metric', 'imperial'] } },
+    },
+    currency: {
+      rates: { base: 'string', symbols: { type: 'array', items: { type: 'string' } } },
+      convert: { from: 'string', to: 'string', amount: 'number' },
+    },
+    crypto: {
+      price: { coins: {}, currency: 'string' },
+      trending: {},
+      top: { currency: 'string', limit: 'number' },
+    },
+    research: {
+      wikipedia: { query: 'string', language: 'string', limit: 'number' },
+      article: { title: 'string', language: 'string' },
+      books: { query: 'string', limit: 'number' },
+    },
+    islamic: {
+      quranChapters: {},
+      quranChapter: { number: 'number', edition: 'string' },
+      randomVerse: {},
+      azkar: { type: { type: 'string', enum: ['morning', 'evening'] } },
+      prayerTimes: { city: 'string', country: 'string', method: 'number' },
+    },
+    memes: {
+      random: {},
+      fromSubreddit: { subreddit: 'string', limit: 'number' },
+    },
+    animals: {
+      randomDog: {},
+      randomCat: {},
+      randomFox: {},
+      randomDuck: {},
+      randomPanda: {},
+      randomBird: {},
+    },
+    gaming: {
+      freeFirePlayer: { playerId: 'string' },
+      pubgPlayer: { playerName: 'string', platform: 'string' },
+      crossfireNews: {},
+      freeFireNews: {},
+      pubgPatchNotes: {},
+    },
+    spaceExtended: {
+      apod: { date: 'string', apiKey: 'string' },
+      marsPhotos: { rover: 'string', sol: 'number', apiKey: 'string' },
+      nearEarthObjects: { startDate: 'string', endDate: 'string', apiKey: 'string' },
+      issPosition: {},
+    },
+    // Add more specific schemas as needed!
+  };
+
+  if (commonParams[providerName] && commonParams[providerName][methodName]) {
+    const params = commonParams[providerName][methodName];
+    Object.keys(params).forEach(key => {
+      const paramType = typeof params[key] === 'object' ? params[key] : { type: params[key] };
+      schema.properties[key] = paramType;
+      if (key !== 'units' && key !== 'language' && key !== 'limit' && key !== 'currency' && key !== 'edition' && key !== 'platform') {
+        schema.required.push(key);
+      }
+    });
+  } else {
+    // Generic schema
+    schema.properties = {
+      query: { type: 'string' },
+      limit: { type: 'number' },
+    };
+  }
+
+  return schema;
+}
+
+// Auto-generate tools from all providers!
+const providerNames = Object.keys(api).filter(key => 
+  !['_keys', '_options', '_events', '_plugins', '_monitor', 'use', 'plugins', 'on', 'off', 'health', 'healthOf', 'rateLimits', 'rateLimit', '_require', '_wrap', 'free', 'smart', 'monitor', 'export', 'cache', 'batch'].includes(key)
+);
+
+providerNames.forEach(providerName => {
+  const provider = api[providerName];
+  if (provider && typeof provider === 'object') {
+    const methodNames = Object.keys(provider);
+    methodNames.forEach(methodName => {
+      if (typeof provider[methodName] === 'function') {
+        allTools.push({
+          name: `${providerName}_${methodName}`,
+          description: `${providerName} - ${methodName}`,
+          inputSchema: createInputSchema(providerName, methodName),
+        });
+      }
+    });
+  }
+});
+
+// Add smart tools and free tools!
+allTools.push(
+  {
+    name: 'smart_weather',
+    description: 'Get smart weather with automatic fallback (no API key needed!)',
+    inputSchema: { type: 'object', properties: { city: { type: 'string' }, units: { type: 'string', enum: ['metric', 'imperial'] } }, required: ['city'] },
+  },
+  {
+    name: 'smart_news',
+    description: 'Get smart news with fallback (RSS if API key missing)',
+    inputSchema: { type: 'object', properties: { q: { type: 'string' }, limit: { type: 'number' } } },
+  },
+  {
+    name: 'free_weather',
+    description: 'Get weather from Open-Meteo (100% free, no key)',
+    inputSchema: { type: 'object', properties: { lat: { type: 'number' }, lon: { type: 'number' }, city: { type: 'string' } } },
+  },
+  {
+    name: 'rss_aggregate',
+    description: 'Aggregate news from multiple RSS feeds',
+    inputSchema: { type: 'object', properties: { sources: { type: 'array', items: { type: 'string' } }, limit: { type: 'number' } } },
+  }
+);
+
+server.setRequestHandler(ListToolsRequestSchema, async () => {
+  return { tools: allTools };
+});
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
 
   try {
     let result;
-    switch (name) {
-      case 'getWeather':             result = await api.weather.current(args); break;
-      case 'getWeatherForecast':     result = await api.weather.forecast(args); break;
-      case 'convertCurrency':        result = await api.currency.convert(args); break;
-      case 'getExchangeRates':       result = await api.currency.rates(args); break;
-      case 'getNews':                result = await api.news.headlines(args); break;
-      case 'searchNews':             result = await api.news.search(args); break;
-      case 'searchImages':           result = await api.images.search(args); break;
-      case 'searchPexels':           result = await api.images.pexels(args); break;
-      case 'getFootballFixtures':    result = await api.football.fixtures(args); break;
-      case 'getFootballStandings':   result = await api.football.standings(args); break;
-      case 'getCryptoPrice':         result = await api.crypto.price(args); break;
-      case 'getTrendingCrypto':      result = await api.crypto.trending(); break;
-      case 'getTopCrypto':           result = await api.crypto.top(args); break;
-      case 'getGoldPrice':           result = await api.gold.price(args); break;
-      case 'searchWikipedia':        result = await api.research.wikipedia(args); break;
-      case 'getWikipediaArticle':    result = await api.research.article(args); break;
-      case 'searchBooks':            result = await api.research.books(args); break;
-      default:
+
+    // Handle smart/free tools
+    if (name === 'smart_weather') {
+      result = await api.smart.weather(args);
+    } else if (name === 'smart_news') {
+      result = await api.smart.news(args);
+    } else if (name === 'free_weather') {
+      if (args.city) {
+        result = await api.free.wttr(args);
+      } else {
+        result = await api.free.weather(args);
+      }
+    } else if (name === 'rss_aggregate') {
+      result = await api.rss.aggregate(args);
+    } else {
+      // Handle provider methods
+      const [providerName, methodName] = name.split('_');
+      if (providerName && methodName && api[providerName] && typeof api[providerName][methodName] === 'function') {
+        result = await api[providerName][methodName](args);
+      } else {
         return { content: [{ type: 'text', text: `Unknown tool: ${name}` }], isError: true };
+      }
     }
-    return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+
+    return {
+      content: [
+        { type: 'text', text: JSON.stringify(result, null, 2) }
+      ]
+    };
   } catch (err) {
     logger.error(`MCP tool "${name}" failed: ${err.message}`);
-    return { content: [{ type: 'text', text: `Error: ${err.message}` }], isError: true };
+    return {
+      content: [{ type: 'text', text: `Error: ${err.message}` }],
+      isError: true
+    };
   }
 });
 
 const transport = new StdioServerTransport();
 await server.connect(transport);
-logger.info('Bemora MCP server running');
+logger.info('Bemora MCP server running (v3.1.0) with 100+ tools!');
