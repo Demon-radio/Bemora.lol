@@ -2,7 +2,7 @@
 
 <img src="https://capsule-render.vercel.app/api?type=waving&color=0:6366f1,100:8b5cf6&height=200&section=header&text=bemora&fontSize=80&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=The%20only%20API%20library%20your%20AI%20agent%20will%20ever%20need&descAlignY=60&descSize=18" width="100%" />
 
-<br/>
+<br />
 
 [![npm version](https://img.shields.io/npm/v/bemora?style=for-the-badge&color=6366f1)](https://www.npmjs.com/package/bemora)
 [![npm downloads](https://img.shields.io/npm/dm/bemora?style=for-the-badge&color=8b5cf6)](https://www.npmjs.com/package/bemora)
@@ -10,13 +10,14 @@
 [![node](https://img.shields.io/node/v/bemora?style=for-the-badge&color=10b981)](package.json)
 [![GitHub stars](https://img.shields.io/github/stars/bemora/bemora?style=for-the-badge&color=f59e0b)](https://github.com/bemora/bemora/stargazers)
 
-<br/>
+<br />
 
-**30+ API categories. One library. Zero frustration.**
+**100+ tools & 30+ API categories. One library. Zero frustration.**
 
 Weather · Currency · News · Images · Football · Crypto · Gold · Research  
 Location · IP · Countries · Translation · Movies · Food · Space · Stocks  
-Music · Social · GitHub · Hacker News · AI (Groq + OpenAI) · Utils
+Music · Social · GitHub · Hacker News · AI (Groq + OpenAI) · Utils  
+Islamic (Quran, Azkar, Prayer) · Memes · Animals · Gaming (PUBG, Free Fire)
 
 <br/>
 
@@ -569,17 +570,33 @@ const tools = {
 
 ---
 
-## 🖥 MCP Server (Cursor / Claude / Windsurf)
+## 🖥 MCP Server (Cursor / Claude / Windsurf / Claude Desktop)
 
-Add bemora to your AI editor — the AI can call all 30+ APIs natively:
+Add bemora to your AI editor — the AI gets **100+ tools** natively!
 
-**`~/.cursor/mcp.json`**
+### For Cursor / Claude Desktop:
+
+#### **`~/.cursor/mcp.json`** (macOS/Linux) or **`%APPDATA%\Cursor\User\mcp.json`** (Windows):
 ```json
 {
   "mcpServers": {
     "bemora": {
       "command": "npx",
-      "args": ["bemora-mcp"],
+    "args": ["-y", "bemora@3.2.0", "bemora-mcp"]
+    }
+  }
+}
+```
+
+### For Claude Desktop:
+
+#### **`~/.claude/claude_desktop_config.json`** (macOS)
+```json
+{
+  "mcpServers": {
+    "bemora": {
+      "command": "npx",
+    "args": ["-y", "bemora@3.2.0", "bemora-mcp"],
       "env": {
         "BEMORA_WEATHER_KEY":  "...",
         "BEMORA_NEWS_KEY":     "...",
@@ -592,6 +609,15 @@ Add bemora to your AI editor — the AI can call all 30+ APIs natively:
   }
 }
 ```
+
+### What's new in MCP Server:
+✅ **100+ tools** (all providers auto-discovered!**
+✅ **User-friendly API key errors with instructions
+✅ **Response trimming** to save context
+✅ **Clear tool descriptions** so AI knows when to use which
+✅ **Smart fallback tools** (no key needed!)
+✅ **All new providers** (Islamic, gaming, memes, animals, space, etc.)
+
 
 ---
 
