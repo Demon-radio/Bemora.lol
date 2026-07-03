@@ -11,7 +11,7 @@ export async function githubUser({ username }) {
   if (cached) return { ...cached, _cached: true };
 
   const { data } = await axios.get(`https://api.github.com/users/${username}`, {
-    headers: { 'User-Agent': 'bemora/1.0' },
+    headers: { 'User-Agent': 'bemora/3.2.0 (+https://github.com/bemora/bemora)' },
   });
 
   const result = {
@@ -45,7 +45,7 @@ export async function githubRepo({ owner, repo }) {
   if (cached) return { ...cached, _cached: true };
 
   const { data } = await axios.get(`https://api.github.com/repos/${owner}/${repo}`, {
-    headers: { 'User-Agent': 'bemora/1.0' },
+    headers: { 'User-Agent': 'bemora/3.2.0 (+https://github.com/bemora/bemora)' },
   });
 
   const result = {

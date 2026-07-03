@@ -232,17 +232,38 @@ export async function getHolidays({ country, year }) {
 
 // ─── Quotes ───────────────────────────────────────────────────────────────────
 
+const FALLBACK_QUOTES = [
+  { content: "The only way to do great work is to love what you do.", author: "Steve Jobs", tags: ["inspirational", "work"] },
+  { content: "Life is what happens when you're busy making other plans.", author: "John Lennon", tags: ["life", "wisdom"] },
+  { content: "The best time to plant a tree was 20 years ago. The second best time is now.", author: "Chinese Proverb", tags: ["inspirational", "wisdom"] },
+  { content: "In the middle of difficulty lies opportunity.", author: "Albert Einstein", tags: ["inspirational", "wisdom"] },
+  { content: "Stay hungry, stay foolish.", author: "Steve Jobs", tags: ["inspirational"] },
+];
+
 export async function getQuote({ tag } = {}) {
   const params = tag ? { tags: tag } : {};
-  const { data } = await axios.get('https://api.quotable.io/random', { params });
-  return { content: data.content, author: data.author, tags: data.tags, length: data.length };
+  try {
+    const { data } = await axios.get('https://api.quotable.io/random', { params });
+    return { content: data.content, author: data.author, tags: data.tags, length: data.length };
+  } catch (e) {
+    // Fallback if quotable is down
+    const quote = FALLBACK_QUOTES[Math.floor(Math.random() * FALLBACK_QUOTES.length)];
+    return { ...quote, length: quote.content.length, _cached: false };
+  }
 }
 
 export async function getQuotes({ limit = 5, tag } = {}) {
   const params = { limit };
   if (tag) params.tags = tag;
-  const { data } = await axios.get('https://api.quotable.io/quotes', { params });
-  return { total: data.totalCount, quotes: data.results.map((q) => ({ content: q.content, author: q.author, tags: q.tags })) };
+  try {
+    const { data } = await axios.get('https://api.quotable.io/quotes', { params });
+    return { total: data.totalCount, quotes: data.results.map((q) => ({ content: q.content, author: q.author, tags: q.tags })) };
+  } catch (e) {
+    // Fallback to built-in quotes
+    const shuffled = [...FALLBACK_QUOTES].sort(() => 0.5 - Math.random());
+    const quotes = shuffled.slice(0, limit);
+    return { total: FALLBACK_QUOTES.length, quotes };
+  }
 }
 
 // ─── Dictionary ───────────────────────────────────────────────────────────────
