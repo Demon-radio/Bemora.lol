@@ -34,7 +34,7 @@ import * as flights from './providers/flights.js';
 import * as art from './providers/art.js';
 import * as dev from './providers/dev.js';
 import * as podcasts from './providers/podcasts.js';
-import * as medical from './providers/health';
+import * as medical from './providers/health.js';
 import * as fandom from './providers/fandom.js';
 import * as spotify from './providers/spotify.js';
 import * as stackexchange from './providers/stackexchange.js';
