@@ -34,7 +34,7 @@ import * as flights from './providers/flights.js';
 import * as art from './providers/art.js';
 import * as dev from './providers/dev.js';
 import * as podcasts from './providers/podcasts.js';
-import * as healthProv from './providers/health.js';
+import * as medical from './providers/health';
 import * as fandom from './providers/fandom.js';
 import * as spotify from './providers/spotify.js';
 import * as stackexchange from './providers/stackexchange.js';
@@ -186,7 +186,7 @@ export class Bemora {
     this.art       = this._buildArt();
     this.dev       = this._buildDev();
     this.podcasts  = this._buildPodcasts();
-    this.health    = this._buildHealth();
+    this.medical   = this._buildMedical();
     this.enriched  = this._buildEnriched();
     this.combined  = this._buildCombined();
     this.cache     = cache;
@@ -238,7 +238,7 @@ export class Bemora {
 
   _buildFood() { 
     return {
-      searchMeals: food.searchMeals, getRandomMeal: food.getRandomMeal, getMeal: food.getMeal, byCategory: food.byCategory, categories: food.categories,
+      searchMeals: food.searchMeals, getRandomMeal: food.getRandomMeal, random: food.getRandomMeal, getMeal: food.getMeal, byCategory: food.byCategory, categories: food.categories,
       searchSpoonacular: this._wrap('spoonacular', (p) => food.searchSpoonacular({ ...p, apiKey: this._require('spoonacular', 'spoonacular') })),
       getSpoonacularRecipe: this._wrap('spoonacular', (p) => food.getSpoonacularRecipe({ ...p, apiKey: this._require('spoonacular', 'spoonacular') })),
       searchEdamam: this._wrap('edamam', (p) => food.searchEdamam({ ...p, appId: this._require('edamamAppId', 'edamam app ID'), appKey: this._require('edamamAppKey', 'edamam app key') })),
@@ -253,18 +253,26 @@ export class Bemora {
   _buildSocial() { return { githubUser: this._wrap('github', (p) => social.githubUser(p)), githubRepo: this._wrap('github', (p) => social.githubRepo(p)), githubTrending: this._wrap('github', (p) => social.githubTrending(p)), hackerNews: this._wrap('hn', (p) => social.hackerNewsTop(p)), productHunt: this._wrap('ph', () => social.productHuntToday()) }; }
 
   _buildAI() {
+    const openaiChat = this._wrap('openai', (p) => ai.openaiChat(p, this._require('openai', 'openai')));
+    const groqChat = this._wrap('groq', (p) => ai.groqChat(p, this._require('groq', 'groq')));
+    const smartChat = (p) => ai.smartChat(p, {
+      groqKey: this._keys.groq,
+      openaiKey: this._keys.openai,
+      anthropicKey: this._keys.anthropic,
+      geminiKey: this._keys.gemini,
+    });
+
     return {
-      openaiChat: this._wrap('openai', (p) => ai.openaiChat(p, this._require('openai', 'openai'))),
-      groqChat: this._wrap('groq', (p) => ai.groqChat(p, this._require('groq', 'groq'))),
+      openaiChat,
+      openai: openaiChat,
+      groqChat,
+      groq: groqChat,
       anthropicChat: this._wrap('anthropic', (p) => ai.anthropicChat(p, this._require('anthropic', 'anthropic'))),
       geminiChat: this._wrap('google', (p) => ai.geminiChat(p, this._require('gemini', 'gemini'))),
-      smartChat: (p) => ai.smartChat(p, {
-        groqKey: this._keys.groq,
-        openaiKey: this._keys.openai,
-        anthropicKey: this._keys.anthropic,
-        geminiKey: this._keys.gemini,
-      }),
+      smartChat,
+      chat: smartChat,
       generateImage: this._wrap('openai', (p) => ai.generateImage(p, this._require('openai', 'openai'))),
+      imagine: this._wrap('openai', (p) => ai.generateImage(p, this._require('openai', 'openai'))),
       embed: this._wrap('openai', (p) => ai.embed(p, this._require('openai', 'openai'))),
     };
   }
@@ -388,7 +396,7 @@ export class Bemora {
   _buildArt() { return { search: this._wrap('artic', (p) => art.searchArtworks(p)), details: this._wrap('artic', (p) => art.getArtwork(p)), searchMet: this._wrap('metmuseum', (p) => art.searchMet(p)), metDetails: this._wrap('metmuseum', (p) => art.getMetArtwork(p)) }; }
   _buildDev() { return { npmPackage: this._wrap('npmjs', (p) => dev.npmPackage(p)), npmDownloads: this._wrap('npmjs', (p) => dev.npmDownloads(p)), githubRepos: this._wrap('github', (p) => dev.githubRepos(p)), githubReleases: this._wrap('github', (p) => dev.githubReleases(p)), validateEmail: this._wrap('dns', (p) => dev.validateEmail(p)), dnsLookup: this._wrap('dns', (p) => dev.dnsLookup(p)), loremIpsum: this._wrap('loripsum', (p) => dev.loremIpsum(p)), httpStatus: dev.httpStatus }; }
   _buildPodcasts() { return { search: this._wrap('itunes', (p) => podcasts.searchPodcasts(p)), episodes: this._wrap('podcast-rss', (p) => podcasts.getPodcastEpisodes(p)), index: this._wrap('podcastindex', (p) => podcasts.searchPodcastIndex(p)) }; }
-  _buildHealth() { return { drug: this._wrap('fda', (p) => healthProv.searchDrug(p)), disease: this._wrap('wikipedia', (p) => healthProv.getDiseaseInfo(p)), exercises: this._wrap('wger', (p) => healthProv.getExercises(p)), nutrition: this._wrap('openfoodfacts', (p) => healthProv.getNutrition(p)), bmi: healthProv.calculateBMI }; }
+  _buildMedical() { return { drug: this._wrap('fda', (p) => medical.searchDrug(p)), disease: this._wrap('wikipedia', (p) => medical.getDiseaseInfo(p)), exercises: this._wrap('wger', (p) => medical.getExercises(p)), nutrition: this._wrap('openfoodfacts', (p) => medical.getNutrition(p)), bmi: medical.calculateBMI }; }
   _buildEnriched() { return { weather: this._wrap('openweathermap', (p) => enriched.getEnrichedWeather(p, this._require('weather', 'weather'))), compareCities: this._wrap('openweathermap', (p) => enriched.compareCities(p, this._require('weather', 'weather'))) }; }
   _buildCombined() { return { marketSnapshot: this._wrap('coingecko', (p) => combined.getMarketSnapshot(p, this._keys.gold, this._keys.currency)), newsDigest: this._wrap('newsapi', (p) => combined.getNewsDigest(p, this._require('news', 'news'))) }; }
 }
