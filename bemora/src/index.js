@@ -34,7 +34,7 @@ import * as flights from './providers/flights.js';
 import * as art from './providers/art.js';
 import * as dev from './providers/dev.js';
 import * as podcasts from './providers/podcasts.js';
-import * as medical from './providers/health';
+import * as medical from './providers/health.js';
 import * as fandom from './providers/fandom.js';
 import * as spotify from './providers/spotify.js';
 import * as stackexchange from './providers/stackexchange.js';
@@ -67,6 +67,24 @@ import * as religion from './providers/religion.js';
 import * as islamic from './providers/islamic.js';
 import * as gaming from './providers/gaming.js';
 import * as spaceExtended from './providers/space-extended.js';
+import * as pokemon from './providers/pokemon.js';
+import * as rickmorty from './providers/rickmorty.js';
+import * as starwars from './providers/starwars.js';
+import * as harrypotter from './providers/harrypotter.js';
+import * as covid from './providers/covid.js';
+import * as earthquake from './providers/earthquake.js';
+import * as airquality from './providers/airquality.js';
+import * as astronomy from './providers/astronomy.js';
+import * as postal from './providers/postal.js';
+import * as predict from './providers/predict.js';
+import * as brewery from './providers/brewery.js';
+import * as chucknorris from './providers/chucknorris.js';
+import * as bored from './providers/bored.js';
+import * as sportsdb from './providers/sportsdb.js';
+import * as domain from './providers/domain.js';
+import * as placeholder from './providers/placeholder.js';
+import * as weatheralerts from './providers/weatheralerts.js';
+import * as coinwizard from './providers/coinwizard.js';
 import { logger } from './core/logger.js';
 import * as cache from './core/cache.js';
 import { batch } from './core/batch.js';
@@ -172,6 +190,24 @@ export class Bemora {
     this.islamic   = this._buildIslamic();
     this.gaming    = this._buildGaming();
     this.spaceExtended = this._buildSpaceExtended();
+    this.pokemon   = this._buildPokemon();
+    this.rickmorty = this._buildRickMorty();
+    this.starwars  = this._buildStarWars();
+    this.harrypotter = this._buildHarryPotter();
+    this.covid     = this._buildCovid();
+    this.earthquake = this._buildEarthquake();
+    this.airquality = this._buildAirQuality();
+    this.astronomy = this._buildAstronomy();
+    this.postal    = this._buildPostal();
+    this.predict   = this._buildPredict();
+    this.brewery   = this._buildBrewery();
+    this.chucknorris = this._buildChuckNorris();
+    this.bored     = this._buildBored();
+    this.sportsdb  = this._buildSportsDB();
+    this.domain    = this._buildDomain();
+    this.placeholder = this._buildPlaceholder();
+    this.weatheralerts = this._buildWeatherAlerts();
+    this.coinWizard = this._buildCoinWizard();
 
     this.free      = this._buildFree();
     this.rss       = this._buildRSS();
@@ -399,6 +435,38 @@ export class Bemora {
   _buildMedical() { return { drug: this._wrap('fda', (p) => medical.searchDrug(p)), disease: this._wrap('wikipedia', (p) => medical.getDiseaseInfo(p)), exercises: this._wrap('wger', (p) => medical.getExercises(p)), nutrition: this._wrap('openfoodfacts', (p) => medical.getNutrition(p)), bmi: medical.calculateBMI }; }
   _buildEnriched() { return { weather: this._wrap('openweathermap', (p) => enriched.getEnrichedWeather(p, this._require('weather', 'weather'))), compareCities: this._wrap('openweathermap', (p) => enriched.compareCities(p, this._require('weather', 'weather'))) }; }
   _buildCombined() { return { marketSnapshot: this._wrap('coingecko', (p) => combined.getMarketSnapshot(p, this._keys.gold, this._keys.currency)), newsDigest: this._wrap('newsapi', (p) => combined.getNewsDigest(p, this._require('news', 'news'))) }; }
+
+  _buildPokemon() { return { get: this._wrap('pokeapi', (p) => pokemon.getPokemon(p)), ability: this._wrap('pokeapi', (p) => pokemon.getAbility(p)), species: this._wrap('pokeapi', (p) => pokemon.getSpecies(p)), random: this._wrap('pokeapi', () => pokemon.random()) }; }
+  _buildRickMorty() { return { character: this._wrap('rickandmortyapi', (p) => rickmorty.getCharacter(p)), search: this._wrap('rickandmortyapi', (p) => rickmorty.searchCharacters(p)), location: this._wrap('rickandmortyapi', (p) => rickmorty.getLocation(p)), episode: this._wrap('rickandmortyapi', (p) => rickmorty.getEpisode(p)), random: this._wrap('rickandmortyapi', () => rickmorty.random()) }; }
+  _buildStarWars() { return { person: this._wrap('swapi', (p) => starwars.getPerson(p)), people: this._wrap('swapi', () => starwars.listPeople()), planet: this._wrap('swapi', (p) => starwars.getPlanet(p)), starship: this._wrap('swapi', (p) => starwars.getStarship(p)), film: this._wrap('swapi', (p) => starwars.getFilm(p)) }; }
+  _buildHarryPotter() { return { characters: this._wrap('hp-api', (p) => harrypotter.getCharacters(p)), students: this._wrap('hp-api', () => harrypotter.getStudents()), staff: this._wrap('hp-api', () => harrypotter.getStaff()), random: this._wrap('hp-api', () => harrypotter.randomCharacter()) }; }
+  _buildCovid() { return { global: this._wrap('disease.sh', () => covid.getGlobal()), country: this._wrap('disease.sh', (p) => covid.getCountry(p)), historical: this._wrap('disease.sh', (p) => covid.getHistorical(p)), topCountries: this._wrap('disease.sh', (p) => covid.getTopCountries(p)) }; }
+  _buildEarthquake() { return { recent: this._wrap('usgs', (p) => earthquake.getRecent(p)), byLocation: this._wrap('usgs', (p) => earthquake.getByLocation(p)), biggestToday: this._wrap('usgs', () => earthquake.getBiggestToday()) }; }
+  _buildAirQuality() { return { current: this._wrap('open-meteo-aq', (p) => airquality.getCurrent(p)), forecast: this._wrap('open-meteo-aq', (p) => airquality.getForecast(p)), classify: airquality.classifyAQI }; }
+  _buildAstronomy() { return { sunriseSunset: this._wrap('sunrise-sunset.org', (p) => astronomy.getSunriseSunset(p)), moonPhase: this._wrap('farmsense', (p) => astronomy.getMoonPhase(p)) }; }
+  _buildPostal() { return { lookup: this._wrap('zippopotam', (p) => postal.lookup(p)) }; }
+  _buildPredict() { return { nationality: this._wrap('nationalize', (p) => predict.predictNationality(p)), gender: this._wrap('genderize', (p) => predict.predictGender(p)), age: this._wrap('agify', (p) => predict.predictAge(p)), all: this._wrap('predict-combo', (p) => predict.predictAll(p)) }; }
+  _buildBrewery() { return { search: this._wrap('openbrewerydb', (p) => brewery.search(p)), random: this._wrap('openbrewerydb', () => brewery.random()), getById: this._wrap('openbrewerydb', (p) => brewery.getById(p)) }; }
+  _buildChuckNorris() { return { random: this._wrap('chucknorris.io', (p) => chucknorris.random(p)), categories: this._wrap('chucknorris.io', () => chucknorris.categories()), search: this._wrap('chucknorris.io', (p) => chucknorris.search(p)) }; }
+  _buildBored() { return { activity: this._wrap('bored-api', (p) => bored.getActivity(p)) }; }
+  _buildSportsDB() { return { searchTeam: this._wrap('thesportsdb', (p) => sportsdb.searchTeam(p)), searchPlayer: this._wrap('thesportsdb', (p) => sportsdb.searchPlayer(p)), leagueEvents: this._wrap('thesportsdb', (p) => sportsdb.getLeagueEvents(p)), leagues: this._wrap('thesportsdb', (p) => sportsdb.listLeagues(p)) }; }
+  _buildDomain() { return { whois: this._wrap('rdap', (p) => domain.whois(p)), dnsRecords: this._wrap('dns', (p) => domain.dnsRecords(p)), resolveIp: this._wrap('dns', (p) => domain.resolveIp(p)) }; }
+  _buildPlaceholder() { return { image: placeholder.placeholderImage, picsum: placeholder.picsumImage, avatar: placeholder.avatarUrl, dicebear: placeholder.dicebearAvatar }; }
+  _buildWeatherAlerts() { return { usAlerts: this._wrap('weather.gov', (p) => weatheralerts.getUSAlerts(p)), pointForecast: this._wrap('weather.gov', (p) => weatheralerts.getPointForecast(p)) }; }
+  _buildCoinWizard() {
+    return {
+      info: this._wrap('coingecko', (p) => coinwizard.coinInfo(p)),
+      chart: this._wrap('coingecko', (p) => coinwizard.marketChart(p)),
+      ohlc: this._wrap('coingecko', (p) => coinwizard.ohlc(p)),
+      global: this._wrap('coingecko', () => coinwizard.globalMarket()),
+      exchanges: this._wrap('coingecko', (p) => coinwizard.exchanges(p)),
+      categories: this._wrap('coingecko', (p) => coinwizard.categories(p)),
+      gainersLosers: this._wrap('coingecko', (p) => coinwizard.gainersLosers(p)),
+      search: this._wrap('coingecko', (p) => coinwizard.searchCoins(p)),
+      convert: this._wrap('coingecko', (p) => coinwizard.convertCoin(p)),
+      list: this._wrap('coingecko', () => coinwizard.supportedCoinsList()),
+    };
+  }
 }
 
 export default Bemora;
