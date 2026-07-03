@@ -582,7 +582,7 @@ Add bemora to your AI editor — the AI gets **100+ tools** natively!
   "mcpServers": {
     "bemora": {
       "command": "npx",
-    "args": ["-y", "bemora@3.2.0", "bemora-mcp"]
+    "args": ["-y", "bemora@3.2.1", "bemora-mcp"]
     }
   }
 }
@@ -596,7 +596,7 @@ Add bemora to your AI editor — the AI gets **100+ tools** natively!
   "mcpServers": {
     "bemora": {
       "command": "npx",
-    "args": ["-y", "bemora@3.2.0", "bemora-mcp"],
+    "args": ["-y", "bemora@3.2.1", "bemora-mcp"],
       "env": {
         "BEMORA_WEATHER_KEY":  "...",
         "BEMORA_NEWS_KEY":     "...",
