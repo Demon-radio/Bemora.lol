@@ -1,4 +1,5 @@
 
+
 import 'dotenv/config';
 import * as weather from './providers/weather.js';
 import * as currency from './providers/currency.js';
@@ -38,6 +39,34 @@ import * as fandom from './providers/fandom.js';
 import * as spotify from './providers/spotify.js';
 import * as stackexchange from './providers/stackexchange.js';
 import * as steam from './providers/steam.js';
+import * as animals from './providers/animals.js';
+import * as books from './providers/books.js';
+import * as lyrics from './providers/lyrics.js';
+import * as memes from './providers/memes.js';
+import * as math from './providers/math.js';
+import * as zodiac from './providers/zodiac.js';
+import * as jobs from './providers/jobs.js';
+import * as science from './providers/science.js';
+import * as basketball from './providers/basketball.js';
+import * as vehicles from './providers/vehicles.js';
+import * as pets from './providers/pets.js';
+import * as drinks from './providers/drinks.js';
+import * as geography from './providers/geography.js';
+import * as comics from './providers/comics.js';
+import * as tv from './providers/tv.js';
+import * as baseball from './providers/baseball.js';
+import * as hockey from './providers/hockey.js';
+import * as finance from './providers/finance.js';
+import * as literature from './providers/literature.js';
+import * as wildlife from './providers/wildlife.js';
+import * as politics from './providers/politics.js';
+import * as language from './providers/language.js';
+import * as law from './providers/law.js';
+import * as military from './providers/military.js';
+import * as religion from './providers/religion.js';
+import * as islamic from './providers/islamic.js';
+import * as gaming from './providers/gaming.js';
+import * as spaceExtended from './providers/space-extended.js';
 import { logger } from './core/logger.js';
 import * as cache from './core/cache.js';
 import { batch } from './core/batch.js';
@@ -115,6 +144,34 @@ export class Bemora {
     this.spotify   = this._buildSpotify();
     this.stackexchange = this._buildStackExchange();
     this.steam     = this._buildSteam();
+    this.animals   = this._buildAnimals();
+    this.books     = this._buildBooks();
+    this.lyrics    = this._buildLyrics();
+    this.memes     = this._buildMemes();
+    this.math      = this._buildMath();
+    this.zodiac    = this._buildZodiac();
+    this.jobs      = this._buildJobs();
+    this.science   = this._buildScience();
+    this.basketball = this._buildBasketball();
+    this.vehicles  = this._buildVehicles();
+    this.pets      = this._buildPets();
+    this.drinks    = this._buildDrinks();
+    this.geography = this._buildGeography();
+    this.comics    = this._buildComics();
+    this.tv        = this._buildTV();
+    this.baseball  = this._buildBaseball();
+    this.hockey    = this._buildHockey();
+    this.finance   = this._buildFinance();
+    this.literature = this._buildLiterature();
+    this.wildlife  = this._buildWildlife();
+    this.politics  = this._buildPolitics();
+    this.language  = this._buildLanguage();
+    this.law       = this._buildLaw();
+    this.military  = this._buildMilitary();
+    this.religion  = this._buildReligion();
+    this.islamic   = this._buildIslamic();
+    this.gaming    = this._buildGaming();
+    this.spaceExtended = this._buildSpaceExtended();
 
     this.free      = this._buildFree();
     this.rss       = this._buildRSS();
@@ -257,6 +314,35 @@ export class Bemora {
 
   _buildSteam() { return { getPlayerSummaries: this._wrap('steam', (p) => steam.getPlayerSummaries({ ...p, apiKey: this._require('steam', 'steam') })), getOwnedGames: this._wrap('steam', (p) => steam.getOwnedGames({ ...p, apiKey: this._require('steam', 'steam') })), searchApps: this._wrap('steam', (p) => steam.searchApps(p)) }; }
 
+  _buildAnimals() { return { randomDog: this._wrap('dogceo', () => animals.getRandomDog()), randomCat: this._wrap('thecatapi', () => animals.getRandomCat()), randomFox: this._wrap('randomfox', () => animals.getRandomFox()), randomDuck: this._wrap('randomduck', () => animals.getRandomDuck()), randomPanda: this._wrap('some-random-api', () => animals.getRandomPanda()), randomBird: this._wrap('some-random-api', () => animals.getRandomBird()) }; }
+  _buildBooks() { return { search: this._wrap('googlebooks', (p) => books.searchBooks(p)), getById: this._wrap('googlebooks', (p) => books.getBookById(p)), random: this._wrap('openlibrary', () => books.getRandomBook()) }; }
+  _buildLyrics() { return { search: this._wrap('lyricsovh', (p) => lyrics.searchLyrics(p)) }; }
+  _buildMemes() { return { random: this._wrap('memeapi', () => memes.getRandomMeme()), fromSubreddit: this._wrap('memeapi', (p) => memes.getMemesFromSubreddit(p)) }; }
+  _buildMath() { return { evaluate: this._wrap('mathjs', (p) => math.evaluateMath(p)), randomFact: this._wrap('numbersapi', (p) => math.getRandomMathFact(p)) }; }
+  _buildZodiac() { return { horoscope: this._wrap('aztro', (p) => zodiac.getHoroscope(p)) }; }
+  _buildJobs() { return { search: this._wrap('adzuna', (p) => jobs.searchJobs(p)) }; }
+  _buildScience() { return { nasaApod: this._wrap('nasa', (p) => science.getNasaApod(p)), randomFact: this._wrap('uselessfacts', () => science.getRandomScienceFact()) }; }
+  _buildBasketball() { return { nbaTeams: this._wrap('balldontlie', () => basketball.getNBATeams()), nbaGames: this._wrap('balldontlie', (p) => basketball.getNBAGames(p)), nbaPlayer: this._wrap('balldontlie', (p) => basketball.getNBAPlayer(p)) }; }
+  _buildVehicles() { return { randomCar: this._wrap('nhtsa', () => vehicles.getRandomCar()) }; }
+  _buildPets() { return { random: this._wrap('randomdog', () => pets.getRandomPet()) }; }
+  _buildDrinks() { return { randomCocktail: this._wrap('thecocktaildb', () => drinks.getRandomCocktail()), searchCocktail: this._wrap('thecocktaildb', (p) => drinks.searchCocktail(p)), searchIngredient: this._wrap('thecocktaildb', (p) => drinks.searchIngredient(p)) }; }
+  _buildGeography() { return { countryInfo: this._wrap('restcountries', (p) => geography.getCountryInfo(p)), allCountries: this._wrap('restcountries', () => geography.getAllCountries()), capitalCity: this._wrap('restcountries', (p) => geography.getCapitalCity(p)) }; }
+  _buildComics() { return { randomXKCD: this._wrap('xkcd', () => comics.getRandomXKCD()), getXKCD: this._wrap('xkcd', (p) => comics.getXKCD(p)) }; }
+  _buildTV() { return { search: this._wrap('tmdb', (p) => tv.searchTVShows(p, this._require('movies', 'movies'))), details: this._wrap('tmdb', (p) => tv.getTVShowDetails(p, this._require('movies', 'movies'))), trending: this._wrap('tmdb', (p) => tv.getTrendingTV(p, this._require('movies', 'movies'))) }; }
+  _buildBaseball() { return { mlbTeams: this._wrap('mlb', () => baseball.getMLBTeams()), mlbSchedule: this._wrap('mlb', (p) => baseball.getMLBSchedule(p)) }; }
+  _buildHockey() { return { nhlTeams: this._wrap('nhl', () => hockey.getNHLTeams()), nhlPlayer: this._wrap('nhl', (p) => hockey.getNHLPlayer(p)) }; }
+  _buildFinance() { return { stockQuote: this._wrap('yahoo', (p) => finance.getStockQuote(p)), cryptoPrice: this._wrap('coingecko', (p) => finance.getCryptoPrice(p)) }; }
+  _buildLiterature() { return { randomQuote: this._wrap('quotable', () => literature.getRandomQuote()), searchQuotes: this._wrap('quotable', (p) => literature.searchQuotes(p)) }; }
+  _buildWildlife() { return { randomFact: this._wrap('some-random-api', () => wildlife.getRandomAnimalFact()) }; }
+  _buildPolitics() { return { presidents: this._wrap('usa', () => politics.getPresidents()) }; }
+  _buildLanguage() { return { detect: this._wrap('libretranslate', (p) => language.detectLanguage(p)), translate: this._wrap('libretranslate', (p) => language.translateText(p)) }; }
+  _buildLaw() { return { search: this._wrap('law', (p) => law.searchLaws(p)) }; }
+  _buildMilitary() { return { time: this._wrap('military', (p) => military.getMilitaryTime(p)) }; }
+  _buildReligion() { return { randomVerse: this._wrap('bibleapi', () => religion.getRandomVerse()), getVerse: this._wrap('bibleapi', (p) => religion.getVerse(p)) }; }
+  _buildIslamic() { return { quranChapters: this._wrap('alquran', () => islamic.getQuranChapters()), quranChapter: this._wrap('alquran', (p) => islamic.getQuranChapter(p)), randomVerse: this._wrap('alquran', () => islamic.getRandomVerse()), azkar: this._wrap('hisnmuslim', (p) => islamic.getAzkar(p)), prayerTimes: this._wrap('aladhan', (p) => islamic.getPrayerTimes(p)) }; }
+  _buildGaming() { return { freeFirePlayer: this._wrap('freefire', (p) => gaming.getFreeFirePlayer(p)), pubgPlayer: this._wrap('pubg', (p) => gaming.getPubgPlayer(p)), crossfireNews: this._wrap('crossfire', () => gaming.getCrossfireNews()), freeFireNews: this._wrap('freefire', () => gaming.getFreeFireNews()), pubgPatchNotes: this._wrap('pubg', () => gaming.getPubgPatchNotes()) }; }
+  _buildSpaceExtended() { return { apod: this._wrap('nasa', (p) => spaceExtended.getAPOD(p)), marsPhotos: this._wrap('nasa', (p) => spaceExtended.getMarsPhotos(p)), nearEarthObjects: this._wrap('nasa', (p) => spaceExtended.getNearEarthObjects(p)), issPosition: this._wrap('open-notify', () => spaceExtended.getISSPosition()) }; }
+
   _buildFree() { return { weather: this._wrap('open-meteo', (p) => pub.openMeteoWeather(p)), wttr: this._wrap('wttr', (p) => pub.wttrWeather(p)), exchangeRates: this._wrap('exchangerate.host', (p) => pub.freeExchangeRates(p)), binanceTicker: this._wrap('binance', (p) => pub.binanceTicker(p)), binanceTickers: this._wrap('binance', (p) => pub.binanceTickers(p)), football: this._wrap('openligadb', (p) => pub.openLigaFixtures(p)) }; }
   _buildRSS() { return { fetch: this._wrap('rss', (p) => rss.fetchFeed(p)), custom: this._wrap('rss', (p) => rss.fetchCustomFeed(p)), aggregate: this._wrap('rss', (p) => rss.aggregateFeeds(p)), sources: () => rss.AVAILABLE_SOURCES }; }
   _buildRealtime() { return { binance: (symbols) => new realtime.BinanceStream(symbols), kraken: (pairs) => new realtime.KrakenStream(pairs), getPrice: (p) => realtime.getRealtimePrice(p) }; }
@@ -308,4 +394,3 @@ export class Bemora {
 }
 
 export default Bemora;
-
