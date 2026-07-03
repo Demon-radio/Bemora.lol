@@ -1,3 +1,4 @@
+
 export interface BemoraKeys {
   weatherKey?: string;
   currencyKey?: string;
@@ -6,10 +7,17 @@ export interface BemoraKeys {
   pexelsKey?: string;
   footballKey?: string;
   goldKey?: string;
+  nasaKey?: string;
+  moviesKey?: string;
+  stocksKey?: string;
+  openaiKey?: string;
+  groqKey?: string;
+  flightsKey?: string;
 }
 
 export interface BemoraOptions {
   logLevel?: 'silent' | 'error' | 'warn' | 'info' | 'debug';
+  retries?: number;
 }
 
 export interface WeatherResult {
@@ -152,6 +160,59 @@ export interface BooksResult {
   _cached: boolean;
 }
 
+// --- New Utility Interfaces ---
+
+export interface QRResult {
+  text: string;
+  qr_url: string;
+  size: string;
+  format: string;
+}
+
+export interface PasswordStrengthResult {
+  score: number;
+  label: string;
+  suggestions: string[];
+}
+
+export interface HashResult {
+  hash: string;
+  algorithm: string;
+}
+
+export interface Base64Result {
+  encoded?: string;
+  text?: string;
+}
+
+export interface LoremIpsumResult {
+  type: string;
+  count: number;
+  text: string;
+}
+
+export interface Emoji {
+  emoji: string;
+  name: string;
+  category: string;
+}
+
+export interface EmojiSearchResult {
+  count: number;
+  emojis: Emoji[];
+}
+
+export interface HexToRgbResult {
+  r: number;
+  g: number;
+  b: number;
+}
+
+export interface HttpStatusResult {
+  code: number;
+  message: string;
+}
+
 export declare class Bemora {
   constructor(keys?: BemoraKeys, options?: BemoraOptions);
 
@@ -166,7 +227,7 @@ export declare class Bemora {
   };
 
   news: {
-    headlines(params: { country?: string; category?: string; q?: string; pageSize?: number }): Promise<NewsResult>;
+    headlines(params?: { country?: string; category?: string; q?: string; pageSize?: number }): Promise<NewsResult>;
     search(params: { q: string; language?: string; sortBy?: string; pageSize?: number }): Promise<NewsResult>;
   };
 
@@ -197,6 +258,31 @@ export declare class Bemora {
     wikipedia(params: { query: string; language?: string; limit?: number }): Promise<WikipediaResult>;
     article(params: { title: string; language?: string }): Promise<any>;
     books(params: { query: string; limit?: number }): Promise<BooksResult>;
+  };
+
+  // --- New Utilities ---
+  utils: {
+    qr(params: { text: string; size?: number; format?: 'png' | 'svg' }): QRResult;
+    uuid(): string;
+    passwordStrength(params: { password: string }): PasswordStrengthResult;
+    hash(params: { text: string; algorithm?: 'md5' | 'sha1' | 'sha256' | 'sha512' }): HashResult;
+    base64Encode(params: { text: string }): Base64Result;
+    base64Decode(params: { encoded: string }): Base64Result;
+    loremIpsum(params?: { type?: 'words' | 'sentences' | 'paragraphs'; count?: number }): LoremIpsumResult;
+    emojiSearch(params?: { query?: string; category?: string; limit?: number }): EmojiSearchResult;
+    randomEmoji(params?: { category?: string }): Emoji;
+    hexToRgb(params: { hex: string }): HexToRgbResult;
+    rgbToHex(params: { r: number; g: number; b: number }): { hex: string };
+    httpStatus(params: { code: number }): HttpStatusResult;
+    shorten(params: { url: string }): Promise<any>;
+    time(params: { timezone: string }): Promise<any>;
+    timezones(): Promise<string[]>;
+    holidays(params: { country: string; year?: number }): Promise<any>;
+    quote(params?: { tag?: string }): Promise<any>;
+    quotes(params?: { limit?: number; tag?: string }): Promise<any>;
+    define(params: { word: string; language?: string }): Promise<any>;
+    trivia(params?: { amount?: number; category?: number; difficulty?: 'easy' | 'medium' | 'hard'; type?: 'multiple' | 'boolean' }): Promise<any>;
+    color(params: { hex: string }): Promise<any>;
   };
 }
 
