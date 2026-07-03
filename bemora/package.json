@@ -1,7 +1,7 @@
 {
   "name": "bemora",
-  "version": "3.0.0",
-  "description": "The ultimate API library for AI agents and developers — 60+ categories, smart fallback chains, RSS aggregation, real-time WebSockets, zero-key free tier, MCP server, powerful CLI, Fandom, Anthropic, Google Gemini, and much more!",
+  "version": "3.1.0",
+  "description": "The ultimate API library for AI agents and developers — 100+ categories, smart fallback chains, RSS aggregation, real-time WebSockets, zero-key free tier, MCP server, powerful CLI, Fandom, Anthropic, Google Gemini, and much more!",
   "main": "src/index.js",
   "types": "src/types/index.d.ts",
   "type": "module",
