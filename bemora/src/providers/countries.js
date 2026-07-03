@@ -20,15 +20,24 @@ async function getAllCountriesRaw() {
 export async function byName({ name }) {
   const cacheKey = `countries:name:${name}`;
   const cached = cache.get(cacheKey);
-  if (cached) return { ...cached, _cached: true };
+  if (cached) {
+    // Return array with .countries property for backward compatibility
+    const arr = [...cached.countries];
+    arr.countries = cached.countries;
+    arr._cached = true;
+    return arr;
+  }
 
   const allCountries = await getAllCountriesRaw();
   const data = allCountries.filter(c => 
     c.name.common.toLowerCase().includes(name.toLowerCase()) ||
     (c.name.official && c.name.official.toLowerCase().includes(name.toLowerCase()))
   );
-  const result = { countries: data.map(format), _cached: false };
-  cache.set(cacheKey, result, 86400);
+  const countries = data.map(format);
+  const result = [...countries];
+  result.countries = countries;
+  result._cached = false;
+  cache.set(cacheKey, { countries, _cached: false }, 86400);
   return result;
 }
 
@@ -39,14 +48,22 @@ export async function byName({ name }) {
 export async function byCode({ code }) {
   const cacheKey = `countries:code:${code.toUpperCase()}`;
   const cached = cache.get(cacheKey);
-  if (cached) return { ...cached, _cached: true };
+  if (cached) {
+    const arr = [...cached.countries];
+    arr.countries = cached.countries;
+    arr._cached = true;
+    return arr;
+  }
 
   const allCountries = await getAllCountriesRaw();
   const data = allCountries.filter(c => 
     c.cca2 === code.toUpperCase() || c.cca3 === code.toUpperCase()
   );
-  const result = { countries: data.map(format), _cached: false };
-  cache.set(cacheKey, result, 86400);
+  const countries = data.map(format);
+  const result = [...countries];
+  result.countries = countries;
+  result._cached = false;
+  cache.set(cacheKey, { countries, _cached: false }, 86400);
   return result;
 }
 
@@ -57,14 +74,22 @@ export async function byCode({ code }) {
 export async function byRegion({ region }) {
   const cacheKey = `countries:region:${region}`;
   const cached = cache.get(cacheKey);
-  if (cached) return { ...cached, _cached: true };
+  if (cached) {
+    const arr = [...cached.countries];
+    arr.countries = cached.countries;
+    arr._cached = true;
+    return arr;
+  }
 
   const allCountries = await getAllCountriesRaw();
   const data = allCountries.filter(c => 
     c.region.toLowerCase() === region.toLowerCase()
   );
-  const result = { countries: data.map(format), _cached: false };
-  cache.set(cacheKey, result, 86400);
+  const countries = data.map(format);
+  const result = [...countries];
+  result.countries = countries;
+  result._cached = false;
+  cache.set(cacheKey, { countries, _cached: false }, 86400);
   return result;
 }
 
@@ -74,11 +99,21 @@ export async function byRegion({ region }) {
 export async function all() {
   const cacheKey = 'countries:all';
   const cached = cache.get(cacheKey);
-  if (cached) return { ...cached, _cached: true };
+  if (cached) {
+    const arr = [...cached.countries];
+    arr.countries = cached.countries;
+    arr.total = cached.total;
+    arr._cached = true;
+    return arr;
+  }
 
   const allCountries = await getAllCountriesRaw();
-  const result = { countries: allCountries.map(format), total: allCountries.length, _cached: false };
-  cache.set(cacheKey, result, 86400);
+  const countries = allCountries.map(format);
+  const result = [...countries];
+  result.countries = countries;
+  result.total = allCountries.length;
+  result._cached = false;
+  cache.set(cacheKey, { countries, total: allCountries.length, _cached: false }, 86400);
   return result;
 }
 
