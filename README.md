@@ -12,17 +12,18 @@
 
 <br/>
 
-**85+ API categories. 300+ methods. One library. Zero frustration.**
+**94+ API categories. 320+ methods. One library. Zero frustration.**
 
 Weather · Currency · News · Images · Football · Crypto (+ Coin Wizard) · Gold · Research  
 Location · IP · Countries · Translation · Movies · Food · Space · Stocks  
 Music · Social · GitHub · Hacker News · AI (Groq + OpenAI) · Pokémon · Star Wars  
 Rick and Morty · Harry Potter · COVID-19 · Earthquakes · Air Quality · Astronomy  
-Postal Codes · Breweries · Sports · Domain Lookup · Utils · and 60+ more
+**Gaming: CrossFire (Fandom Wiki) · Fortnite · League of Legends · Minecraft · Chess.com**  
+Postal Codes · Breweries · Sports · Domain Lookup · Utils · and 65+ more
 
 <br/>
 
-[Quick Start](#-quick-start) · [All 85+ APIs](#-all-apis) · [Coin Wizard](#-coin-wizard) · [Advanced Features](#-advanced-features) · [AI Agent Power](#-ai-agent-power) · [MCP Server](#-mcp-server) · [CLI](#-cli)
+[Quick Start](#-quick-start) · [All 94+ APIs](#-all-apis) · [🎮 Gaming Suite](#-gaming-suite) · [Coin Wizard](#-coin-wizard) · [Advanced Features](#-advanced-features) · [AI Agent Power](#-ai-agent-power) · [MCP Server](#-mcp-server) · [CLI](#-cli)
 
 </div>
 
@@ -49,7 +50,7 @@ npm install bemora
 import Bemora from 'bemora';
 const api = new Bemora();
 
-// 85+ APIs. Same interface. Every time.
+// 94+ APIs. Same interface. Every time.
 await api.weather.current({ city: 'Cairo' });
 await api.translate.text({ text: 'Hello', from: 'en', to: 'ar' });
 await api.movies.trending();
@@ -137,6 +138,17 @@ console.log(`${weather.city}: ${weather.temperature}°C`);
 | `api.domain` | RDAP / WHOIS-like | Domain availability + registration info |
 | `api.placeholder` | Multiple | Placeholder images, avatars, lorem ipsum |
 | `api.weatheralerts` | NWS | Active US weather alerts by state |
+| `api.gaming` | CrossFire Fandom Wiki + more | Weapons, maps, characters, modes, events, search |
+| `api.gaming` (Fortnite) | fortnite-api.com | Item shop, cosmetic search |
+| `api.gaming` (LoL) | Riot Data Dragon | Champions, lore, stats, abilities |
+| `api.gaming` (Minecraft) | Mojang / Crafatar / mcsrvstat.us | Player skins, server status |
+| `api.gaming` (Chess) | Chess.com + Lichess | Player profile/stats, daily puzzle |
+| `api.advice` | Advice Slip API | Random life advice, advice search |
+| `api.dadjokes` | icanhazdadjoke | Random + searchable dad jokes |
+| `api.kanye` | kanye.rest | Random Kanye West quotes |
+| `api.randomuser` | randomuser.me | Fake user profiles for testing/demos |
+| `api.thesaurus` | Datamuse | Synonyms, antonyms, rhymes, word suggestions |
+| `api.currencyHistory` | Frankfurter (ECB) | Latest/historical/time-series FX rates |
 
 ### 🔑 Providers with a free API key (sign up once, 2 minutes)
 
@@ -543,6 +555,50 @@ await api.harrypotter.getCharacters({ house: 'gryffindor' });
 // Chuck Norris jokes + Bored activity suggestions (no key)
 await api.chucknorris.random();
 await api.bored.activity();
+
+// Kanye West quotes + dad jokes + life advice (no key)
+await api.kanye.random();
+await api.dadjokes.random();
+await api.advice.random();
+```
+</details>
+
+<details open>
+<summary><strong>🎮 Gaming Suite</strong></summary>
+
+CrossFire has no official public API, so bemora pulls live data straight from the **CrossFire Fandom Wiki** (weapons, maps, characters, modes, and recent events) — plus first-class support for Fortnite, League of Legends, Minecraft, and Chess.
+
+```js
+// 🔫 CrossFire — weapons, maps, characters, modes & live events (via Fandom Wiki, no key)
+await api.gaming.crossfireWeapons({ limit: 20 });
+await api.gaming.crossfireWeapon({ name: 'AK47' });
+// → { name, image, infobox: { damage, rate of fire, magazine, ... }, wiki }
+
+await api.gaming.crossfireMaps({ limit: 20 });
+await api.gaming.crossfireCharacters({ limit: 20 });
+await api.gaming.crossfireGameModes();
+await api.gaming.crossfireEvents({ limit: 10 });        // recent wiki updates/events
+await api.gaming.crossfireSearch({ query: 'Desert Eagle' });
+
+// Works for ANY game with a Fandom wiki (Valorant, Apex, Overwatch, ...)
+await api.gaming.searchGameWiki({ wiki: 'valorant', query: 'Jett' });
+
+// 🎯 Fortnite (no key)
+await api.gaming.fortniteShop();                         // current item shop
+await api.gaming.fortniteCosmetic({ name: 'Skull Trooper' });
+
+// ⚔️ League of Legends — Riot Data Dragon (no key)
+await api.gaming.lolChampions();
+await api.gaming.lolChampion({ name: 'ahri' });
+// → lore, stats, abilities, splash art
+
+// ⛏️ Minecraft (no key)
+await api.gaming.minecraftPlayer({ username: 'Notch' });  // UUID + skin + render
+await api.gaming.minecraftServerStatus({ host: 'mc.hypixel.net' });
+
+// ♟️ Chess — Chess.com + Lichess (no key)
+await api.gaming.chessPlayer({ username: 'hikaru' });
+await api.gaming.chessDailyPuzzle();
 ```
 </details>
 
@@ -703,7 +759,7 @@ const tools = {
 
 ## 🖥 MCP Server (Cursor / Claude / Windsurf)
 
-Add bemora to your AI editor — the AI can call all 85+ APIs natively:
+Add bemora to your AI editor — the AI can call all 94+ APIs natively:
 
 **`~/.cursor/mcp.json`**
 ```json
@@ -829,7 +885,14 @@ bemora/
 │   │   ├── sportsdb.js       ← TheSportsDB
 │   │   ├── baseball.js       ← MLB Stats API
 │   │   ├── hockey.js         ← NHL API
-│   │   └── ... 60+ more providers
+│   │   ├── gaming.js         ← CrossFire (Fandom Wiki) + Fortnite + LoL + Minecraft + Chess
+│   │   ├── advice.js         ← Advice Slip API
+│   │   ├── dadjokes.js       ← icanhazdadjoke
+│   │   ├── kanye.js          ← kanye.rest
+│   │   ├── randomuser.js     ← randomuser.me
+│   │   ├── thesaurus.js      ← Datamuse
+│   │   ├── currencyhistory.js ← Frankfurter (ECB)
+│   │   └── ... 70+ more providers
 │   ├── mcp-server/index.js   ← MCP for Cursor/Claude
 │   └── types/index.d.ts      ← TypeScript definitions
 ├── examples/

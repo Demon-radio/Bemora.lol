@@ -1,7 +1,7 @@
 {
   "name": "bemora",
-  "version": "3.3.0",
-  "description": "The ultimate API library for AI agents and developers — 85+ categories, 300+ methods, smart fallback chains, RSS aggregation, real-time WebSockets, zero-key free tier, MCP server, powerful CLI, Coin Wizard crypto toolkit, Pokemon, Star Wars, Harry Potter, COVID, earthquakes, air quality, and much more!",
+  "version": "3.4.0",
+  "description": "The ultimate API library for AI agents and developers — 94+ categories, 320+ methods, smart fallback chains, RSS aggregation, real-time WebSockets, zero-key free tier, MCP server, powerful CLI, Coin Wizard crypto toolkit, a full gaming suite (CrossFire, Fortnite, League of Legends, Minecraft, Chess.com), Pokemon, Star Wars, Harry Potter, COVID, earthquakes, air quality, and much more!",
   "main": "src/index.js",
   "types": "src/types/index.d.ts",
   "type": "module",
@@ -38,7 +38,13 @@
     "sunrise-sunset", "postal-code", "zip-code", "name-predict",
     "brewery", "chuck-norris", "bored-api", "sportsdb",
     "domain-lookup", "placeholder-images", "weather-alerts",
-    "public-apis", "free-apis", "api-aggregator"
+    "public-apis", "free-apis", "api-aggregator",
+    "gaming", "crossfire", "fandom-wiki", "fortnite",
+    "league-of-legends", "riot-games", "minecraft", "chess",
+    "chess.com", "lichess", "esports", "game-weapons",
+    "game-maps", "game-characters", "advice-slip", "dad-jokes",
+    "kanye-rest", "random-user", "thesaurus", "datamuse",
+    "synonyms", "frankfurter", "exchange-rate-history"
   ],
   "author": "bemora",
   "license": "MIT",

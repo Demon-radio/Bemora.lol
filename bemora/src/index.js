@@ -63,6 +63,12 @@ import * as politics from './providers/politics.js';
 import * as language from './providers/language.js';
 import * as law from './providers/law.js';
 import * as military from './providers/military.js';
+import * as advice from './providers/advice.js';
+import * as dadjokes from './providers/dadjokes.js';
+import * as kanye from './providers/kanye.js';
+import * as randomuser from './providers/randomuser.js';
+import * as thesaurus from './providers/thesaurus.js';
+import * as currencyhistory from './providers/currencyhistory.js';
 import * as religion from './providers/religion.js';
 import * as islamic from './providers/islamic.js';
 import * as gaming from './providers/gaming.js';
@@ -186,6 +192,12 @@ export class Bemora {
     this.language  = this._buildLanguage();
     this.law       = this._buildLaw();
     this.military  = this._buildMilitary();
+    this.advice    = this._buildAdvice();
+    this.dadjokes  = this._buildDadJokes();
+    this.kanye     = this._buildKanye();
+    this.randomuser = this._buildRandomUser();
+    this.thesaurus = this._buildThesaurus();
+    this.currencyHistory = this._buildCurrencyHistory();
     this.religion  = this._buildReligion();
     this.islamic   = this._buildIslamic();
     this.gaming    = this._buildGaming();
@@ -382,9 +394,37 @@ export class Bemora {
   _buildLanguage() { return { detect: this._wrap('libretranslate', (p) => language.detectLanguage(p)), translate: this._wrap('libretranslate', (p) => language.translateText(p)) }; }
   _buildLaw() { return { search: this._wrap('law', (p) => law.searchLaws(p)) }; }
   _buildMilitary() { return { time: this._wrap('military', (p) => military.getMilitaryTime(p)) }; }
+  _buildAdvice() { return { random: this._wrap('adviceslip', () => advice.getRandomAdvice()), search: this._wrap('adviceslip', (p) => advice.searchAdvice(p)) }; }
+  _buildDadJokes() { return { random: this._wrap('icanhazdadjoke', () => dadjokes.getRandomDadJoke()), search: this._wrap('icanhazdadjoke', (p) => dadjokes.searchDadJokes(p)) }; }
+  _buildKanye() { return { random: this._wrap('kanye-rest', () => kanye.getRandomQuote()) }; }
+  _buildRandomUser() { return { single: this._wrap('randomuser', (p) => randomuser.getRandomUser(p)), many: this._wrap('randomuser', (p) => randomuser.getRandomUsers(p)) }; }
+  _buildThesaurus() { return { synonyms: this._wrap('datamuse', (p) => thesaurus.getSynonyms(p)), antonyms: this._wrap('datamuse', (p) => thesaurus.getAntonyms(p)), rhymes: this._wrap('datamuse', (p) => thesaurus.getRhymes(p)), suggest: this._wrap('datamuse', (p) => thesaurus.suggest(p)) }; }
+  _buildCurrencyHistory() { return { latest: this._wrap('frankfurter', (p) => currencyhistory.getLatestRates(p)), historical: this._wrap('frankfurter', (p) => currencyhistory.getHistoricalRates(p)), timeSeries: this._wrap('frankfurter', (p) => currencyhistory.getTimeSeries(p)) }; }
   _buildReligion() { return { randomVerse: this._wrap('bibleapi', () => religion.getRandomVerse()), getVerse: this._wrap('bibleapi', (p) => religion.getVerse(p)) }; }
   _buildIslamic() { return { quranChapters: this._wrap('alquran', () => islamic.getQuranChapters()), quranChapter: this._wrap('alquran', (p) => islamic.getQuranChapter(p)), randomVerse: this._wrap('alquran', () => islamic.getRandomVerse()), azkar: this._wrap('hisnmuslim', (p) => islamic.getAzkar(p)), prayerTimes: this._wrap('aladhan', (p) => islamic.getPrayerTimes(p)) }; }
-  _buildGaming() { return { freeFirePlayer: this._wrap('freefire', (p) => gaming.getFreeFirePlayer(p)), pubgPlayer: this._wrap('pubg', (p) => gaming.getPubgPlayer(p)), crossfireNews: this._wrap('crossfire', () => gaming.getCrossfireNews()), freeFireNews: this._wrap('freefire', () => gaming.getFreeFireNews()), pubgPatchNotes: this._wrap('pubg', () => gaming.getPubgPatchNotes()) }; }
+  _buildGaming() { return {
+    freeFirePlayer: this._wrap('freefire', (p) => gaming.getFreeFirePlayer(p)),
+    pubgPlayer: this._wrap('pubg', (p) => gaming.getPubgPlayer(p)),
+    crossfireNews: this._wrap('crossfire', () => gaming.getCrossfireNews()),
+    freeFireNews: this._wrap('freefire', () => gaming.getFreeFireNews()),
+    pubgPatchNotes: this._wrap('pubg', () => gaming.getPubgPatchNotes()),
+    crossfireWeapons: this._wrap('crossfire', (p) => gaming.getCrossfireWeapons(p)),
+    crossfireWeapon: this._wrap('crossfire', (p) => gaming.getCrossfireWeapon(p)),
+    crossfireMaps: this._wrap('crossfire', (p) => gaming.getCrossfireMaps(p)),
+    crossfireCharacters: this._wrap('crossfire', (p) => gaming.getCrossfireCharacters(p)),
+    crossfireGameModes: this._wrap('crossfire', (p) => gaming.getCrossfireGameModes(p)),
+    crossfireEvents: this._wrap('crossfire', (p) => gaming.getCrossfireEvents(p)),
+    crossfireSearch: this._wrap('crossfire', (p) => gaming.searchCrossfireWiki(p)),
+    fortniteCosmetic: this._wrap('fortnite', (p) => gaming.searchFortniteCosmetic(p)),
+    fortniteShop: this._wrap('fortnite', () => gaming.getFortniteShop()),
+    lolChampions: this._wrap('lol', () => gaming.getLolChampions()),
+    lolChampion: this._wrap('lol', (p) => gaming.getLolChampion(p)),
+    minecraftPlayer: this._wrap('minecraft', (p) => gaming.getMinecraftPlayer(p)),
+    minecraftServerStatus: this._wrap('minecraft', (p) => gaming.getMinecraftServerStatus(p)),
+    chessPlayer: this._wrap('chess', (p) => gaming.getChessPlayer(p)),
+    chessDailyPuzzle: this._wrap('chess', () => gaming.getChessDailyPuzzle()),
+    searchGameWiki: this._wrap('gamewiki', (p) => gaming.searchGameWiki(p)),
+  }; }
   _buildSpaceExtended() { return { apod: this._wrap('nasa', (p) => spaceExtended.getAPOD(p)), marsPhotos: this._wrap('nasa', (p) => spaceExtended.getMarsPhotos(p)), nearEarthObjects: this._wrap('nasa', (p) => spaceExtended.getNearEarthObjects(p)), issPosition: this._wrap('open-notify', () => spaceExtended.getISSPosition()) }; }
 
   _buildFree() { return { weather: this._wrap('open-meteo', (p) => pub.openMeteoWeather(p)), wttr: this._wrap('wttr', (p) => pub.wttrWeather(p)), exchangeRates: this._wrap('exchangerate.host', (p) => pub.freeExchangeRates(p)), binanceTicker: this._wrap('binance', (p) => pub.binanceTicker(p)), binanceTickers: this._wrap('binance', (p) => pub.binanceTickers(p)), football: this._wrap('openligadb', (p) => pub.openLigaFixtures(p)) }; }
