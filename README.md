@@ -8,19 +8,21 @@
 [![npm downloads](https://img.shields.io/npm/dm/bemora?style=for-the-badge&color=8b5cf6)](https://www.npmjs.com/package/bemora)
 [![license](https://img.shields.io/npm/l/bemora?style=for-the-badge&color=06b6d4)](LICENSE)
 [![node](https://img.shields.io/node/v/bemora?style=for-the-badge&color=10b981)](package.json)
-[![GitHub stars](https://img.shields.io/github/stars/bemora/bemora?style=for-the-badge&color=f59e0b)](https://github.com/bemora/bemora/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/Demon-radio/Bemora.lol?style=for-the-badge&color=f59e0b)](https://github.com/Demon-radio/Bemora.lol/stargazers)
 
 <br/>
 
-**30+ API categories. One library. Zero frustration.**
+**85+ API categories. 300+ methods. One library. Zero frustration.**
 
-Weather · Currency · News · Images · Football · Crypto · Gold · Research  
+Weather · Currency · News · Images · Football · Crypto (+ Coin Wizard) · Gold · Research  
 Location · IP · Countries · Translation · Movies · Food · Space · Stocks  
-Music · Social · GitHub · Hacker News · AI (Groq + OpenAI) · Utils
+Music · Social · GitHub · Hacker News · AI (Groq + OpenAI) · Pokémon · Star Wars  
+Rick and Morty · Harry Potter · COVID-19 · Earthquakes · Air Quality · Astronomy  
+Postal Codes · Breweries · Sports · Domain Lookup · Utils · and 60+ more
 
 <br/>
 
-[Quick Start](#-quick-start) · [All 30+ APIs](#-all-apis) · [Advanced Features](#-advanced-features) · [AI Agent Power](#-ai-agent-power) · [MCP Server](#-mcp-server) · [CLI](#-cli)
+[Quick Start](#-quick-start) · [All 85+ APIs](#-all-apis) · [Coin Wizard](#-coin-wizard) · [Advanced Features](#-advanced-features) · [AI Agent Power](#-ai-agent-power) · [MCP Server](#-mcp-server) · [CLI](#-cli)
 
 </div>
 
@@ -47,7 +49,7 @@ npm install bemora
 import Bemora from 'bemora';
 const api = new Bemora();
 
-// 30+ APIs. Same interface. Every time.
+// 85+ APIs. Same interface. Every time.
 await api.weather.current({ city: 'Cairo' });
 await api.translate.text({ text: 'Hello', from: 'en', to: 'ar' });
 await api.movies.trending();
@@ -56,6 +58,8 @@ await api.ai.chat({ messages: [{ role: 'user', content: 'What is the capital of 
 await api.social.githubTrending();
 await api.food.random();
 await api.utils.define({ word: 'serendipity' });
+await api.coinWizard.info({ id: 'bitcoin' });
+await api.pokemon.get({ name: 'pikachu' });
 ```
 
 ---
@@ -113,6 +117,26 @@ console.log(`${weather.city}: ${weather.temperature}°C`);
 | `api.utils.color` | The Color API | Color info from HEX |
 | `api.research.wikipedia` | Wikipedia | Search + full article summaries |
 | `api.research.books` | Open Library | Book search |
+| `api.coinWizard` | CoinGecko | Deep crypto: charts, OHLC, global stats, gainers/losers, converter |
+| `api.pokemon` | PokéAPI | Pokémon stats, abilities, types, moves |
+| `api.rickmorty` | Rick and Morty API | Characters, episodes, locations |
+| `api.starwars` | SWAPI | People, planets, starships, films |
+| `api.harrypotter` | HP API | Characters, houses, wands, patronuses |
+| `api.covid` | disease.sh | Global + per-country COVID-19 stats |
+| `api.earthquake` | USGS | Recent earthquakes by magnitude/region |
+| `api.airquality` | Open-Meteo | Real-time air quality (AQI, PM2.5, PM10) |
+| `api.astronomy` | Sunrise-Sunset.org | Sunrise, sunset, solar noon, day length |
+| `api.postal` | Zippopotam.us | Postal/zip code → city, state, coordinates |
+| `api.predict` | Agify/Genderize/Nationalize | Predict age, gender, nationality from a name |
+| `api.brewery` | Open Brewery DB | Search breweries by city, state, type |
+| `api.chucknorris` | Chuck Norris API | Random Chuck Norris jokes |
+| `api.bored` | Bored API + fallback | Random activity suggestions |
+| `api.sportsdb` | TheSportsDB | Search teams, players, events |
+| `api.baseball` | MLB Stats API | MLB teams, schedules, scores |
+| `api.hockey` | NHL API | NHL standings, player lookup |
+| `api.domain` | RDAP / WHOIS-like | Domain availability + registration info |
+| `api.placeholder` | Multiple | Placeholder images, avatars, lorem ipsum |
+| `api.weatheralerts` | NWS | Active US weather alerts by state |
 
 ### 🔑 Providers with a free API key (sign up once, 2 minutes)
 
@@ -179,6 +203,43 @@ await api.crypto.price({ coins: 'bitcoin' });
 await api.crypto.price({ coins: ['bitcoin', 'ethereum', 'solana', 'dogecoin'] });
 await api.crypto.top({ limit: 20, currency: 'usd' });
 await api.crypto.trending();
+```
+</details>
+
+<details>
+<summary><strong>🧙 Coin Wizard — deep crypto toolkit</strong></summary>
+
+```js
+// Full coin profile: description, links, market data, all-time high/low
+await api.coinWizard.info({ id: 'bitcoin' });
+
+// Historical price chart (days: 1, 7, 30, 90, 365, 'max')
+await api.coinWizard.chart({ id: 'ethereum', days: 30, currency: 'usd' });
+
+// OHLC candlestick data
+await api.coinWizard.ohlc({ id: 'bitcoin', days: 7 });
+
+// Global crypto market overview
+await api.coinWizard.global();
+// → total_market_cap, total_volume, btc_dominance, active_cryptocurrencies
+
+// Exchanges ranked by trust score
+await api.coinWizard.exchanges({ limit: 10 });
+
+// All coin categories (DeFi, Layer 1, Meme, etc.)
+await api.coinWizard.categories();
+
+// Top gainers & losers in the last 24h
+await api.coinWizard.gainersLosers({ limit: 10 });
+
+// Fuzzy search for any coin, exchange, or category
+await api.coinWizard.search({ query: 'doge' });
+
+// Convert between any two assets (crypto or fiat)
+await api.coinWizard.convert({ from: 'bitcoin', to: 'usd', amount: 2.5 });
+
+// Paginated list of all supported coins
+await api.coinWizard.list({ page: 1, perPage: 50 });
 ```
 </details>
 
@@ -460,6 +521,77 @@ await api.search.web({ query: 'Cairo history', language: 'ar', limit: 5 });
 ```
 </details>
 
+<details>
+<summary><strong>🎮 Fun & Pop Culture</strong></summary>
+
+```js
+// Pokémon (no key)
+await api.pokemon.get({ name: 'pikachu' });
+
+// Rick and Morty (no key)
+await api.rickmorty.random();
+await api.rickmorty.character({ id: 1 });
+
+// Star Wars (no key)
+await api.starwars.person({ id: 1 });
+await api.starwars.planet({ id: 1 });
+
+// Harry Potter (no key)
+await api.harrypotter.random();
+await api.harrypotter.getCharacters({ house: 'gryffindor' });
+
+// Chuck Norris jokes + Bored activity suggestions (no key)
+await api.chucknorris.random();
+await api.bored.activity();
+```
+</details>
+
+<details>
+<summary><strong>🌍 Science, Health & Places</strong></summary>
+
+```js
+// Global + per-country COVID-19 stats (no key)
+await api.covid.global();
+await api.covid.country({ country: 'egypt' });
+
+// Recent earthquakes worldwide (no key)
+await api.earthquake.recent({ limit: 10 });
+
+// Real-time air quality (no key)
+await api.airquality.current({ lat: 30.04, lon: 31.24 });
+
+// Sunrise / sunset / day length (no key)
+await api.astronomy.sunriseSunset({ lat: 36.7, lon: -119.7 });
+
+// Postal / zip code lookup (no key)
+await api.postal.lookup({ country: 'us', postalCode: '90210' });
+
+// Active US weather alerts (no key)
+await api.weatheralerts.active({ state: 'CA' });
+
+// Nearby breweries (no key)
+await api.brewery.random();
+```
+</details>
+
+<details>
+<summary><strong>🔮 Name Prediction & Sports</strong></summary>
+
+```js
+// Predict age, gender, and nationality from a name (no key)
+await api.predict.all({ name: 'michael' });
+
+// Search sports teams/players/events (no key)
+await api.sportsdb.searchTeam({ name: 'Arsenal' });
+
+// MLB teams & schedule (no key)
+await api.baseball.mlbTeams();
+
+// NHL standings & player lookup (no key)
+await api.hockey.nhlTeams();
+```
+</details>
+
 ---
 
 ## ⚡ Advanced Features
@@ -571,7 +703,7 @@ const tools = {
 
 ## 🖥 MCP Server (Cursor / Claude / Windsurf)
 
-Add bemora to your AI editor — the AI can call all 30+ APIs natively:
+Add bemora to your AI editor — the AI can call all 85+ APIs natively:
 
 **`~/.cursor/mcp.json`**
 ```json
@@ -681,7 +813,23 @@ bemora/
 │   │   ├── search.js         ← DuckDuckGo + Wikipedia
 │   │   ├── utils.js          ← QR + timezone + holidays + quotes + dictionary + trivia + colors
 │   │   ├── enriched.js       ← Weather + AQI + UV (merged)
-│   │   └── combined.js       ← Market snapshot + News digest (merged)
+│   │   ├── combined.js       ← Market snapshot + News digest (merged)
+│   │   ├── coinwizard.js     ← CoinGecko deep crypto toolkit
+│   │   ├── pokemon.js        ← PokéAPI
+│   │   ├── rickmorty.js      ← Rick and Morty API
+│   │   ├── starwars.js       ← SWAPI
+│   │   ├── harrypotter.js    ← HP API
+│   │   ├── covid.js          ← disease.sh
+│   │   ├── earthquake.js     ← USGS
+│   │   ├── airquality.js     ← Open-Meteo
+│   │   ├── astronomy.js      ← Sunrise-Sunset.org
+│   │   ├── postal.js         ← Zippopotam.us
+│   │   ├── predict.js        ← Agify/Genderize/Nationalize
+│   │   ├── brewery.js        ← Open Brewery DB
+│   │   ├── sportsdb.js       ← TheSportsDB
+│   │   ├── baseball.js       ← MLB Stats API
+│   │   ├── hockey.js         ← NHL API
+│   │   └── ... 60+ more providers
 │   ├── mcp-server/index.js   ← MCP for Cursor/Claude
 │   └── types/index.d.ts      ← TypeScript definitions
 ├── examples/
@@ -706,7 +854,7 @@ bemora/
 
 ## 📄 License
 
-MIT © [bemora](https://github.com/bemora)
+MIT © [Demon-radio](https://github.com/Demon-radio)
 
 ---
 

@@ -1,0 +1,2 @@
+- [Bemora provider wiring](bemora-provider-wiring.md) — new providers need imports + `_build()` constructor call + method block in index.js; MCP server needs separate manual wiring.
+- [Bemora dead/broken APIs](bemora-dead-apis.md) — known dead endpoints and missing files found in this library; check before assuming a provider works.

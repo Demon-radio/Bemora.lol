@@ -50,10 +50,15 @@ export async function getRandomPanda() {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get('https://some-random-api.com/animal/panda');
-  const result = { image: data.image, fact: data.fact, _cached: false };
-  cache.set(cacheKey, result, 60);
-  return result;
+  try {
+    const { data } = await axios.get('https://some-random-api.com/animal/panda', { timeout: 5000 });
+    const result = { image: data.image, fact: data.fact, _cached: false, _source: 'some-random-api' };
+    cache.set(cacheKey, result, 60);
+    return result;
+  } catch (e) {
+    const { data } = await axios.get('https://api.thecatapi.com/v1/images/search', { params: { limit: 1 } });
+    return { image: data[0]?.url, fact: 'Pandas spend up to 14 hours a day eating bamboo.', _cached: false, _source: 'fallback' };
+  }
 }
 
 export async function getRandomBird() {
@@ -61,8 +66,13 @@ export async function getRandomBird() {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get('https://some-random-api.com/animal/bird');
-  const result = { image: data.image, fact: data.fact, _cached: false };
-  cache.set(cacheKey, result, 60);
-  return result;
+  try {
+    const { data } = await axios.get('https://some-random-api.com/animal/bird', { timeout: 5000 });
+    const result = { image: data.image, fact: data.fact, _cached: false, _source: 'some-random-api' };
+    cache.set(cacheKey, result, 60);
+    return result;
+  } catch (e) {
+    const { data } = await axios.get('https://shibe.online/api/birds', { params: { count: 1 } });
+    return { image: Array.isArray(data) ? data[0] : null, fact: 'Birds are the only living descendants of dinosaurs.', _cached: false, _source: 'fallback' };
+  }
 }

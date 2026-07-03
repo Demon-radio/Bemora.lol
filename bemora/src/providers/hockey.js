@@ -6,13 +6,35 @@ export async function getNHLTeams() {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get('https://statsapi.web.nhl.com/api/v1/teams');
-  const result = { teams: data.teams, _cached: false };
+  const { data } = await axios.get('https://api-web.nhle.com/v1/standings/now');
+  const teams = (data.standings || []).map((t) => ({
+    name: t.teamName?.default,
+    abbreviation: t.teamAbbrev?.default,
+    conference: t.conferenceName,
+    division: t.divisionName,
+    wins: t.wins,
+    losses: t.losses,
+    otLosses: t.otLosses,
+    points: t.points,
+  }));
+  const result = { teams, _cached: false };
   cache.set(cacheKey, result, 86400);
   return result;
 }
 
 export async function getNHLPlayer({ id }) {
-  const { data } = await axios.get(`https://statsapi.web.nhl.com/api/v1/people/${id}`);
-  return { player: data.people[0] };
+  const { data } = await axios.get(`https://api-web.nhle.com/v1/player/${id}/landing`);
+  return {
+    player: {
+      id: data.playerId,
+      name: `${data.firstName?.default || ''} ${data.lastName?.default || ''}`.trim(),
+      position: data.position,
+      team: data.fullTeamName?.default,
+      number: data.sweaterNumber,
+      height: data.heightInCentimeters,
+      weight: data.weightInKilograms,
+      birthDate: data.birthDate,
+      birthCountry: data.birthCountry,
+    },
+  };
 }
