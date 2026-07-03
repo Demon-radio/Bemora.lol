@@ -1,13 +1,29 @@
+
 import axios from 'axios';
 import * as cache from '../core/cache.js';
+
+const COUNTRIES_URL = 'https://raw.githubusercontent.com/mledoze/countries/master/dist/countries.json';
+
+let _allCountriesCache = null;
+async function getAllCountriesRaw() {
+  if (!_allCountriesCache) {
+    const { data } = await axios.get(COUNTRIES_URL);
+    _allCountriesCache = data;
+  }
+  return _allCountriesCache;
+}
 
 export async function getCountryInfo({ country }) {
   const cacheKey = `geography:country:${country}`;
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get(`https://restcountries.com/v3.1/name/${encodeURIComponent(country)}`);
-  const result = { country: data[0], _cached: false };
+  const allCountries = await getAllCountriesRaw();
+  const data = allCountries.find(c => 
+    c.name.common.toLowerCase().includes(country.toLowerCase()) ||
+    (c.name.official && c.name.official.toLowerCase().includes(country.toLowerCase()))
+  );
+  const result = { country: data, _cached: false };
   cache.set(cacheKey, result, 86400);
   return result;
 }
@@ -17,8 +33,8 @@ export async function getAllCountries() {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get('https://restcountries.com/v3.1/all');
-  const result = { countries: data, _cached: false };
+  const allCountries = await getAllCountriesRaw();
+  const result = { countries: allCountries, _cached: false };
   cache.set(cacheKey, result, 86400);
   return result;
 }
