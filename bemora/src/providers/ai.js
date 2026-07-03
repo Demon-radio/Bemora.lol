@@ -34,7 +34,7 @@ export async function generateImage({ prompt, size = '1024x1024', quality = 'sta
   const { data } = await axios.post(
     'https://api.openai.com/v1/images/generations',
     { model: 'dall-e-3', prompt, size, quality, n: 1 },
-    { headers: { Authorization: `Bearer ${apiKey} } }
+    { headers: { Authorization: `Bearer ${apiKey}` } }
   );
   return { url: data.data[0].url, revised_prompt: data.data[0].revised_prompt };
 }
@@ -157,7 +157,7 @@ export async function embed({ input, model = 'text-embedding-3-small' }, apiKey)
   const { data } = await axios.post(
     'https://api.openai.com/v1/embeddings',
     { model, input },
-    { headers: { Authorization: `Bearer ${apiKey} } }
+    { headers: { Authorization: `Bearer ${apiKey}` } }
   );
   return {
     embeddings: data.data.map((d) => d.embedding),
