@@ -1,7 +1,17 @@
+
 import axios from 'axios';
 import * as cache from '../core/cache.js';
 
-const BASE = 'https://restcountries.com/v3.1';
+const COUNTRIES_URL = 'https://raw.githubusercontent.com/mledoze/countries/master/dist/countries.json';
+
+let _allCountriesCache = null;
+async function getAllCountriesRaw() {
+  if (!_allCountriesCache) {
+    const { data } = await axios.get(COUNTRIES_URL);
+    _allCountriesCache = data;
+  }
+  return _allCountriesCache;
+}
 
 /**
  * Get country by name (Free, no key)
@@ -12,7 +22,11 @@ export async function byName({ name }) {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get(`${BASE}/name/${encodeURIComponent(name)}`);
+  const allCountries = await getAllCountriesRaw();
+  const data = allCountries.filter(c => 
+    c.name.common.toLowerCase().includes(name.toLowerCase()) ||
+    (c.name.official && c.name.official.toLowerCase().includes(name.toLowerCase()))
+  );
   const result = { countries: data.map(format), _cached: false };
   cache.set(cacheKey, result, 86400);
   return result;
@@ -27,7 +41,10 @@ export async function byCode({ code }) {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get(`${BASE}/alpha/${code}`);
+  const allCountries = await getAllCountriesRaw();
+  const data = allCountries.filter(c => 
+    c.cca2 === code.toUpperCase() || c.cca3 === code.toUpperCase()
+  );
   const result = { countries: data.map(format), _cached: false };
   cache.set(cacheKey, result, 86400);
   return result;
@@ -42,7 +59,10 @@ export async function byRegion({ region }) {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get(`${BASE}/region/${region}`);
+  const allCountries = await getAllCountriesRaw();
+  const data = allCountries.filter(c => 
+    c.region.toLowerCase() === region.toLowerCase()
+  );
   const result = { countries: data.map(format), _cached: false };
   cache.set(cacheKey, result, 86400);
   return result;
@@ -56,8 +76,8 @@ export async function all() {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get(`${BASE}/all`);
-  const result = { countries: data.map(format), total: data.length, _cached: false };
+  const allCountries = await getAllCountriesRaw();
+  const result = { countries: allCountries.map(format), total: allCountries.length, _cached: false };
   cache.set(cacheKey, result, 86400);
   return result;
 }
