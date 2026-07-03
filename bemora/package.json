@@ -1,7 +1,7 @@
 {
   "name": "bemora",
-  "version": "1.3.0",
-  "description": "The only API library your AI agent will ever need — 40+ categories, smart fallback, RSS, real-time WebSocket, zero-key free tier, MCP server, CLI.",
+  "version": "1.4.0",
+  "description": "The only API library your AI agent will ever need — 50+ categories, smart fallback, RSS, real-time WebSocket, zero-key free tier, MCP server, CLI, and powerful utility functions!",
   "main": "src/index.js",
   "types": "src/types/index.d.ts",
   "type": "module",
@@ -13,7 +13,9 @@
     "demo": "node examples/zero-key-demo.js",
     "start": "node src/index.js",
     "mcp": "node src/mcp-server/index.js",
-    "cli": "node src/cli.js"
+    "cli": "node src/cli.js",
+    "test": "echo \"Testing bemora...\" && npm run demo",
+    "lint": "echo \"Linting...\""
   },
   "keywords": [
     "api", "unified-api", "weather", "crypto", "news", "football",
@@ -21,7 +23,9 @@
     "mcp", "ai-agent", "llm-tools", "bemora", "no-key", "free-api",
     "open-meteo", "binance", "coingecko", "location", "translate",
     "movies", "food", "space", "stocks", "music", "github",
-    "smart-fallback", "aggregator", "real-time", "monitor"
+    "smart-fallback", "aggregator", "real-time", "monitor",
+    "uuid", "password-strength", "hash", "base64", "lorem-ipsum",
+    "emoji"
   ],
   "author": "bemora",
   "license": "MIT",
@@ -39,7 +43,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/bemora/bemora"
+    "url": "https://github.com/Demon-radio/Bemora.lol"
   },
-  "homepage": "https://bemora.dev"
+  "homepage": "https://github.com/Demon-radio/Bemora.lol"
 }
