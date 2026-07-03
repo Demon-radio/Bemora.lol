@@ -1,6 +1,23 @@
 import NodeCache from 'node-cache';
 
-const cache = new NodeCache({ stdTTL: 300, checkperiod: 60 });
+let currentCache = new NodeCache({ stdTTL: 300, checkperiod: 60 });
+
+/**
+ * Set custom cache adapter
+ * @param {Object} adapter - must have get/set/del/flush/keys methods
+ */
+export function setAdapter(adapter) {
+  if (
+    typeof adapter.get !== 'function' ||
+    typeof adapter.set !== 'function' ||
+    typeof adapter.del !== 'function' ||
+    typeof adapter.flush !== 'function' ||
+    typeof adapter.keys !== 'function'
+  ) {
+    throw new Error('Cache adapter must implement get, set, del, flush, keys methods');
+  }
+  currentCache = adapter;
+}
 
 /**
  * Get a value from cache
@@ -8,7 +25,7 @@ const cache = new NodeCache({ stdTTL: 300, checkperiod: 60 });
  * @returns {any|null}
  */
 export function get(key) {
-  return cache.get(key) ?? null;
+  return currentCache.get(key) ?? null;
 }
 
 /**
@@ -18,7 +35,7 @@ export function get(key) {
  * @param {number} ttl - seconds (default 300)
  */
 export function set(key, value, ttl = 300) {
-  cache.set(key, value, ttl);
+  currentCache.set(key, value, ttl);
 }
 
 /**
@@ -26,14 +43,14 @@ export function set(key, value, ttl = 300) {
  * @param {string} key
  */
 export function del(key) {
-  cache.del(key);
+  currentCache.del(key);
 }
 
 /**
  * Clear all cache
  */
 export function flush() {
-  cache.flushAll();
+  currentCache.flush();
 }
 
 /**
@@ -41,5 +58,5 @@ export function flush() {
  * @returns {string[]}
  */
 export function keys() {
-  return cache.keys();
+  return currentCache.keys();
 }

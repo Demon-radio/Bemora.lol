@@ -11,7 +11,16 @@ const inFlight = new Map();
  */
 export async function dedup(key, fn) {
   if (inFlight.has(key)) return inFlight.get(key);
-  const promise = fn().finally(() => inFlight.delete(key));
+  
+  // Create the promise first, store it before executing fn to avoid race condition
+  const promise = (async () => {
+    try {
+      return await fn();
+    } finally {
+      inFlight.delete(key);
+    }
+  })();
+  
   inFlight.set(key, promise);
   return promise;
 }

@@ -1,4 +1,5 @@
 import * as cache from './cache.js';
+import { logger } from './logger.js';
 
 /**
  * Stale-While-Revalidate pattern.
@@ -19,7 +20,9 @@ export async function staleWhileRevalidate(key, fetcher, ttl = 300) {
       try {
         const fresh = await fetcher();
         cache.set(key, fresh, ttl);
-      } catch (_) {}
+      } catch (e) {
+        logger.error(`Stale-while-revalidate failed for key "${key}": ${e.message}`, e);
+      }
     });
     return { data: cached, stale: true };
   }

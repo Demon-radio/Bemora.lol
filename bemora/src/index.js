@@ -114,6 +114,7 @@ export { BinanceStream, KrakenStream, getRealtimePrice } from './providers/realt
 export { BemoraMonitor } from './core/monitor.js';
 export { fallbackChain, aggregate } from './core/fallback.js';
 export { BemoraError, ConfigurationError, ProviderError, ValidationError } from './core/errors.js';
+export { setAdapter } from './core/cache.js';
 
 export class Bemora {
   constructor(keys = {}, options = {}) {
@@ -142,6 +143,13 @@ export class Bemora {
 
     this._options = { retries: 2, ...options };
     if (options.logLevel) logger.setLevel(options.logLevel);
+    
+    // Apply custom cache adapter if provided
+    if (this._options.cacheAdapter) {
+      import('./core/cache.js').then(module => {
+        module.setAdapter(this._options.cacheAdapter);
+      });
+    }
 
     this._events  = new BemoraEvents();
     this._plugins = new PluginSystem();
