@@ -1,7 +1,7 @@
 {
   "name": "bemora",
-  "version": "1.4.0",
-  "description": "The only API library your AI agent will ever need — 50+ categories, smart fallback, RSS, real-time WebSocket, zero-key free tier, MCP server, CLI, and powerful utility functions!",
+  "version": "1.5.0",
+  "description": "The only API library your AI agent will ever need — 50+ categories, smart fallback, RSS, real-time WebSocket, zero-key free tier, MCP server, and a powerful CLI with utilities!",
   "main": "src/index.js",
   "types": "src/types/index.d.ts",
   "type": "module",
