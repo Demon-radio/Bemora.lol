@@ -1,5 +1,31 @@
-import WebSocket from 'ws';
-import { EventEmitter } from 'events';
+// `events` and `ws` are loaded at module initialisation time using top-level
+// await so class bodies can still use `extends EventEmitter`.
+// In edge / browser runtimes that lack `events`, a minimal stub is used.
+// Actual WebSocket streaming requires Node.js — in edge environments the
+// stream classes exist but _connect() will throw when `ws` is unavailable.
+
+let EventEmitter;
+try {
+  ({ EventEmitter } = await import('events'));
+} catch {
+  // Edge / browser — provide a minimal EventEmitter-compatible stub
+  EventEmitter = class MinimalEmitter {
+    constructor() { this._listeners = {}; }
+    on(e, fn)  { (this._listeners[e] ??= []).push(fn); return this; }
+    off(e, fn) { this._listeners[e] = (this._listeners[e] || []).filter(f => f !== fn); return this; }
+    emit(e, ...args) { (this._listeners[e] || []).forEach(fn => fn(...args)); return this; }
+    once(e, fn) { const w = (...a) => { this.off(e, w); fn(...a); }; return this.on(e, w); }
+  };
+}
+
+let WebSocketImpl = null;
+async function loadWebSocket() {
+  if (!WebSocketImpl) {
+    const mod = await import('ws');
+    WebSocketImpl = mod.default;
+  }
+  return WebSocketImpl;
+}
 
 /**
  * Binance WebSocket stream — real-time crypto prices (no key)
@@ -24,7 +50,9 @@ export class BinanceStream extends EventEmitter {
     this._connect();
   }
 
-  _connect() {
+  async _connect() {
+    const WebSocket = await loadWebSocket();
+    if (this._closed) return;
     const streams = this._symbols.map((s) => `${s}@miniTicker`).join('/');
     const url = `wss://stream.binance.com:9443/stream?streams=${streams}`;
 
@@ -85,7 +113,9 @@ export class KrakenStream extends EventEmitter {
     this._connect();
   }
 
-  _connect() {
+  async _connect() {
+    const WebSocket = await loadWebSocket();
+    if (this._closed) return;
     this._ws = new WebSocket('wss://ws.kraken.com');
 
     this._ws.on('open', () => {

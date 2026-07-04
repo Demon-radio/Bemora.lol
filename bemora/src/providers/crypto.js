@@ -11,7 +11,7 @@ const BASE = 'https://api.coingecko.com/api/v3';
  * @param {string} [params.currency] - e.g. 'usd'
  * @returns {Promise<Object>}
  */
-export async function getPrice({ coins, currency = 'usd' }) {
+export async function getPrice({ coins, currency = 'usd', signal }) {
   const ids = Array.isArray(coins) ? coins.join(',') : coins;
   const cacheKey = `crypto:price:${ids}:${currency}`;
   const cached = cache.get(cacheKey);
@@ -24,6 +24,7 @@ export async function getPrice({ coins, currency = 'usd' }) {
       include_24hr_change: true,
       include_market_cap: true,
     },
+    signal,
   });
 
   const result = {
