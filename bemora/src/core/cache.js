@@ -29,6 +29,16 @@ export function get(key) {
 }
 
 /**
+ * Get value and cache metadata
+ * @param {string} key
+ * @returns {{value: any|null, hit: boolean}
+ */
+export function getWithMeta(key) {
+  const value = currentCache.get(key);
+  return { value: value ?? null, hit: value !== undefined };
+}
+
+/**
  * Set a value in cache
  * @param {string} key
  * @param {any} value
@@ -59,4 +69,22 @@ export function flush() {
  */
 export function keys() {
   return currentCache.keys();
+}
+
+/**
+ * Helper to wrap cache operations and add metadata to result
+ * @param {string} key
+ * @param {function} fetchFn
+ * @param {number} ttl
+ * @returns {Promise<any>}
+ */
+export async function wrapCache(key, fetchFn, ttl = 300) {
+  const { value: cached, hit } = getWithMeta(key);
+  if (hit && cached) {
+    return { ...cached, _cacheStatus: 'HIT', _cacheTTL: ttl };
+  }
+
+  const result = await fetchFn();
+  set(key, result, ttl);
+  return { ...result, _cacheStatus: 'MISS', _cacheTTL: ttl };
 }
