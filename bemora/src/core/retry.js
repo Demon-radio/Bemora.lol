@@ -25,16 +25,20 @@ function isRetryable(err, retryOn) {
  * @param {number} opts.baseDelay - base delay ms (default 300)
  * @param {number} opts.maxDelay - max delay ms (default 5000)
  * @param {number[]} opts.retryOn - HTTP status codes worth retrying (default [408,429,500,502,503,504])
+ * @param {AbortSignal} [opts.signal] - if provided and already aborted (or aborts mid-retry), retrying stops immediately
  * @returns {Promise<any>}
  */
-export async function withRetry(fn, { retries = 3, baseDelay = 300, maxDelay = 5000, retryOn = DEFAULT_RETRY_STATUS_CODES } = {}) {
+export async function withRetry(fn, { retries = 3, baseDelay = 300, maxDelay = 5000, retryOn = DEFAULT_RETRY_STATUS_CODES, signal } = {}) {
   let lastError;
   for (let attempt = 0; attempt <= retries; attempt++) {
+    if (signal?.aborted) {
+      throw signal.reason instanceof Error ? signal.reason : new Error('Aborted');
+    }
     try {
       return await fn();
     } catch (err) {
       lastError = err;
-      if (attempt === retries || !isRetryable(err, retryOn)) break;
+      if (signal?.aborted || attempt === retries || !isRetryable(err, retryOn)) break;
       const delay = Math.min(baseDelay * 2 ** attempt + Math.random() * 100, maxDelay);
       await new Promise((r) => setTimeout(r, delay));
     }

@@ -134,13 +134,14 @@
   "author": "bemora",
   "license": "MIT",
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
     "axios": "^1.7.2",
     "chalk": "^5.3.0",
     "commander": "^12.1.0",
     "dotenv": "^16.4.5",
     "node-cache": "^5.1.2",
     "ws": "^8.16.0",
-    "@modelcontextprotocol/sdk": "^1.0.0"
+    "zod": "^4.4.3"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -149,5 +150,8 @@
     "type": "git",
     "url": "https://github.com/Demon-radio/Bemora.lol"
   },
-  "homepage": "https://github.com/Demon-radio/Bemora.lol"
+  "homepage": "https://github.com/Demon-radio/Bemora.lol",
+  "devDependencies": {
+    "vitest": "^4.1.9"
+  }
 }

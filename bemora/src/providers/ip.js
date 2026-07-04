@@ -5,7 +5,7 @@ import * as cache from '../core/cache.js';
  * Get full intelligence for an IP address (Free, no key)
  * @param {{ ip?: string }} params — omit or pass 'me' for current IP
  */
-export async function lookup({ ip = '' } = {}) {
+export async function lookup({ ip = '', signal } = {}) {
   const target = ip === 'me' || !ip ? '' : ip;
   const cacheKey = `ip:lookup:${target || 'me'}`;
   const cached = cache.get(cacheKey);
@@ -15,7 +15,7 @@ export async function lookup({ ip = '' } = {}) {
     ? `http://ip-api.com/json/${target}?fields=status,message,continent,country,countryCode,region,regionName,city,zip,lat,lon,timezone,isp,org,as,query`
     : `http://ip-api.com/json/?fields=status,message,continent,country,countryCode,region,regionName,city,zip,lat,lon,timezone,isp,org,as,query`;
 
-  const { data } = await axios.get(url);
+  const { data } = await axios.get(url, { signal });
 
   if (data.status === 'fail') throw new Error(`IP lookup failed: ${data.message}`);
 
