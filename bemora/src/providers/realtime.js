@@ -1,8 +1,23 @@
-import { EventEmitter } from 'events';
+// `events` and `ws` are loaded at module initialisation time using top-level
+// await so class bodies can still use `extends EventEmitter`.
+// In edge / browser runtimes that lack `events`, a minimal stub is used.
+// Actual WebSocket streaming requires Node.js — in edge environments the
+// stream classes exist but _connect() will throw when `ws` is unavailable.
 
-// `ws` is imported lazily so this module (and anything importing it, like the
-// edge/browser build) doesn't require a Node-only WebSocket implementation
-// unless a real-time stream is actually opened.
+let EventEmitter;
+try {
+  ({ EventEmitter } = await import('events'));
+} catch {
+  // Edge / browser — provide a minimal EventEmitter-compatible stub
+  EventEmitter = class MinimalEmitter {
+    constructor() { this._listeners = {}; }
+    on(e, fn)  { (this._listeners[e] ??= []).push(fn); return this; }
+    off(e, fn) { this._listeners[e] = (this._listeners[e] || []).filter(f => f !== fn); return this; }
+    emit(e, ...args) { (this._listeners[e] || []).forEach(fn => fn(...args)); return this; }
+    once(e, fn) { const w = (...a) => { this.off(e, w); fn(...a); }; return this.on(e, w); }
+  };
+}
+
 let WebSocketImpl = null;
 async function loadWebSocket() {
   if (!WebSocketImpl) {

@@ -1,6 +1,9 @@
 
 
-import 'dotenv/config';
+// Load .env in Node.js environments; no-op in edge/browser runtimes
+if (typeof process !== 'undefined' && process.versions?.node) {
+  try { await import('dotenv/config'); } catch { /* edge or dotenv absent */ }
+}
 import * as weather from './providers/weather.js';
 import * as currency from './providers/currency.js';
 import * as news from './providers/news.js';
@@ -480,6 +483,24 @@ export class Bemora {
       generateImage: this._wrap('openai', (p) => ai.generateImage(p, this._require('openai', 'openai'))),
       imagine: this._wrap('openai', (p) => ai.generateImage(p, this._require('openai', 'openai'))),
       embed: this._wrap('openai', (p) => ai.embed(p, this._require('openai', 'openai'))),
+
+      /**
+       * Stream Groq responses as async generator chunks.
+       * @param {{ messages, model?, temperature?, signal? }} params
+       * @returns {AsyncGenerator<{ content: string, done: boolean }>}
+       * @example
+       * for await (const chunk of api.ai.groqStream({ messages })) {
+       *   process.stdout.write(chunk.content);
+       * }
+       */
+      groqStream: (p) => ai.groqStream(p, this._require('groq', 'groq')),
+
+      /**
+       * Stream OpenAI responses as async generator chunks.
+       * @param {{ messages, model?, temperature?, signal? }} params
+       * @returns {AsyncGenerator<{ content: string, done: boolean }>}
+       */
+      openaiStream: (p) => ai.openaiStream(p, this._require('openai', 'openai')),
     };
   }
 
