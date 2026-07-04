@@ -261,8 +261,8 @@ export class Bemora {
   plugins()    { return this._plugins.list(); }
   on(ev, fn)   { this._events.on(ev, fn); return this; }
   off(ev, fn)  { this._events.off(ev, fn); return this; }
-  async health()       { return checkAllHealth(); }
-  async healthOf(name) { return checkHealth(name); }
+  async health()       { return checkAllHealth(this._keys); }
+  async healthOf(name) { return checkHealth(name, this._keys); }
   rateLimits()         { return getAllStatus(); }
   rateLimit(p)         { return getStatus(p); }
 

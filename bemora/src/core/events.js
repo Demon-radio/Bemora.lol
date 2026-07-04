@@ -39,12 +39,12 @@ export class BemoraEvents {
   emit(event, payload) {
     (this._handlers[event] || []).forEach((h) => {
       try { h(payload); } catch (e) {
-        logger.error(`Event handler for "${event}" failed: ${e.message}", e);
+        logger.error(`Event handler for "${event}" failed: ${e.message}`, e);
       }
     });
     (this._handlers['*'] || []).forEach((h) => {
       try { h({ event, payload }); } catch (e) {
-        logger.error(`Event handler for "*" failed: ${e.message}", e);
+        logger.error(`Event handler for "*" failed: ${e.message}`, e);
       }
     });
   }
