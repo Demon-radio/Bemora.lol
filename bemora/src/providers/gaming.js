@@ -1,7 +1,7 @@
 import axios from 'axios';
 import * as cache from '../core/cache.js';
 
-const CF_WIKI = 'https://crossfire.fandom.com/api.php';
+const CF_WIKI = 'https://crossfirefps.fandom.com/api.php';
 
 async function cfCategory(category, limit = 30) {
   const { data } = await axios.get(CF_WIKI, {
@@ -37,7 +37,7 @@ export async function getCrossfireWeapons({ limit = 40 } = {}) {
   const thumbs = await cfThumbnails(items.map((i) => i.title));
   const result = {
     count: items.length,
-    weapons: items.map((i) => ({ name: i.title, image: thumbs[i.title] || null, wiki: `https://crossfire.fandom.com/wiki/${encodeURIComponent(i.title.replace(/ /g, '_'))}` })),
+    weapons: items.map((i) => ({ name: i.title, image: thumbs[i.title] || null, wiki: `https://crossfirefps.fandom.com/wiki/${encodeURIComponent(i.title.replace(/ /g, '_'))}` })),
     source: 'CrossFire Fandom Wiki',
     _cached: false,
   };
@@ -79,7 +79,7 @@ export async function getCrossfireWeapon({ name }) {
     name: hit.title,
     image: thumbs[hit.title] || null,
     infobox,
-    wiki: `https://crossfire.fandom.com/wiki/${encodeURIComponent(hit.title.replace(/ /g, '_'))}`,
+    wiki: `https://crossfirefps.fandom.com/wiki/${encodeURIComponent(hit.title.replace(/ /g, '_'))}`,
     _cached: false,
   };
   cache.set(cacheKey, result, 21600);
@@ -98,7 +98,7 @@ export async function getCrossfireMaps({ limit = 40 } = {}) {
   const thumbs = await cfThumbnails(items.map((i) => i.title));
   const result = {
     count: items.length,
-    maps: items.map((i) => ({ name: i.title, image: thumbs[i.title] || null, wiki: `https://crossfire.fandom.com/wiki/${encodeURIComponent(i.title.replace(/ /g, '_'))}` })),
+    maps: items.map((i) => ({ name: i.title, image: thumbs[i.title] || null, wiki: `https://crossfirefps.fandom.com/wiki/${encodeURIComponent(i.title.replace(/ /g, '_'))}` })),
     source: 'CrossFire Fandom Wiki',
     _cached: false,
   };
@@ -118,7 +118,7 @@ export async function getCrossfireCharacters({ limit = 40 } = {}) {
   const thumbs = await cfThumbnails(items.map((i) => i.title));
   const result = {
     count: items.length,
-    characters: items.map((i) => ({ name: i.title, image: thumbs[i.title] || null, wiki: `https://crossfire.fandom.com/wiki/${encodeURIComponent(i.title.replace(/ /g, '_'))}` })),
+    characters: items.map((i) => ({ name: i.title, image: thumbs[i.title] || null, wiki: `https://crossfirefps.fandom.com/wiki/${encodeURIComponent(i.title.replace(/ /g, '_'))}` })),
     source: 'CrossFire Fandom Wiki',
     _cached: false,
   };
@@ -137,7 +137,7 @@ export async function getCrossfireGameModes({ limit = 40 } = {}) {
   const items = await cfCategory('Game Modes', limit);
   const result = {
     count: items.length,
-    modes: items.map((i) => ({ name: i.title, wiki: `https://crossfire.fandom.com/wiki/${encodeURIComponent(i.title.replace(/ /g, '_'))}` })),
+    modes: items.map((i) => ({ name: i.title, wiki: `https://crossfirefps.fandom.com/wiki/${encodeURIComponent(i.title.replace(/ /g, '_'))}` })),
     source: 'CrossFire Fandom Wiki',
     _cached: false,
   };
@@ -162,7 +162,7 @@ export async function getCrossfireEvents({ limit = 15 } = {}) {
     events: changes.map((c) => ({
       title: c.title,
       timestamp: c.timestamp,
-      wiki: `https://crossfire.fandom.com/wiki/${encodeURIComponent(c.title.replace(/ /g, '_'))}`,
+      wiki: `https://crossfirefps.fandom.com/wiki/${encodeURIComponent(c.title.replace(/ /g, '_'))}`,
     })),
     source: 'CrossFire Fandom Wiki (recent changes)',
     _cached: false,
@@ -186,7 +186,7 @@ export async function searchCrossfireWiki({ query, limit = 10 }) {
     results: results.map((r) => ({
       title: r.title,
       snippet: r.snippet.replace(/<[^>]+>/g, ''),
-      wiki: `https://crossfire.fandom.com/wiki/${encodeURIComponent(r.title.replace(/ /g, '_'))}`,
+      wiki: `https://crossfirefps.fandom.com/wiki/${encodeURIComponent(r.title.replace(/ /g, '_'))}`,
     })),
   };
 }

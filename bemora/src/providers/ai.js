@@ -7,6 +7,37 @@ import axios from 'axios';
  */
 
 /**
+ * Chat with OpenAI (GPT-4o, GPT-3.5, etc.) - streaming version
+ * @param {{ messages: Array<{role,content}>, model?: string, temperature?: number }} params
+ * @param {string} apiKey — OpenAI API key
+ * @yields {{content: string}}
+ */
+export async function* openaiChatStream({ messages, model = 'gpt-4o-mini', temperature = 0.7 }, apiKey) {
+  const response = await axios.post(
+    'https://api.openai.com/v1/chat/completions',
+    { model, messages, temperature, stream: true },
+    { 
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      responseType: 'stream'
+    }
+  );
+
+  for await (const chunk of response.data) {
+    const lines = chunk.toString('utf8').split('\n').filter(line => line.trim() !== '');
+    for (const line of lines) {
+      const message = line.replace(/^data: /, '');
+      if (message === '[DONE]') return;
+      try {
+        const parsed = JSON.parse(message);
+        if (parsed.choices[0]?.delta?.content) {
+          yield { content: parsed.choices[0].delta.content };
+        }
+      } catch (e) { /* ignore */ }
+    }
+  }
+}
+
+/**
  * Chat with OpenAI (GPT-4o, GPT-3.5, etc.)
  * @param {{ messages: Array<{role,content}>, model?: string, temperature?: number }} params
  * @param {string} apiKey — OpenAI API key
@@ -37,6 +68,38 @@ export async function generateImage({ prompt, size = '1024x1024', quality = 'sta
     { headers: { Authorization: `Bearer ${apiKey}` } }
   );
   return { url: data.data[0].url, revised_prompt: data.data[0].revised_prompt };
+}
+
+/**
+ * Groq ultra-fast inference (Llama 3, Mixtral — FREE tier available) - streaming version
+ * Free key: https://console.groq.com
+ * @param {{ messages: Array<{role,content}>, model?: string }} params
+ * @param {string} apiKey — Groq API key
+ * @yields {{content: string}}
+ */
+export async function* groqChatStream({ messages, model = 'llama3-8b-8192', temperature = 0.7 }, apiKey) {
+  const response = await axios.post(
+    'https://api.groq.com/openai/v1/chat/completions',
+    { model, messages, temperature, stream: true },
+    { 
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      responseType: 'stream'
+    }
+  );
+
+  for await (const chunk of response.data) {
+    const lines = chunk.toString('utf8').split('\n').filter(line => line.trim() !== '');
+    for (const line of lines) {
+      const message = line.replace(/^data: /, '');
+      if (message === '[DONE]') return;
+      try {
+        const parsed = JSON.parse(message);
+        if (parsed.choices[0]?.delta?.content) {
+          yield { content: parsed.choices[0].delta.content };
+        }
+      } catch (e) { /* ignore */ }
+    }
+  }
 }
 
 /**

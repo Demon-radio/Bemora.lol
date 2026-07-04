@@ -107,6 +107,7 @@ import { fallbackChain, aggregate } from './core/fallback.js';
 import { BemoraMonitor } from './core/monitor.js';
 import * as exportUtils from './core/export.js';
 import { BemoraError, ConfigurationError, ProviderError, ValidationError } from './core/errors.js';
+import { providerRegistry } from './core/provider-registry.js';
 
 export { batch } from './core/batch.js';
 export { staleWhileRevalidate } from './core/stale.js';
@@ -141,7 +142,11 @@ export class Bemora {
       steam:       keys.steamKey        || process.env.BEMORA_STEAM_KEY,
     };
 
-    this._options = { retries: 2, ...options };
+    this._options = { 
+      retries: 2, 
+      fallbacks: {},
+      ...options 
+    };
     if (options.logLevel) logger.setLevel(options.logLevel);
     
     // Apply custom cache adapter if provided
@@ -154,6 +159,22 @@ export class Bemora {
     this._events  = new BemoraEvents();
     this._plugins = new PluginSystem();
     this._monitor = new BemoraMonitor();
+    
+    // Initialize interceptors
+    this.interceptors = {
+      request: {
+        _use: [],
+        use(fn) {
+          this._use.push(fn);
+        }
+      },
+      response: {
+        _use: [],
+        use(fn) {
+          this._use.push(fn);
+        }
+      }
+    };
 
     this.weather   = this._buildWeather();
     this.currency  = this._buildCurrency();
@@ -265,6 +286,9 @@ export class Bemora {
   async healthOf(name) { return checkHealth(name); }
   rateLimits()         { return getAllStatus(); }
   rateLimit(p)         { return getStatus(p); }
+  providers = {
+    status: (name) => name ? providerRegistry.getStatus(name) : providerRegistry.getAllStatuses()
+  };
 
   _require(key, name) {
     if (!this._keys[key]) {
@@ -278,11 +302,71 @@ export class Bemora {
 
   _wrap(provider, fn) {
     return (...args) => {
+      // Check for options with signal in the last argument
+      let options = {};
+      let fnArgs = args;
+      if (args.length > 0 && args[args.length - 1] && typeof args[args.length - 1] === 'object' && 'signal' in args[args.length - 1]) {
+        options = args[args.length - 1];
+        fnArgs = args.slice(0, -1);
+      }
+
+      // Check if provider is available
+      if (!providerRegistry.isAvailable(provider)) {
+        throw new ProviderError(`Provider ${provider} is marked as dead.`, { provider });
+      }
+
       recordRequest(provider);
       this._events.emit('request', { provider });
-      return withRetry(() => fn(...args), { retries: this._options.retries })
-        .then((d)  => { this._events.emit('response', { provider }); return d; })
-        .catch((e) => { this._events.emit('error', { provider, error: e.message }); throw new ProviderError(e.message, { provider, cause: e }); });
+      
+      // Apply request interceptors
+      let processedArgs = fnArgs;
+      for (const interceptor of this.interceptors.request._use) {
+        processedArgs = interceptor({ provider, args: processedArgs }) || processedArgs;
+        if (Array.isArray(processedArgs)) {
+          processedArgs = processedArgs;
+        } else if (processedArgs && processedArgs.args) {
+          processedArgs = processedArgs.args;
+        }
+      }
+      
+      const controller = options.signal ? null : new AbortController();
+      const signal = options.signal || controller.signal;
+
+      // If signal is already aborted, throw immediately
+      if (signal.aborted) {
+        throw new ProviderError('Request cancelled', { provider, cause: new DOMException('Aborted', 'AbortError') });
+      }
+
+      // Create a promise that rejects if the signal is aborted
+      const abortPromise = new Promise((_, reject) => {
+        signal.addEventListener('abort', () => {
+          reject(new ProviderError('Request cancelled', { provider, cause: new DOMException('Aborted', 'AbortError') }));
+        }, { once: true });
+      });
+
+      // Race between the actual request and the abort promise
+      return Promise.race([
+        withRetry(() => fn(...processedArgs), { retries: this._options.retries }),
+        abortPromise
+      ])
+        .then((d) => { 
+          providerRegistry.recordSuccess(provider);
+          this._events.emit('response', { provider });
+          let result = d;
+          for (const interceptor of this.interceptors.response._use) {
+            result = interceptor({ provider, data: result }) || result;
+          }
+          return result;
+        })
+        .catch((e) => { 
+          if (e.cause && e.cause.name === 'AbortError') {
+            // Don't count abort as failure
+            throw e;
+          }
+          providerRegistry.recordFailure(provider);
+          this._events.emit('error', { provider, error: e.message }); 
+          throw new ProviderError(e.message, { provider, cause: e }); 
+        });
     };
   }
 
@@ -329,8 +413,10 @@ export class Bemora {
     return {
       openaiChat,
       openai: openaiChat,
+      openaiChatStream: (p) => ai.openaiChatStream(p, this._require('openai', 'openai')),
       groqChat,
       groq: groqChat,
+      groqChatStream: (p) => ai.groqChatStream(p, this._require('groq', 'groq')),
       anthropicChat: this._wrap('anthropic', (p) => ai.anthropicChat(p, this._require('anthropic', 'anthropic'))),
       geminiChat: this._wrap('google', (p) => ai.geminiChat(p, this._require('gemini', 'gemini'))),
       smartChat,

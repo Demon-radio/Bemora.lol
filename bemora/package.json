@@ -14,8 +14,12 @@
     "start": "node src/index.js",
     "mcp": "node src/mcp-server/index.js",
     "cli": "node src/cli.js",
-    "test": "echo \"Testing bemora...\" && npm run demo",
+    "test": "vitest",
+    "test:run": "vitest run",
     "lint": "echo \"Linting...\""
+  },
+  "devDependencies": {
+    "vitest": "^2.0.0"
   },
   "keywords": [
     "api",
