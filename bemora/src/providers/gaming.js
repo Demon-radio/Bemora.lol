@@ -379,6 +379,9 @@ export async function getChessDailyPuzzle() {
  * @param {{ wiki: string, query: string, limit?: number }} params
  */
 export async function searchGameWiki({ wiki, query, limit = 10 }) {
+  if (!/^[a-z0-9][a-z0-9-]{0,60}$/i.test(wiki)) {
+    throw new Error(`Invalid wiki name: "${wiki}". Must be a plain subdomain (letters, numbers, hyphens only).`);
+  }
   const { data } = await axios.get(`https://${wiki}.fandom.com/api.php`, {
     params: { action: 'query', list: 'search', srsearch: query, srlimit: limit, format: 'json' },
   });

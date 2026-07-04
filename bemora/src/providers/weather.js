@@ -10,7 +10,7 @@ import { logger } from '../core/logger.js';
  * @param {string} apiKey - OpenWeatherMap API key
  * @returns {Promise<Object>}
  */
-export async function getCurrentWeather({ city, units = 'metric' }, apiKey) {
+export async function getCurrentWeather({ city, units = 'metric', signal }, apiKey) {
   const cacheKey = `weather:current:${city}:${units}`;
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
@@ -18,6 +18,7 @@ export async function getCurrentWeather({ city, units = 'metric' }, apiKey) {
   const url = 'https://api.openweathermap.org/data/2.5/weather';
   const { data } = await axios.get(url, {
     params: { q: city, units, appid: apiKey },
+    signal,
   });
 
   const result = {
@@ -48,7 +49,7 @@ export async function getCurrentWeather({ city, units = 'metric' }, apiKey) {
  * @param {string} apiKey
  * @returns {Promise<Object>}
  */
-export async function getForecast({ city, units = 'metric' }, apiKey) {
+export async function getForecast({ city, units = 'metric', signal }, apiKey) {
   const cacheKey = `weather:forecast:${city}:${units}`;
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
@@ -56,6 +57,7 @@ export async function getForecast({ city, units = 'metric' }, apiKey) {
   const url = 'https://api.openweathermap.org/data/2.5/forecast';
   const { data } = await axios.get(url, {
     params: { q: city, units, appid: apiKey },
+    signal,
   });
 
   const result = {

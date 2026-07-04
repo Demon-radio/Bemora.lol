@@ -1,6 +1,9 @@
 
 
-import 'dotenv/config';
+// Load .env in Node.js environments; no-op in edge/browser runtimes
+if (typeof process !== 'undefined' && process.versions?.node) {
+  try { await import('dotenv/config'); } catch { /* edge or dotenv absent */ }
+}
 import * as weather from './providers/weather.js';
 import * as currency from './providers/currency.js';
 import * as news from './providers/news.js';
@@ -107,7 +110,11 @@ import { fallbackChain, aggregate } from './core/fallback.js';
 import { BemoraMonitor } from './core/monitor.js';
 import * as exportUtils from './core/export.js';
 import { BemoraError, ConfigurationError, ProviderError, ValidationError } from './core/errors.js';
-import { providerRegistry } from './core/provider-registry.js';
+import * as registry from './core/registry.js';
+import { Interceptors } from './core/interceptors.js';
+import { MiddlewareChain } from './core/middleware.js';
+import { validateResponse } from './core/validate.js';
+import { generateOpenAPISpec } from './core/openapi.js';
 
 export { batch } from './core/batch.js';
 export { staleWhileRevalidate } from './core/stale.js';
@@ -116,6 +123,11 @@ export { BemoraMonitor } from './core/monitor.js';
 export { fallbackChain, aggregate } from './core/fallback.js';
 export { BemoraError, ConfigurationError, ProviderError, ValidationError } from './core/errors.js';
 export { setAdapter } from './core/cache.js';
+export * as registry from './core/registry.js';
+export { Interceptors } from './core/interceptors.js';
+export { MiddlewareChain } from './core/middleware.js';
+export { validateResponse, schemas as validationSchemas } from './core/validate.js';
+export { generateOpenAPISpec } from './core/openapi.js';
 
 export class Bemora {
   constructor(keys = {}, options = {}) {
@@ -142,11 +154,7 @@ export class Bemora {
       steam:       keys.steamKey        || process.env.BEMORA_STEAM_KEY,
     };
 
-    this._options = { 
-      retries: 2, 
-      fallbacks: {},
-      ...options 
-    };
+    this._options = { retries: 2, validateResponses: false, fallbacks: {}, ...options };
     if (options.logLevel) logger.setLevel(options.logLevel);
     
     // Apply custom cache adapter if provided
@@ -159,22 +167,9 @@ export class Bemora {
     this._events  = new BemoraEvents();
     this._plugins = new PluginSystem();
     this._monitor = new BemoraMonitor();
-    
-    // Initialize interceptors
-    this.interceptors = {
-      request: {
-        _use: [],
-        use(fn) {
-          this._use.push(fn);
-        }
-      },
-      response: {
-        _use: [],
-        use(fn) {
-          this._use.push(fn);
-        }
-      }
-    };
+    this.interceptors = new Interceptors();
+    this.middleware   = new MiddlewareChain();
+    this._watchers = new Map();
 
     this.weather   = this._buildWeather();
     this.currency  = this._buildCurrency();
@@ -276,19 +271,100 @@ export class Bemora {
     this.combined  = this._buildCombined();
     this.cache     = cache;
     this.batch     = (calls) => batch(calls);
+
+    this.providers = {
+      status: () => registry.getAllProviderStatus(),
+      statusOf: (name) => registry.getProviderStatus(name),
+      reset: (name) => registry.resetProvider(name),
+    };
   }
 
   use(plugin)  { this._plugins.use(plugin, this); return this; }
   plugins()    { return this._plugins.list(); }
   on(ev, fn)   { this._events.on(ev, fn); return this; }
   off(ev, fn)  { this._events.off(ev, fn); return this; }
-  async health()       { return checkAllHealth(); }
-  async healthOf(name) { return checkHealth(name); }
+  async health()       { return checkAllHealth(this._keys); }
+  async healthOf(name) { return checkHealth(name, this._keys); }
   rateLimits()         { return getAllStatus(); }
   rateLimit(p)         { return getStatus(p); }
-  providers = {
-    status: (name) => name ? providerRegistry.getStatus(name) : providerRegistry.getAllStatuses()
-  };
+
+  /**
+   * Generate an OpenAPI 3.0 spec describing every namespace/method on this
+   * instance. Useful when wrapping bemora behind a REST API.
+   * @param {{ basePath?: string, title?: string, version?: string }} opts
+   */
+  toOpenAPI(opts) { return generateOpenAPISpec(this, opts); }
+
+  /**
+   * Dynamically load a `bemora-plugin-*` package and register it via use().
+   * Convention: the package must default-export (or named-export `plugin`) a
+   * function of the shape (bemoraInstance) => void | Promise<void>.
+   * @param {string} name - npm package name, e.g. 'bemora-plugin-redis-cache'
+   */
+  async loadPlugin(name) {
+    if (!/^bemora-plugin-/.test(name)) {
+      logger.warn?.(`[bemora] loadPlugin("${name}") — plugin packages should follow the "bemora-plugin-*" naming convention.`);
+    }
+    const mod = await import(name);
+    const plugin = mod.plugin || mod.default;
+    if (typeof plugin !== 'function') {
+      throw new ConfigurationError(`[bemora] Plugin "${name}" does not export a default or named "plugin" function.`, { provider: name });
+    }
+    return this.use(plugin);
+  }
+
+  /**
+   * Watch a resource for changes, polling under the hood (webhook-style
+   * abstraction without requiring the caller to run a server).
+   * @param {string} resource - e.g. 'crypto.price', dot-namespaced like the api itself
+   * @param {Object} params - params passed to the underlying method each poll
+   * @param {(data: any) => void} onData - called whenever the fetched value changes
+   * @param {{ intervalMs?: number, onError?: (err: Error) => void }} [opts]
+   * @returns {string} watchId — pass to unwatch() to stop
+   */
+  watch(resource, params, onData, { intervalMs = 30000, onError } = {}) {
+    const [namespace, method] = resource.split('.');
+    const fn = this[namespace]?.[method];
+    if (typeof fn !== 'function') {
+      throw new ConfigurationError(`[bemora] watch("${resource}") — no such method exists on this instance.`, { provider: resource });
+    }
+
+    const watchId = `${resource}:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`;
+    let lastSnapshot = null;
+
+    const poll = async () => {
+      try {
+        const result = await fn(params);
+        const snapshot = JSON.stringify(result);
+        if (snapshot !== lastSnapshot) {
+          lastSnapshot = snapshot;
+          onData(result);
+        }
+      } catch (err) {
+        if (onError) onError(err);
+        else this._events.emit('error', { provider: resource, error: err.message });
+      }
+    };
+
+    poll();
+    const timer = setInterval(poll, intervalMs);
+    this._watchers.set(watchId, timer);
+    return watchId;
+  }
+
+  /**
+   * Stop a previously created watch().
+   * @param {string} watchId
+   */
+  unwatch(watchId) {
+    const timer = this._watchers.get(watchId);
+    if (timer) {
+      clearInterval(timer);
+      this._watchers.delete(watchId);
+      return true;
+    }
+    return false;
+  }
 
   _require(key, name) {
     if (!this._keys[key]) {
@@ -300,87 +376,72 @@ export class Bemora {
     return this._keys[key];
   }
 
-  _wrap(provider, fn) {
-    return (...args) => {
-      // Check for options with signal in the last argument
-      let options = {};
-      let fnArgs = args;
-      if (args.length > 0 && args[args.length - 1] && typeof args[args.length - 1] === 'object' && 'signal' in args[args.length - 1]) {
-        options = args[args.length - 1];
-        fnArgs = args.slice(0, -1);
+  /**
+   * Wrap a provider call with the full bemora pipeline: dead-provider
+   * skipping, retry, interceptors, middleware, cache-status headers,
+   * optional response validation, and health-registry bookkeeping.
+   * @param {string} provider - provider id used for rate-limit/health tracking
+   * @param {Function} fn - (...args) => Promise<any>
+   * @param {string} [schemaKey] - key into core/validate.js schemas for opt-in validation
+   */
+  _wrap(provider, fn, schemaKey) {
+    return async (...args) => {
+      if (registry.shouldSkip(provider)) {
+        const err = new ProviderError(
+          `[bemora] Provider "${provider}" is marked dead after repeated failures and is being skipped until its recovery window elapses.`,
+          { provider }
+        );
+        this._events.emit('error', { provider, error: err.message });
+        throw err;
       }
 
-      // Check if provider is available
-      if (!providerRegistry.isAvailable(provider)) {
-        throw new ProviderError(`Provider ${provider} is marked as dead.`, { provider });
-      }
+      const signal = args[0] && typeof args[0] === 'object' ? args[0].signal : undefined;
 
       recordRequest(provider);
       this._events.emit('request', { provider });
-      
-      // Apply request interceptors
-      let processedArgs = fnArgs;
-      for (const interceptor of this.interceptors.request._use) {
-        processedArgs = interceptor({ provider, args: processedArgs }) || processedArgs;
-        if (Array.isArray(processedArgs)) {
-          processedArgs = processedArgs;
-        } else if (processedArgs && processedArgs.args) {
-          processedArgs = processedArgs.args;
+
+      const config = await this.interceptors.request.run({ provider, args });
+
+      const terminal = async () => {
+        return withRetry(() => fn(...config.args), { retries: this._options.retries, signal });
+      };
+
+      try {
+        let result = await this.middleware.run({ provider, args: config.args }, terminal);
+
+        if (result && typeof result === 'object' && '_cached' in result) {
+          result._cacheStatus = result._cached ? 'HIT' : 'MISS';
         }
+
+        if (this._options.validateResponses && schemaKey) {
+          validateResponse(schemaKey, result);
+        }
+
+        result = await this.interceptors.response.run(result);
+
+        registry.markSuccess(provider);
+        this._events.emit('response', { provider });
+        return result;
+      } catch (e) {
+        registry.markFailure(provider, e);
+        this._events.emit('error', { provider, error: e.message });
+        if (e instanceof ValidationError) throw e;
+        throw new ProviderError(e.message, { provider, cause: e });
       }
-      
-      const controller = options.signal ? null : new AbortController();
-      const signal = options.signal || controller.signal;
-
-      // If signal is already aborted, throw immediately
-      if (signal.aborted) {
-        throw new ProviderError('Request cancelled', { provider, cause: new DOMException('Aborted', 'AbortError') });
-      }
-
-      // Create a promise that rejects if the signal is aborted
-      const abortPromise = new Promise((_, reject) => {
-        signal.addEventListener('abort', () => {
-          reject(new ProviderError('Request cancelled', { provider, cause: new DOMException('Aborted', 'AbortError') }));
-        }, { once: true });
-      });
-
-      // Race between the actual request and the abort promise
-      return Promise.race([
-        withRetry(() => fn(...processedArgs), { retries: this._options.retries }),
-        abortPromise
-      ])
-        .then((d) => { 
-          providerRegistry.recordSuccess(provider);
-          this._events.emit('response', { provider });
-          let result = d;
-          for (const interceptor of this.interceptors.response._use) {
-            result = interceptor({ provider, data: result }) || result;
-          }
-          return result;
-        })
-        .catch((e) => { 
-          if (e.cause && e.cause.name === 'AbortError') {
-            // Don't count abort as failure
-            throw e;
-          }
-          providerRegistry.recordFailure(provider);
-          this._events.emit('error', { provider, error: e.message }); 
-          throw new ProviderError(e.message, { provider, cause: e }); 
-        });
     };
   }
 
-  _buildWeather() { return { current: this._wrap('openweathermap', (p) => weather.getCurrentWeather(p, this._require('weather', 'weather'))), forecast: this._wrap('openweathermap', (p) => weather.getForecast(p, this._require('weather', 'weather'))) }; }
+  _buildWeather() { return { current: this._wrap('openweathermap', (p) => weather.getCurrentWeather(p, this._require('weather', 'weather')), 'weather.current'), forecast: this._wrap('openweathermap', (p) => weather.getForecast(p, this._require('weather', 'weather'))) }; }
   _buildCurrency() { return { rates: this._wrap('exchangerate', (p) => currency.getRates(p, this._require('currency', 'currency'))), convert: this._wrap('exchangerate', (p) => currency.convert(p, this._require('currency', 'currency'))) }; }
   _buildNews() { return { headlines: this._wrap('newsapi', (p) => news.getHeadlines(p, this._require('news', 'news'))), search: this._wrap('newsapi', (p) => news.searchNews(p, this._require('news', 'news'))) }; }
   _buildImages() { return { search: this._wrap('unsplash', (p) => images.searchPhotos(p, this._require('unsplash', 'unsplash'))), random: this._wrap('unsplash', (p) => images.getRandomPhoto(p, this._require('unsplash', 'unsplash'))), pexels: this._wrap('pexels', (p) => images.searchPexels(p, this._require('pexels', 'pexels'))) }; }
   _buildFootball() { return { fixtures: this._wrap('apifootball', (p) => football.getFixtures(p, this._require('football', 'football'))), standings: this._wrap('apifootball', (p) => football.getStandings(p, this._require('football', 'football'))), teams: this._wrap('apifootball', (p) => football.searchTeams(p, this._require('football', 'football'))) }; }
-  _buildCrypto() { return { price: this._wrap('coingecko', (p) => crypto.getPrice(p)), trending: this._wrap('coingecko', () => crypto.getTrending()), top: this._wrap('coingecko', (p) => crypto.getTopCoins(p)) }; }
+  _buildCrypto() { return { price: this._wrap('coingecko', (p) => crypto.getPrice(p), 'crypto.price'), trending: this._wrap('coingecko', () => crypto.getTrending()), top: this._wrap('coingecko', (p) => crypto.getTopCoins(p)) }; }
   _buildGold() { return { price: this._wrap('goldapi', (p) => gold.getGoldPrice(p, this._require('gold', 'gold'))), silver: this._wrap('goldapi', (p) => gold.getSilverPrice(p, this._require('gold', 'gold'))) }; }
   _buildResearch() { return { wikipedia: this._wrap('wikipedia', (p) => research.searchWikipedia(p)), article: this._wrap('wikipedia', (p) => research.getWikipediaArticle(p)), books: this._wrap('openlibrary', (p) => research.searchBooks(p)) }; }
   _buildLocation() { return { geocode: this._wrap('nominatim', (p) => location.geocode(p)), reverse: this._wrap('nominatim', (p) => location.reverseGeocode(p)), distance: location.distance }; }
-  _buildIP() { return { lookup: this._wrap('ip-api', (p) => ip.lookup(p)), batchLookup: this._wrap('ip-api', (p) => ip.batchLookup(p)) }; }
-  _buildCountries() { return { byName: this._wrap('restcountries', (p) => countries.byName(p)), byCode: this._wrap('restcountries', (p) => countries.byCode(p)), byRegion: this._wrap('restcountries', (p) => countries.byRegion(p)), all: this._wrap('restcountries', () => countries.all()) }; }
+  _buildIP() { return { lookup: this._wrap('ip-api', (p) => ip.lookup(p), 'ip.lookup'), batchLookup: this._wrap('ip-api', (p) => ip.batchLookup(p)) }; }
+  _buildCountries() { return { byName: this._wrap('restcountries', (p) => countries.byName(p), 'countries.byName'), byCode: this._wrap('restcountries', (p) => countries.byCode(p)), byRegion: this._wrap('restcountries', (p) => countries.byRegion(p)), all: this._wrap('restcountries', () => countries.all()) }; }
   _buildTranslate() { return { text: this._wrap('mymemory', (p) => translate.translate(p)), many: this._wrap('mymemory', (p) => translate.translateMany(p)), detect: this._wrap('mymemory', (p) => translate.detectLanguage(p)) }; }
   _buildMovies() { return { search: this._wrap('tmdb', (p) => movies.searchMovies(p, this._require('movies', 'movies'))), details: this._wrap('tmdb', (p) => movies.getMovie(p, this._require('movies', 'movies'))), trending: this._wrap('tmdb', (p) => movies.getTrending(p, this._require('movies', 'movies'))), tv: this._wrap('tmdb', (p) => movies.searchTV(p, this._require('movies', 'movies'))) }; }
 
@@ -395,7 +456,7 @@ export class Bemora {
   }
 
   _buildSpace() { return { apod: this._wrap('nasa', (p) => space.getAPOD(p, this._require('nasa', 'nasa'))), mars: this._wrap('nasa', (p) => space.getMarsPhotos(p, this._require('nasa', 'nasa'))), asteroids: this._wrap('nasa', (p) => space.getNearEarthObjects(p, this._require('nasa', 'nasa'))), issPosition: this._wrap('iss', () => space.getISSPosition()) }; }
-  _buildSearch() { return { instant: this._wrap('duckduckgo', (p) => search.instantAnswer(p)), web: this._wrap('wikipedia', (p) => search.webSearch(p)) }; }
+  _buildSearch() { return { instant: this._wrap('duckduckgo', (p) => search.instantAnswer(p)), web: this._wrap('wikipedia', (p) => search.webSearch(p), 'search.web') }; }
   _buildStocks() { return { quote: this._wrap('alphavantage', (p) => stocks.getQuote(p, this._require('stocks', 'stocks'))), search: this._wrap('alphavantage', (p) => stocks.searchStocks(p, this._require('stocks', 'stocks'))), overview: this._wrap('alphavantage', (p) => stocks.getOverview(p, this._require('stocks', 'stocks'))) }; }
   _buildMusic() { return { artist: this._wrap('musicbrainz', (p) => music.searchArtist(p)), album: this._wrap('musicbrainz', (p) => music.searchAlbum(p)), itunes: this._wrap('itunes', (p) => music.itunesSearch(p)) }; }
   _buildSocial() { return { githubUser: this._wrap('github', (p) => social.githubUser(p)), githubRepo: this._wrap('github', (p) => social.githubRepo(p)), githubTrending: this._wrap('github', (p) => social.githubTrending(p)), hackerNews: this._wrap('hn', (p) => social.hackerNewsTop(p)), productHunt: this._wrap('ph', () => social.productHuntToday()) }; }
@@ -413,10 +474,8 @@ export class Bemora {
     return {
       openaiChat,
       openai: openaiChat,
-      openaiChatStream: (p) => ai.openaiChatStream(p, this._require('openai', 'openai')),
       groqChat,
       groq: groqChat,
-      groqChatStream: (p) => ai.groqChatStream(p, this._require('groq', 'groq')),
       anthropicChat: this._wrap('anthropic', (p) => ai.anthropicChat(p, this._require('anthropic', 'anthropic'))),
       geminiChat: this._wrap('google', (p) => ai.geminiChat(p, this._require('gemini', 'gemini'))),
       smartChat,
@@ -424,6 +483,24 @@ export class Bemora {
       generateImage: this._wrap('openai', (p) => ai.generateImage(p, this._require('openai', 'openai'))),
       imagine: this._wrap('openai', (p) => ai.generateImage(p, this._require('openai', 'openai'))),
       embed: this._wrap('openai', (p) => ai.embed(p, this._require('openai', 'openai'))),
+
+      /**
+       * Stream Groq responses as async generator chunks.
+       * @param {{ messages, model?, temperature?, signal? }} params
+       * @returns {AsyncGenerator<{ content: string, done: boolean }>}
+       * @example
+       * for await (const chunk of api.ai.groqStream({ messages })) {
+       *   process.stdout.write(chunk.content);
+       * }
+       */
+      groqStream: (p) => ai.groqStream(p, this._require('groq', 'groq')),
+
+      /**
+       * Stream OpenAI responses as async generator chunks.
+       * @param {{ messages, model?, temperature?, signal? }} params
+       * @returns {AsyncGenerator<{ content: string, done: boolean }>}
+       */
+      openaiStream: (p) => ai.openaiStream(p, this._require('openai', 'openai')),
     };
   }
 

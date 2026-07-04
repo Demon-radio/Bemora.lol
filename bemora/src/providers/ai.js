@@ -123,6 +123,67 @@ export async function groqChat({ messages, model = 'llama3-8b-8192', temperature
 }
 
 /**
+ * Groq streaming chat — yields incremental content chunks as they arrive.
+ * @param {{ messages: Array<{role,content}>, model?: string, temperature?: number, signal?: AbortSignal }} params
+ * @param {string} apiKey
+ * @returns {AsyncGenerator<{ content: string, done: boolean }>}
+ */
+export async function* groqStream({ messages, model = 'llama3-8b-8192', temperature = 0.7, signal } = {}, apiKey) {
+  yield* streamChatCompletions('https://api.groq.com/openai/v1/chat/completions', { model, messages, temperature }, apiKey, signal);
+}
+
+/**
+ * OpenAI streaming chat — yields incremental content chunks as they arrive.
+ * @param {{ messages: Array<{role,content}>, model?: string, temperature?: number, signal?: AbortSignal }} params
+ * @param {string} apiKey
+ * @returns {AsyncGenerator<{ content: string, done: boolean }>}
+ */
+export async function* openaiStream({ messages, model = 'gpt-4o-mini', temperature = 0.7, signal } = {}, apiKey) {
+  yield* streamChatCompletions('https://api.openai.com/v1/chat/completions', { model, messages, temperature }, apiKey, signal);
+}
+
+/**
+ * Shared SSE stream parser for OpenAI-compatible chat completion endpoints.
+ * @private
+ */
+async function* streamChatCompletions(url, body, apiKey, signal) {
+  const response = await axios.post(
+    url,
+    { ...body, stream: true },
+    {
+      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      responseType: 'stream',
+      signal,
+    }
+  );
+
+  let buffer = '';
+  for await (const chunk of response.data) {
+    buffer += chunk.toString('utf8');
+    const lines = buffer.split('\n');
+    buffer = lines.pop() ?? '';
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed.startsWith('data:')) continue;
+      const payload = trimmed.slice(5).trim();
+      if (payload === '[DONE]') {
+        yield { content: '', done: true };
+        return;
+      }
+      try {
+        const parsed = JSON.parse(payload);
+        const delta = parsed.choices?.[0]?.delta?.content;
+        if (delta) yield { content: delta, done: false };
+      } catch (_) {
+        // ignore malformed partial JSON chunks
+      }
+    }
+  }
+  yield { content: '', done: true };
+}
+
+/**
  * Anthropic Claude API (Claude 3, Claude 3.5)
  * @param {{ messages: Array<{role,content}>, model?: string, temperature?: number, maxTokens?: number }} params
  * @param {string} apiKey — Anthropic API key
