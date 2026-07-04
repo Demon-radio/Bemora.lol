@@ -40,6 +40,9 @@ export async function instantAnswer({ query }) {
  * @param {{ query: string, language?: string, limit?: number }} params
  */
 export async function webSearch({ query, language = 'en', limit = 5 }) {
+  if (!/^[a-z]{2,3}(-[a-z]{2,4})?$/i.test(language)) {
+    throw new Error(`Invalid language code: "${language}". Expected a short locale code like "en" or "zh-hans".`);
+  }
   const cacheKey = `search:wiki:${language}:${query}`;
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
@@ -52,6 +55,7 @@ export async function webSearch({ query, language = 'en', limit = 5 }) {
         srlimit: limit, srinfo: 'totalhits', srprop: 'snippet|titlesnippet',
         format: 'json', origin: '*',
       },
+      headers: { 'User-Agent': 'bemora-npm-library (+https://github.com/Demon-radio/Bemora.lol)' },
     }
   );
 

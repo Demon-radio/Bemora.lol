@@ -14,7 +14,14 @@ import * as cache from '../core/cache.js';
  *  - wiki: Fandom wiki domain (e.g., 'minecraft', 'harrypotter')
  *  - query: Search term
  */
+function assertValidWikiName(wiki) {
+  if (!/^[a-z0-9][a-z0-9-]{0,60}$/i.test(wiki)) {
+    throw new Error(`Invalid wiki name: "${wiki}". Must be a plain subdomain (letters, numbers, hyphens only).`);
+  }
+}
+
 export async function search({ wiki, query, limit = 10 }) {
+  assertValidWikiName(wiki);
   const cacheKey = `fandom:search:${wiki}:${query}:${limit}`;
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
@@ -43,6 +50,7 @@ export async function search({ wiki, query, limit = 10 }) {
  * @param {{ wiki: string, pageId?: number, title?: string }} params
  */
 export async function getPage({ wiki, pageId, title }) {
+  assertValidWikiName(wiki);
   const cacheKey = `fandom:page:${wiki}:${pageId || title}`;
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
@@ -68,6 +76,7 @@ export async function getPage({ wiki, pageId, title }) {
  * @param {{ wiki: string, limit?: number }} params
  */
 export async function recentActivity({ wiki, limit = 20 }) {
+  assertValidWikiName(wiki);
   const { data } = await axios.get(`https://${wiki}.fandom.com/api/v1/Activity/LatestActivity`, {
     params: { limit }
   });
