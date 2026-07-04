@@ -94,3 +94,10 @@ export function getStatus(provider) {
 export function getAllStatus() {
   return Object.keys(FREE_LIMITS).map(getStatus);
 }
+
+/**
+ * Reset all usage data (useful for testing).
+ */
+export function resetUsage() {
+  usage.clear();
+}

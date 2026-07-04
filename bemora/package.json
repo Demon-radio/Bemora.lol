@@ -14,8 +14,18 @@
     "start": "node src/index.js",
     "mcp": "node src/mcp-server/index.js",
     "cli": "node src/cli.js",
-    "test": "echo \"Testing bemora...\" && npm run demo",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:integration": "vitest run --config vitest.config.integration.js",
     "lint": "echo \"Linting...\""
+  },
+  "exports": {
+    ".": {
+      "import": "./src/index.js",
+      "default": "./src/index.js"
+    },
+    "./edge": "./src/edge.js"
   },
   "keywords": [
     "api",

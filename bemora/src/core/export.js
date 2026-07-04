@@ -1,11 +1,16 @@
-import { join } from 'path';
-
 /**
  * Export data to different file formats.
- * `fs/promises` is imported lazily so this module doesn't hard-require Node's
- * filesystem API unless an export function is actually called (keeps the
- * edge/browser build importable without a filesystem shim).
+ * Both `path` and `fs/promises` are imported lazily so this module is
+ * importable in edge / browser runtimes without a filesystem shim.
+ * Calling any toXxx() / exportAll() function in a non-Node environment will
+ * throw at runtime, which is expected — file export requires a filesystem.
  */
+let _path = null;
+async function joinPath(...parts) {
+  if (!_path) _path = await import('path');
+  return _path.join(...parts);
+}
+
 let fsPromises = null;
 async function fs() {
   if (!fsPromises) fsPromises = await import('fs/promises');
@@ -138,7 +143,7 @@ export async function exportAll({ data, dir = '.', name = 'bemora-export', forma
   const results = [];
 
   for (const format of formats) {
-    const path = join(dir, `${name}.${format}`);
+    const path = await joinPath(dir, `${name}.${format}`);
     try {
       if (format === 'json')     results.push(await toJSON({ data, path }));
       if (format === 'csv')      results.push(await toCSV({ data: Array.isArray(data) ? data : [data], path }));
