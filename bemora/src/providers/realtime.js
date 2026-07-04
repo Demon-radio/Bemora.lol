@@ -1,5 +1,16 @@
-import WebSocket from 'ws';
 import { EventEmitter } from 'events';
+
+// `ws` is imported lazily so this module (and anything importing it, like the
+// edge/browser build) doesn't require a Node-only WebSocket implementation
+// unless a real-time stream is actually opened.
+let WebSocketImpl = null;
+async function loadWebSocket() {
+  if (!WebSocketImpl) {
+    const mod = await import('ws');
+    WebSocketImpl = mod.default;
+  }
+  return WebSocketImpl;
+}
 
 /**
  * Binance WebSocket stream — real-time crypto prices (no key)
@@ -24,7 +35,9 @@ export class BinanceStream extends EventEmitter {
     this._connect();
   }
 
-  _connect() {
+  async _connect() {
+    const WebSocket = await loadWebSocket();
+    if (this._closed) return;
     const streams = this._symbols.map((s) => `${s}@miniTicker`).join('/');
     const url = `wss://stream.binance.com:9443/stream?streams=${streams}`;
 
@@ -85,7 +98,9 @@ export class KrakenStream extends EventEmitter {
     this._connect();
   }
 
-  _connect() {
+  async _connect() {
+    const WebSocket = await loadWebSocket();
+    if (this._closed) return;
     this._ws = new WebSocket('wss://ws.kraken.com');
 
     this._ws.on('open', () => {

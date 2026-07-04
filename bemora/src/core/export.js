@@ -1,15 +1,23 @@
-import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 
 /**
- * Export data to different file formats
+ * Export data to different file formats.
+ * `fs/promises` is imported lazily so this module doesn't hard-require Node's
+ * filesystem API unless an export function is actually called (keeps the
+ * edge/browser build importable without a filesystem shim).
  */
+let fsPromises = null;
+async function fs() {
+  if (!fsPromises) fsPromises = await import('fs/promises');
+  return fsPromises;
+}
 
 /**
  * Export data as JSON file
  * @param {{ data: any, path: string, pretty?: boolean }} opts
  */
 export async function toJSON({ data, path, pretty = true }) {
+  const { writeFile } = await fs();
   const content = pretty ? JSON.stringify(data, null, 2) : JSON.stringify(data);
   await writeFile(path, content, 'utf8');
   return { format: 'json', path, size: Buffer.byteLength(content) };
@@ -21,6 +29,7 @@ export async function toJSON({ data, path, pretty = true }) {
  * @param {{ data: any[], path: string, columns?: string[] }} opts
  */
 export async function toCSV({ data, path, columns }) {
+  const { writeFile } = await fs();
   const rows = Array.isArray(data) ? data : [data];
   const cols = columns || Object.keys(rows[0] || {});
 
@@ -47,6 +56,7 @@ export async function toCSV({ data, path, columns }) {
  * @param {{ data: any[], path: string, title?: string }} opts
  */
 export async function toMarkdown({ data, path, title }) {
+  const { writeFile } = await fs();
   const rows = Array.isArray(data) ? data : [data];
   const cols = Object.keys(rows[0] || {});
 
@@ -74,6 +84,7 @@ export async function toMarkdown({ data, path, title }) {
  * @param {{ data: any[], path: string, title?: string }} opts
  */
 export async function toHTML({ data, path, title = 'Bemora Export' }) {
+  const { writeFile } = await fs();
   const rows = Array.isArray(data) ? data : [data];
   const cols = Object.keys(rows[0] || {});
 
@@ -122,6 +133,7 @@ export async function toHTML({ data, path, title = 'Bemora Export' }) {
  * @param {{ data: any, dir: string, name: string, formats: string[] }} opts
  */
 export async function exportAll({ data, dir = '.', name = 'bemora-export', formats = ['json', 'csv', 'html'] }) {
+  const { mkdir } = await fs();
   await mkdir(dir, { recursive: true });
   const results = [];
 
