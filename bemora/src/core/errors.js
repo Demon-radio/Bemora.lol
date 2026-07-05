@@ -52,3 +52,25 @@ export class ValidationError extends BemoraError {
     };
   }
 }
+
+/**
+ * Thrown when a circuit breaker is OPEN and a request is rejected fast,
+ * without calling the underlying provider at all.
+ */
+export class CircuitBreakerError extends BemoraError {
+  constructor(message, options = {}) {
+    super(message, { ...options, code: 'CIRCUIT_BREAKER_OPEN' });
+    this.name = 'CircuitBreakerError';
+  }
+}
+
+/**
+ * Thrown when a per-provider (or global) timeout elapses before the
+ * provider returns a response.
+ */
+export class TimeoutError extends BemoraError {
+  constructor(message, options = {}) {
+    super(message, { ...options, code: 'TIMEOUT' });
+    this.name = 'TimeoutError';
+  }
+}

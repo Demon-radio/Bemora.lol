@@ -538,6 +538,155 @@ const api = new Bemora(keys, { retries: 3 }); // retry 3 times before throwing
 
 ---
 
+### 🔌 Circuit Breaker
+
+Dead providers are detected automatically and short-circuited — no more 30-second cascades.
+
+```js
+// Check all circuit states
+api.circuits.status();
+// [{ provider: 'coingecko', state: 'OPEN', failures: 5, openedAt: ... }, ...]
+
+// Force a circuit open (e.g. planned maintenance)
+api.circuits.open('coingecko');
+
+// Reset a circuit manually after a fix
+api.circuits.close('coingecko');
+api.circuits.reset('coingecko'); // delete entry entirely
+
+// Configure thresholds globally
+const api = new Bemora(keys, {
+  circuitBreaker: {
+    failureThreshold: 5,   // consecutive failures before OPEN  (default 5)
+    successThreshold: 2,   // successful probes needed to CLOSE  (default 2)
+    openDuration: 60_000,  // ms to wait before probing          (default 60 000)
+  }
+});
+```
+
+When a circuit is OPEN, `api.crypto.price(...)` throws a `CircuitBreakerError` immediately — no network call is made. After `openDuration` elapses, one probe request is allowed through (HALF_OPEN). Two successful probes close the circuit.
+
+---
+
+### ⏱ Per-Provider Timeouts
+
+```js
+const api = new Bemora(keys, {
+  timeout: 10_000,          // global default 10 s
+  timeouts: {
+    anime: 60_000,          // Jikan is known slow
+    coingecko: 5_000,
+    nasa: 30_000,
+  }
+});
+```
+
+A `TimeoutError` is thrown (and counted as a failure for the circuit breaker) if the provider doesn't respond in time.
+
+---
+
+### 🚫 AbortController / Signal Support
+
+```js
+const ac = new AbortController();
+setTimeout(() => ac.abort(), 3000); // cancel after 3 s
+
+const result = await api.crypto.price({ coins: 'bitcoin', signal: ac.signal });
+```
+
+Pass `signal` as a property in the first argument of any method. Retries are cancelled immediately when the signal fires.
+
+---
+
+### 📊 Metrics & Observability
+
+```js
+// All providers
+const all = api.getMetrics();
+// [{ provider, requests, errors, errorRate, cacheHits, cacheHitRate,
+//    latency: { p50, p95, p99, min, max, avg, samples } }, ...]
+
+// Single provider
+const cg = api.getMetrics('coingecko');
+
+// Prometheus text exposition (mount on /metrics)
+import express from 'express';
+app.get('/metrics', (_req, res) => {
+  res.type('text/plain').send(api.metricsPrometheus());
+});
+```
+
+---
+
+### 🏢 Multi-Tenant Key Management
+
+```js
+// Hot-rotate a key without restarting
+api.setKey('openai', 'sk-new-key-...');
+api.setKey('groq', 'gsk-new-key-...');
+
+// Scoped instance per tenant — inherits global options
+const acmeCorp = api.forTenant('acme-corp', {
+  openaiKey: 'sk-acme-...',
+  groqKey:   'gsk-acme-...',
+});
+await acmeCorp.ai.chat({ messages: [{ role: 'user', content: 'Hello' }] });
+```
+
+---
+
+### 📝 Structured JSON Logging
+
+```bash
+# Switch to JSON output for Datadog / ELK / CloudWatch
+BEMORA_LOG_FORMAT=json node app.js
+# {"ts":"2026-07-05T12:00:00.000Z","level":"info","msg":"coingecko OK (82ms)","provider":"coingecko","latencyMs":82}
+
+# Custom transport
+import { logger } from 'bemora/logger';
+logger.setTransport((entry) => datadogLogger.log(entry));
+
+# Log levels: silent | error | warn | info | debug
+BEMORA_LOG_LEVEL=debug node app.js
+```
+
+---
+
+### 🗄 Cache Headers
+
+```js
+const api = new Bemora(keys, { cacheHeaders: true });
+
+const result = await api.ip.lookup({ ip: '8.8.8.8' });
+// result._cacheStatus   → 'HIT' | 'MISS'
+// result._cacheControl  → 'max-age=300, stale-while-revalidate=60'
+// result._xCacheStatus  → 'HIT' | 'MISS'
+// result._etag          → '"ip-api-300"'
+```
+
+Useful when wrapping bemora behind a REST API — forward these headers in your HTTP response to enable edge caching.
+
+---
+
+### 🔍 Response Schema Validation
+
+```js
+// Opt-in validation — throws ValidationError on unexpected shape
+const api = new Bemora(keys, { validateResponses: true });
+
+try {
+  await api.crypto.price({ coins: 'bitcoin' });
+} catch (e) {
+  if (e instanceof ValidationError) {
+    console.error('CoinGecko changed their response format!', e.errors);
+  }
+}
+```
+
+Schemas are defined in `src/core/validate.js`. Providers with schemas: `ip.lookup`, `countries.byName`, `weather.current`, `crypto.price`, `search.web`, `space.iss`, `translate.text`, `food.random`, `food.search`, `social.hackernews`, `location.geocode`, `utils.holidays`, `comics.xkcd`.
+
+---
+
 ## 🤖 AI Agent Power
 
 bemora is designed to be the data layer for AI agents. Give your agent access to everything:
@@ -675,15 +824,22 @@ bemora/
 │   ├── index.js              ← Main class
 │   ├── cli.js                ← CLI tool
 │   ├── core/
-│   │   ├── cache.js          ← Auto caching
-│   │   ├── retry.js          ← Exponential backoff
+│   │   ├── cache.js          ← Auto caching (pluggable adapter)
+│   │   ├── circuit.js        ← Circuit breaker (CLOSED/OPEN/HALF_OPEN)
+│   │   ├── metrics.js        ← p50/p95/p99 latency + error rates + Prometheus
+│   │   ├── retry.js          ← Exponential backoff + AbortSignal
 │   │   ├── dedup.js          ← Request deduplication
 │   │   ├── events.js         ← Event system
-│   │   ├── health.js         ← Provider health checks
-│   │   ├── ratelimit.js      ← Rate limit tracker
+│   │   ├── health.js         ← Provider health checks (real keys)
+│   │   ├── ratelimit.js      ← Rate limit tracker + enforcement
+│   │   ├── validate.js       ← Zod response schemas (13 providers)
+│   │   ├── logger.js         ← Structured JSON + chalk dual-mode
+│   │   ├── interceptors.js   ← Request/response interceptors
+│   │   ├── middleware.js     ← next()-style middleware chain
+│   │   ├── monitor.js        ← Watch + alert system
 │   │   ├── batch.js          ← Parallel batch runner
 │   │   ├── stale.js          ← Stale-while-revalidate
-│   │   └── plugins.js        ← Plugin system
+│   │   └── plugins.js        ← Plugin system (bemora-plugin-* convention)
 │   ├── providers/
 │   │   ├── weather.js        ← OpenWeatherMap
 │   │   ├── currency.js       ← ExchangeRate-API

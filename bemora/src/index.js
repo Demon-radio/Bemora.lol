@@ -109,19 +109,21 @@ import { withRetry } from './core/retry.js';
 import { fallbackChain, aggregate } from './core/fallback.js';
 import { BemoraMonitor } from './core/monitor.js';
 import * as exportUtils from './core/export.js';
-import { BemoraError, ConfigurationError, ProviderError, ValidationError } from './core/errors.js';
+import { BemoraError, ConfigurationError, ProviderError, ValidationError, CircuitBreakerError, TimeoutError } from './core/errors.js';
 import * as registry from './core/registry.js';
 import { Interceptors } from './core/interceptors.js';
 import { MiddlewareChain } from './core/middleware.js';
 import { validateResponse } from './core/validate.js';
 import { generateOpenAPISpec } from './core/openapi.js';
+import { getBreaker, resetBreaker, resetAllBreakers, getAllBreakerStates } from './core/circuit.js';
+import * as metrics from './core/metrics.js';
 
 export { batch } from './core/batch.js';
 export { staleWhileRevalidate } from './core/stale.js';
 export { BinanceStream, KrakenStream, getRealtimePrice } from './providers/realtime.js';
 export { BemoraMonitor } from './core/monitor.js';
 export { fallbackChain, aggregate } from './core/fallback.js';
-export { BemoraError, ConfigurationError, ProviderError, ValidationError } from './core/errors.js';
+export { BemoraError, ConfigurationError, ProviderError, ValidationError, CircuitBreakerError, TimeoutError } from './core/errors.js';
 export { setAdapter } from './core/cache.js';
 export * as registry from './core/registry.js';
 export { Interceptors } from './core/interceptors.js';
@@ -277,6 +279,22 @@ export class Bemora {
       statusOf: (name) => registry.getProviderStatus(name),
       reset: (name) => registry.resetProvider(name),
     };
+
+    /** Circuit-breaker management */
+    this.circuits = {
+      /** State snapshot for every tracked provider. */
+      status: () => getAllBreakerStates(),
+      /** State for a single provider. */
+      statusOf: (name) => getBreaker(name).getState(),
+      /** Reset (close) a provider's circuit. */
+      reset: (name) => { resetBreaker(name); return this; },
+      /** Reset all circuits. */
+      resetAll: () => { resetAllBreakers(); return this; },
+      /** Manually force a circuit OPEN (e.g. known maintenance window). */
+      open: (name) => { getBreaker(name).forceOpen(); return this; },
+      /** Manually close a previously forced-open circuit. */
+      close: (name) => { getBreaker(name).forceClose(); return this; },
+    };
   }
 
   use(plugin)  { this._plugins.use(plugin, this); return this; }
@@ -287,6 +305,47 @@ export class Bemora {
   async healthOf(name) { return checkHealth(name, this._keys); }
   rateLimits()         { return getAllStatus(); }
   rateLimit(p)         { return getStatus(p); }
+
+  /**
+   * Hot-rotate an API key without restarting the process.
+   * @param {string} name  - key name as used in the constructor (e.g. 'openai', 'groq')
+   * @param {string} value - the new key value
+   */
+  setKey(name, value) {
+    this._keys[name] = value;
+    logger.info(`Key "${name}" rotated.`, { provider: name });
+    return this;
+  }
+
+  /**
+   * Create a scoped Bemora instance that uses per-tenant API keys while
+   * inheriting the same options as the parent instance.
+   * @param {string} tenantId - used only for logging / tracing
+   * @param {object} keys     - same shape as the Bemora constructor `keys` arg
+   * @returns {Bemora}
+   */
+  forTenant(tenantId, keys) {
+    logger.debug(`forTenant("${tenantId}") instance created.`);
+    return new Bemora(keys, this._options);
+  }
+
+  /**
+   * Get collected metrics for all providers (or a single named one).
+   * @param {string} [provider]
+   * @returns {Object|Object[]}
+   */
+  getMetrics(provider) {
+    return metrics.getMetrics(provider);
+  }
+
+  /**
+   * Emit metrics in Prometheus text-exposition format.
+   * Suitable for a /metrics HTTP endpoint.
+   * @returns {string}
+   */
+  metricsPrometheus() {
+    return metrics.toPrometheusText();
+  }
 
   /**
    * Generate an OpenAPI 3.0 spec describing every namespace/method on this
@@ -377,55 +436,120 @@ export class Bemora {
   }
 
   /**
-   * Wrap a provider call with the full bemora pipeline: dead-provider
-   * skipping, retry, interceptors, middleware, cache-status headers,
-   * optional response validation, and health-registry bookkeeping.
-   * @param {string} provider - provider id used for rate-limit/health tracking
-   * @param {Function} fn - (...args) => Promise<any>
-   * @param {string} [schemaKey] - key into core/validate.js schemas for opt-in validation
+   * Wrap a provider call with the full bemora pipeline:
+   *   1. AbortSignal extraction from first arg
+   *   2. Circuit-breaker check (CLOSED → allow, OPEN → fail-fast, HALF_OPEN → probe)
+   *   3. Rate-limit recording & request event
+   *   4. Request interceptors
+   *   5. Per-provider timeout (options.timeouts[provider] || options.timeout || 30 000 ms)
+   *   6. Retry with exponential backoff
+   *   7. Middleware chain
+   *   8. Cache-status metadata + optional Cache-Control / ETag headers
+   *   9. Optional Zod response validation
+   *  10. Response interceptors
+   *  11. Metrics + registry bookkeeping on success
+   *  12. Circuit-breaker + metrics bookkeeping on failure
+   *
+   * @param {string}   provider  - provider id for rate-limiting / registry / circuit
+   * @param {Function} fn        - (...args) => Promise<any>
+   * @param {string}  [schemaKey]- key into core/validate.js schemas for opt-in validation
    */
   _wrap(provider, fn, schemaKey) {
     return async (...args) => {
-      if (registry.shouldSkip(provider)) {
-        const err = new ProviderError(
-          `[bemora] Provider "${provider}" is marked dead after repeated failures and is being skipped until its recovery window elapses.`,
+      // ── 1. Extract AbortSignal from first arg (if caller passes { signal }) ──
+      const signal = args[0] && typeof args[0] === 'object' ? args[0].signal : undefined;
+
+      // ── 2. Circuit-breaker check ─────────────────────────────────────────
+      const breaker = getBreaker(provider, this._options.circuitBreaker);
+      const breakerDecision = breaker.check();
+
+      if (breakerDecision === 'reject') {
+        const err = new CircuitBreakerError(
+          `[bemora] Provider "${provider}" circuit is OPEN — failing fast until recovery window elapses.`,
           { provider }
         );
+        metrics.record(provider, { success: false });
         this._events.emit('error', { provider, error: err.message });
         throw err;
       }
+      if (breakerDecision === 'probe') breaker.startProbe();
 
-      const signal = args[0] && typeof args[0] === 'object' ? args[0].signal : undefined;
-
+      // ── 3. Rate-limit + request event ────────────────────────────────────
       recordRequest(provider);
       this._events.emit('request', { provider });
 
+      // ── 4. Request interceptors ──────────────────────────────────────────
       const config = await this.interceptors.request.run({ provider, args });
 
-      const terminal = async () => {
-        return withRetry(() => fn(...config.args), { retries: this._options.retries, signal });
-      };
+      const startTime = Date.now();
+
+      // ── 5. Per-provider timeout wrapper ─────────────────────────────────
+      const timeoutMs = this._options.timeouts?.[provider] ?? this._options.timeout ?? 30_000;
+      const callOnce = () => new Promise((resolve, reject) => {
+        let settled = false;
+        const timer = setTimeout(() => {
+          if (!settled) {
+            settled = true;
+            reject(new TimeoutError(
+              `[bemora] "${provider}" timed out after ${timeoutMs}ms.`,
+              { provider }
+            ));
+          }
+        }, timeoutMs);
+        fn(...config.args).then(
+          (v) => { if (!settled) { settled = true; clearTimeout(timer); resolve(v); } },
+          (e) => { if (!settled) { settled = true; clearTimeout(timer); reject(e); } },
+        );
+      });
+
+      // ── 6 & 7. Retry inside middleware ───────────────────────────────────
+      const terminal = () => withRetry(callOnce, { retries: this._options.retries, signal });
 
       try {
         let result = await this.middleware.run({ provider, args: config.args }, terminal);
+        const latencyMs = Date.now() - startTime;
 
+        // ── 8. Cache-status metadata ─────────────────────────────────────
+        const cacheHit = result && typeof result === 'object' && result._cached === true;
         if (result && typeof result === 'object' && '_cached' in result) {
           result._cacheStatus = result._cached ? 'HIT' : 'MISS';
+          if (this._options.cacheHeaders) {
+            const ttl = result._ttl ?? 300;
+            result._cacheControl = `max-age=${ttl}, stale-while-revalidate=60`;
+            result._xCacheStatus  = result._cached ? 'HIT' : 'MISS';
+            result._etag          = `"${provider}-${ttl}"`;
+          }
         }
 
+        // ── 9. Optional schema validation ────────────────────────────────
         if (this._options.validateResponses && schemaKey) {
           validateResponse(schemaKey, result);
         }
 
+        // ── 10. Response interceptors ─────────────────────────────────────
         result = await this.interceptors.response.run(result);
 
+        // ── 11. Bookkeeping: success ──────────────────────────────────────
         registry.markSuccess(provider);
-        this._events.emit('response', { provider });
+        metrics.record(provider, { latencyMs, success: true, cacheHit });
+        breaker.recordSuccess();
+        if (breakerDecision === 'probe') breaker.endProbe();
+        this._events.emit('response', { provider, latencyMs });
+        logger.debug(`${provider} OK (${latencyMs}ms)`, { provider, latencyMs, cacheStatus: result?._cacheStatus });
+
         return result;
       } catch (e) {
+        const latencyMs = Date.now() - startTime;
+
+        // ── 12. Bookkeeping: failure ──────────────────────────────────────
         registry.markFailure(provider, e);
+        metrics.record(provider, { latencyMs, success: false });
+        breaker.recordFailure();
+        if (breakerDecision === 'probe') breaker.endProbe();
         this._events.emit('error', { provider, error: e.message });
-        if (e instanceof ValidationError) throw e;
+        logger.warn(`Provider "${provider}" failed: ${e.message}`, { provider, latencyMs });
+
+        if (e instanceof BemoraError) throw e;
         throw new ProviderError(e.message, { provider, cause: e });
       }
     };
@@ -439,15 +563,20 @@ export class Bemora {
   _buildCrypto() { return { price: this._wrap('coingecko', (p) => crypto.getPrice(p), 'crypto.price'), trending: this._wrap('coingecko', () => crypto.getTrending()), top: this._wrap('coingecko', (p) => crypto.getTopCoins(p)) }; }
   _buildGold() { return { price: this._wrap('goldapi', (p) => gold.getGoldPrice(p, this._require('gold', 'gold'))), silver: this._wrap('goldapi', (p) => gold.getSilverPrice(p, this._require('gold', 'gold'))) }; }
   _buildResearch() { return { wikipedia: this._wrap('wikipedia', (p) => research.searchWikipedia(p)), article: this._wrap('wikipedia', (p) => research.getWikipediaArticle(p)), books: this._wrap('openlibrary', (p) => research.searchBooks(p)) }; }
-  _buildLocation() { return { geocode: this._wrap('nominatim', (p) => location.geocode(p)), reverse: this._wrap('nominatim', (p) => location.reverseGeocode(p)), distance: location.distance }; }
+  _buildLocation() { return { geocode: this._wrap('nominatim', (p) => location.geocode(p), 'location.geocode'), reverse: this._wrap('nominatim', (p) => location.reverseGeocode(p)), distance: location.distance }; }
   _buildIP() { return { lookup: this._wrap('ip-api', (p) => ip.lookup(p), 'ip.lookup'), batchLookup: this._wrap('ip-api', (p) => ip.batchLookup(p)) }; }
   _buildCountries() { return { byName: this._wrap('restcountries', (p) => countries.byName(p), 'countries.byName'), byCode: this._wrap('restcountries', (p) => countries.byCode(p)), byRegion: this._wrap('restcountries', (p) => countries.byRegion(p)), all: this._wrap('restcountries', () => countries.all()) }; }
-  _buildTranslate() { return { text: this._wrap('mymemory', (p) => translate.translate(p)), many: this._wrap('mymemory', (p) => translate.translateMany(p)), detect: this._wrap('mymemory', (p) => translate.detectLanguage(p)) }; }
+  _buildTranslate() { return { text: this._wrap('mymemory', (p) => translate.translate(p), 'translate.text'), many: this._wrap('mymemory', (p) => translate.translateMany(p)), detect: this._wrap('mymemory', (p) => translate.detectLanguage(p)) }; }
   _buildMovies() { return { search: this._wrap('tmdb', (p) => movies.searchMovies(p, this._require('movies', 'movies'))), details: this._wrap('tmdb', (p) => movies.getMovie(p, this._require('movies', 'movies'))), trending: this._wrap('tmdb', (p) => movies.getTrending(p, this._require('movies', 'movies'))), tv: this._wrap('tmdb', (p) => movies.searchTV(p, this._require('movies', 'movies'))) }; }
 
   _buildFood() { 
     return {
-      searchMeals: food.searchMeals, getRandomMeal: food.getRandomMeal, random: food.getRandomMeal, getMeal: food.getMeal, byCategory: food.byCategory, categories: food.categories,
+      searchMeals: this._wrap('themealdb', (p) => food.searchMeals(p), 'food.search'),
+      getRandomMeal: this._wrap('themealdb', () => food.getRandomMeal(), 'food.random'),
+      random: this._wrap('themealdb', () => food.getRandomMeal(), 'food.random'),
+      getMeal: this._wrap('themealdb', (p) => food.getMeal(p)),
+      byCategory: this._wrap('themealdb', (p) => food.byCategory(p)),
+      categories: this._wrap('themealdb', () => food.categories()),
       searchSpoonacular: this._wrap('spoonacular', (p) => food.searchSpoonacular({ ...p, apiKey: this._require('spoonacular', 'spoonacular') })),
       getSpoonacularRecipe: this._wrap('spoonacular', (p) => food.getSpoonacularRecipe({ ...p, apiKey: this._require('spoonacular', 'spoonacular') })),
       searchEdamam: this._wrap('edamam', (p) => food.searchEdamam({ ...p, appId: this._require('edamamAppId', 'edamam app ID'), appKey: this._require('edamamAppKey', 'edamam app key') })),
@@ -455,11 +584,11 @@ export class Bemora {
     }; 
   }
 
-  _buildSpace() { return { apod: this._wrap('nasa', (p) => space.getAPOD(p, this._require('nasa', 'nasa'))), mars: this._wrap('nasa', (p) => space.getMarsPhotos(p, this._require('nasa', 'nasa'))), asteroids: this._wrap('nasa', (p) => space.getNearEarthObjects(p, this._require('nasa', 'nasa'))), issPosition: this._wrap('iss', () => space.getISSPosition()) }; }
+  _buildSpace() { return { apod: this._wrap('nasa', (p) => space.getAPOD(p, this._require('nasa', 'nasa'))), mars: this._wrap('nasa', (p) => space.getMarsPhotos(p, this._require('nasa', 'nasa'))), asteroids: this._wrap('nasa', (p) => space.getNearEarthObjects(p, this._require('nasa', 'nasa'))), issPosition: this._wrap('iss', () => space.getISSPosition(), 'space.iss') }; }
   _buildSearch() { return { instant: this._wrap('duckduckgo', (p) => search.instantAnswer(p)), web: this._wrap('wikipedia', (p) => search.webSearch(p), 'search.web') }; }
   _buildStocks() { return { quote: this._wrap('alphavantage', (p) => stocks.getQuote(p, this._require('stocks', 'stocks'))), search: this._wrap('alphavantage', (p) => stocks.searchStocks(p, this._require('stocks', 'stocks'))), overview: this._wrap('alphavantage', (p) => stocks.getOverview(p, this._require('stocks', 'stocks'))) }; }
   _buildMusic() { return { artist: this._wrap('musicbrainz', (p) => music.searchArtist(p)), album: this._wrap('musicbrainz', (p) => music.searchAlbum(p)), itunes: this._wrap('itunes', (p) => music.itunesSearch(p)) }; }
-  _buildSocial() { return { githubUser: this._wrap('github', (p) => social.githubUser(p)), githubRepo: this._wrap('github', (p) => social.githubRepo(p)), githubTrending: this._wrap('github', (p) => social.githubTrending(p)), hackerNews: this._wrap('hn', (p) => social.hackerNewsTop(p)), productHunt: this._wrap('ph', () => social.productHuntToday()) }; }
+  _buildSocial() { return { githubUser: this._wrap('github', (p) => social.githubUser(p)), githubRepo: this._wrap('github', (p) => social.githubRepo(p)), githubTrending: this._wrap('github', (p) => social.githubTrending(p)), hackerNews: this._wrap('hn', (p) => social.hackerNewsTop(p), 'social.hackernews'), productHunt: this._wrap('ph', () => social.productHuntToday()) }; }
 
   _buildAI() {
     const openaiChat = this._wrap('openai', (p) => ai.openaiChat(p, this._require('openai', 'openai')));
@@ -521,7 +650,7 @@ export class Bemora {
       shorten: this._wrap('isgd', (p) => utils.shortenURL(p)), 
       time: this._wrap('worldtime', (p) => utils.getTime(p)), 
       timezones: this._wrap('worldtime', () => utils.listTimezones()), 
-      holidays: this._wrap('nager', (p) => utils.getHolidays(p)), 
+      holidays: this._wrap('nager', (p) => utils.getHolidays(p), 'utils.holidays'), 
       quote: this._wrap('quotable', (p) => utils.getQuote(p)), 
       quotes: this._wrap('quotable', (p) => utils.getQuotes(p)), 
       define: this._wrap('dictionary', (p) => utils.define(p)), 
@@ -562,7 +691,7 @@ export class Bemora {
   _buildPets() { return { random: this._wrap('randomdog', () => pets.getRandomPet()) }; }
   _buildDrinks() { return { randomCocktail: this._wrap('thecocktaildb', () => drinks.getRandomCocktail()), searchCocktail: this._wrap('thecocktaildb', (p) => drinks.searchCocktail(p)), searchIngredient: this._wrap('thecocktaildb', (p) => drinks.searchIngredient(p)) }; }
   _buildGeography() { return { countryInfo: this._wrap('restcountries', (p) => geography.getCountryInfo(p)), allCountries: this._wrap('restcountries', () => geography.getAllCountries()), capitalCity: this._wrap('restcountries', (p) => geography.getCapitalCity(p)) }; }
-  _buildComics() { return { randomXKCD: this._wrap('xkcd', () => comics.getRandomXKCD()), getXKCD: this._wrap('xkcd', (p) => comics.getXKCD(p)) }; }
+  _buildComics() { return { randomXKCD: this._wrap('xkcd', () => comics.getRandomXKCD(), 'comics.xkcd'), getXKCD: this._wrap('xkcd', (p) => comics.getXKCD(p)) }; }
   _buildTV() { return { search: this._wrap('tmdb', (p) => tv.searchTVShows(p, this._require('movies', 'movies'))), details: this._wrap('tmdb', (p) => tv.getTVShowDetails(p, this._require('movies', 'movies'))), trending: this._wrap('tmdb', (p) => tv.getTrendingTV(p, this._require('movies', 'movies'))) }; }
   _buildBaseball() { return { mlbTeams: this._wrap('mlb', () => baseball.getMLBTeams()), mlbSchedule: this._wrap('mlb', (p) => baseball.getMLBSchedule(p)) }; }
   _buildHockey() { return { nhlTeams: this._wrap('nhl', () => hockey.getNHLTeams()), nhlPlayer: this._wrap('nhl', (p) => hockey.getNHLPlayer(p)) }; }
