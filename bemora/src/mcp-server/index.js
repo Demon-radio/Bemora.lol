@@ -1,4 +1,3 @@
-
 #!/usr/bin/env node
 import 'dotenv/config';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
@@ -7,102 +6,152 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
-import { Bemora } from '../index.js';
+import { Bemora, CircuitBreakerError, TimeoutError } from '../index.js';
 import { logger } from '../core/logger.js';
 import PROVIDER_INFO from './provider-info.js';
 
-const api = new Bemora({}, { logLevel: 'error' });
+const VERSION = '4.0.0';
 
-// Helper to check if provider needs a key and it's present
+const api = new Bemora({}, {
+  logLevel: 'error',
+  timeout: 20_000,          // 20 s global timeout for MCP tool calls
+  timeouts: { anime: 45_000, jikan: 45_000 }, // known-slow providers get more time
+});
+
+// ── Key availability check ────────────────────────────────────────────────────
 const checkProviderKey = (providerName) => {
   const info = PROVIDER_INFO[providerName];
   if (!info?.requiresKey) return { available: true };
 
-  const keyPresent = info.keyName.split(/ and | or /).some(keyName => process.env[keyName.trim()]);
+  const keyPresent = info.keyName.split(/ and | or /).some(keyName =>
+    process.env[keyName.trim()]
+  );
 
   return {
     available: keyPresent,
     required: true,
     keyName: info.keyName,
-    keyUrl: info.keyUrl
+    keyUrl: info.keyUrl,
   };
 };
 
-// Helper to get parameter schema for methods (default is flexible)
+// ── Parameter schemas ─────────────────────────────────────────────────────────
 const getParameterSchema = (providerName, methodName) => {
-  // Common patterns for common methods
   const commonSchemas = {
     weather: {
-      current: { type: 'object', properties: { city: { type: 'string' }, units: { type: 'string' } }, required: [] },
-      forecast: { type: 'object', properties: { city: { type: 'string' }, units: { type: 'string' } }, required: [] }
+      current:  { type: 'object', properties: { city: { type: 'string' }, units: { type: 'string' } }, required: [] },
+      forecast: { type: 'object', properties: { city: { type: 'string' }, units: { type: 'string' } }, required: [] },
     },
     currency: {
-      rates: { type: 'object', properties: { base: { type: 'string' }, symbols: { type: 'array', items: { type: 'string' } } }, required: [] },
-      convert: { type: 'object', properties: { from: { type: 'string' }, to: { type: 'string' }, amount: { type: 'number' } }, required: [] }
+      rates:   { type: 'object', properties: { base: { type: 'string' }, symbols: { type: 'array', items: { type: 'string' } } }, required: [] },
+      convert: { type: 'object', properties: { from: { type: 'string' }, to: { type: 'string' }, amount: { type: 'number' } }, required: [] },
     },
     crypto: {
-      price: { type: 'object', properties: { coins: { type: ['string', 'array'] } }, required: [] },
-      top: { type: 'object', properties: { limit: { type: 'number' } }, required: [] }
-    },
-    pokemon: {
-      get: { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] },
-      ability: { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] },
-      species: { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] }
+      price: { type: 'object', properties: { coins: { type: 'string' }, currency: { type: 'string' } }, required: [] },
+      top:   { type: 'object', properties: { limit: { type: 'number' }, currency: { type: 'string' } }, required: [] },
     },
     translate: {
-      text: { type: 'object', properties: { text: { type: 'string' }, from: { type: 'string' }, to: { type: 'string' } }, required: ['text'] }
+      text: { type: 'object', properties: { text: { type: 'string' }, from: { type: 'string' }, to: { type: 'string' } }, required: ['text', 'to'] },
     },
     countries: {
-      byName: { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] },
-      byCode: { type: 'object', properties: { code: { type: 'string' } }, required: ['code'] },
-      byRegion: { type: 'object', properties: { region: { type: 'string' } }, required: ['region'] }
+      byName:   { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] },
+      byCode:   { type: 'object', properties: { code: { type: 'string' } }, required: ['code'] },
+      byRegion: { type: 'object', properties: { region: { type: 'string' } }, required: ['region'] },
     },
     location: {
       geocode: { type: 'object', properties: { address: { type: 'string' } }, required: ['address'] },
-      reverse: { type: 'object', properties: { lat: { type: 'number' }, lon: { type: 'number' } }, required: [] }
+      reverse: { type: 'object', properties: { lat: { type: 'number' }, lon: { type: 'number' } }, required: ['lat', 'lon'] },
+    },
+    pokemon: {
+      get:     { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] },
+      ability: { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] },
+      species: { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] },
+    },
+    social: {
+      githubUser:     { type: 'object', properties: { username: { type: 'string' } }, required: ['username'] },
+      githubRepo:     { type: 'object', properties: { owner: { type: 'string' }, repo: { type: 'string' } }, required: ['owner', 'repo'] },
+      githubTrending: { type: 'object', properties: {}, required: [] },
     },
     free: {
       weather: { type: 'object', properties: { lat: { type: 'number' }, lon: { type: 'number' }, city: { type: 'string' } }, required: [] },
-      wttr: { type: 'object', properties: { city: { type: 'string' }, format: { type: 'string' } }, required: [] }
+      wttr:    { type: 'object', properties: { city: { type: 'string' }, format: { type: 'string' } }, required: [] },
     },
     smart: {
       weather: { type: 'object', properties: { city: { type: 'string' }, units: { type: 'string' } }, required: ['city'] },
-      news: { type: 'object', properties: { topic: { type: 'string' }, limit: { type: 'number' } }, required: [] }
-    }
+      news:    { type: 'object', properties: { topic: { type: 'string' }, limit: { type: 'number' } }, required: [] },
+    },
+    ip: {
+      lookup: { type: 'object', properties: { ip: { type: 'string' } }, required: [] },
+    },
+    research: {
+      wikipedia: { type: 'object', properties: { query: { type: 'string' }, language: { type: 'string' }, limit: { type: 'number' } }, required: ['query'] },
+      article:   { type: 'object', properties: { title: { type: 'string' }, language: { type: 'string' } }, required: ['title'] },
+      books:     { type: 'object', properties: { query: { type: 'string' }, limit: { type: 'number' } }, required: ['query'] },
+    },
+    ai: {
+      chat:       { type: 'object', properties: { messages: { type: 'array' }, model: { type: 'string' } }, required: ['messages'] },
+      smartChat:  { type: 'object', properties: { messages: { type: 'array' } }, required: ['messages'] },
+      groqChat:   { type: 'object', properties: { messages: { type: 'array' }, model: { type: 'string' } }, required: ['messages'] },
+      openaiChat: { type: 'object', properties: { messages: { type: 'array' }, model: { type: 'string' } }, required: ['messages'] },
+    },
+    utils: {
+      time:       { type: 'object', properties: { timezone: { type: 'string' } }, required: ['timezone'] },
+      holidays:   { type: 'object', properties: { country: { type: 'string' }, year: { type: 'number' } }, required: ['country'] },
+      define:     { type: 'object', properties: { word: { type: 'string' } }, required: ['word'] },
+      shorten:    { type: 'object', properties: { url: { type: 'string' } }, required: ['url'] },
+      trivia:     { type: 'object', properties: { amount: { type: 'number' }, difficulty: { type: 'string' } }, required: [] },
+    },
+    food: {
+      searchMeals:   { type: 'object', properties: { name: { type: 'string' } }, required: ['name'] },
+      getRandomMeal: { type: 'object', properties: {}, required: [] },
+    },
   };
 
-  if (commonSchemas[providerName] && commonSchemas[providerName][methodName]) {
-    return commonSchemas[providerName][methodName];
-  }
-
-  // Default schema: accepts any object properties
-  return {
+  return commonSchemas[providerName]?.[methodName] ?? {
     type: 'object',
     properties: {},
     required: [],
-    additionalProperties: true
+    additionalProperties: true,
   };
 };
 
-// Generate tools from provider info
-const generateTools = () => {
-  const tools = [];
+// ── Built-in observability tools ──────────────────────────────────────────────
+const OBSERVABILITY_TOOLS = [
+  {
+    name: 'bemora_status',
+    description: 'Get the health status of all bemora providers, including circuit breaker state (CLOSED/OPEN/HALF_OPEN), failure counts, and registry health.',
+    inputSchema: { type: 'object', properties: {}, required: [] },
+  },
+  {
+    name: 'bemora_metrics',
+    description: 'Get per-provider metrics: request counts, error rates, cache hit rates, and latency percentiles (p50/p95/p99).',
+    inputSchema: { type: 'object', properties: { provider: { type: 'string', description: 'Optional: filter to a specific provider name.' } }, required: [] },
+  },
+  {
+    name: 'bemora_rate_limits',
+    description: 'Check rate limit usage for all tracked providers. Shows used/limit counts and whether any provider is near its limit.',
+    inputSchema: { type: 'object', properties: {}, required: [] },
+  },
+];
 
-  // Add all provider methods
-  Object.keys(PROVIDER_INFO).forEach(providerName => {
+// ── Generate provider tools ───────────────────────────────────────────────────
+const generateTools = () => {
+  const tools = [...OBSERVABILITY_TOOLS];
+
+  Object.keys(PROVIDER_INFO).forEach((providerName) => {
     const provider = PROVIDER_INFO[providerName];
     const keyCheck = checkProviderKey(providerName);
 
-    Object.keys(provider.methods).forEach(methodName => {
-      const descriptionParts = [provider.methods[methodName]];
+    Object.keys(provider.methods).forEach((methodName) => {
+      const descParts = [provider.methods[methodName]];
       if (!keyCheck.available) {
-        descriptionParts.push(`[NEEDS KEY: ${keyCheck.keyName} - Get one at ${keyCheck.keyUrl}]`);
+        descParts.push(`[NEEDS KEY: ${keyCheck.keyName} — get one free at ${keyCheck.keyUrl}]`);
       }
 
       tools.push({
         name: `${providerName}_${methodName}`,
-        description: descriptionParts.join(' '),
-        inputSchema: getParameterSchema(providerName, methodName)
+        description: descParts.join(' '),
+        inputSchema: getParameterSchema(providerName, methodName),
       });
     });
   });
@@ -112,85 +161,116 @@ const generateTools = () => {
 
 const allTools = generateTools();
 
-// Helper to trim large responses
+// ── Response trimmer (saves AI context) ──────────────────────────────────────
 const trimResponse = (data, depth = 0) => {
   if (depth > 3) return '[Truncated]';
-  if (typeof data === 'string') return data;
-
-  if (Array.isArray(data)) {
-    // Limit arrays to max 10 items
-    return data.slice(0, 10).map(item => trimResponse(item, depth + 1));
-  }
-
+  if (typeof data === 'string') return data.length > 2000 ? data.slice(0, 2000) + '…' : data;
+  if (Array.isArray(data)) return data.slice(0, 10).map((item) => trimResponse(item, depth + 1));
   if (typeof data === 'object' && data !== null) {
     const trimmed = {};
-    Object.keys(data).slice(0, 30).forEach(key => {
-      trimmed[key] = trimResponse(data[key], depth + 1);
-    });
+    Object.keys(data).slice(0, 30).forEach((key) => { trimmed[key] = trimResponse(data[key], depth + 1); });
     return trimmed;
   }
-
   return data;
 };
 
+// ── Error → readable message ──────────────────────────────────────────────────
+const formatError = (err, toolName) => {
+  if (err instanceof CircuitBreakerError) {
+    return `Circuit OPEN for this provider — it has failed repeatedly and is being protected. Try again in ~60 seconds, or check bemora_status for details.`;
+  }
+  if (err instanceof TimeoutError) {
+    return `Provider timed out (${toolName}). The external API is taking too long. Try again later.`;
+  }
+  if (err?.code === 'CONFIGURATION_ERROR' || err?.message?.includes('Missing API key')) {
+    return `API key required. ${err.message}`;
+  }
+  return err?.message ?? 'Unknown error';
+};
+
+// ── MCP Server setup ──────────────────────────────────────────────────────────
 const server = new Server(
-  { name: 'bemora', version: '3.4.0' },
-  { capabilities: { tools: {} } }
+  { name: 'bemora', version: VERSION },
+  { capabilities: { tools: {} } },
 );
 
-server.setRequestHandler(ListToolsRequestSchema, async () => {
-  return { tools: allTools };
-});
+server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: allTools }));
 
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const { name, arguments: args } = request.params;
 
-  try {
-    let result;
+  // ── Observability tools ─────────────────────────────────────────────────────
+  if (name === 'bemora_status') {
+    const circuits  = api.circuits.status();
+    const registry  = api.providers.status();
+    return {
+      content: [{
+        type: 'text',
+        text: JSON.stringify({
+          circuitBreakers: circuits,
+          providerRegistry: registry,
+          summary: {
+            total: circuits.length,
+            closed: circuits.filter((c) => c.state === 'CLOSED').length,
+            open: circuits.filter((c) => c.state === 'OPEN').length,
+            halfOpen: circuits.filter((c) => c.state === 'HALF_OPEN').length,
+          },
+        }, null, 2),
+      }],
+    };
+  }
 
-    // Handle tool name (provider_method)
+  if (name === 'bemora_metrics') {
+    const result = args?.provider ? api.getMetrics(args.provider) : api.getMetrics();
+    if (result === null) {
+      return { content: [{ type: 'text', text: `No metrics recorded yet for provider "${args.provider}".` }] };
+    }
+    return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+  }
+
+  if (name === 'bemora_rate_limits') {
+    const limits = api.rateLimits();
+    const warning = limits.filter((l) => l.warning);
+    return {
+      content: [{
+        type: 'text',
+        text: JSON.stringify({ rateLimits: limits, warnings: warning, hasWarnings: warning.length > 0 }, null, 2),
+      }],
+    };
+  }
+
+  // ── Provider tools ──────────────────────────────────────────────────────────
+  try {
     const parts = name.split('_');
-    const methodName = parts.pop();
+    const methodName   = parts.pop();
     const providerName = parts.join('_');
 
     if (!providerName || !methodName || !api[providerName] || typeof api[providerName][methodName] !== 'function') {
       return { content: [{ type: 'text', text: `Unknown tool: ${name}` }], isError: true };
     }
 
-    // Check if provider needs a key
     const keyCheck = checkProviderKey(providerName);
     if (!keyCheck.available) {
       return {
         content: [{
           type: 'text',
-          text: `This tool requires an API key: ${keyCheck.keyName}.\nGet one for free at ${keyCheck.keyUrl}\nAdd it to your .env file.`
+          text: `This tool requires an API key.\nKey name: ${keyCheck.keyName}\nGet one free at: ${keyCheck.keyUrl}\nAdd it to your .env file or MCP server env config.`,
         }],
-        isError: true
+        isError: true,
       };
     }
 
-    result = await api[providerName][methodName](args);
+    const result = await api[providerName][methodName](args);
+    return { content: [{ type: 'text', text: JSON.stringify(trimResponse(result), null, 2) }] };
 
-    // Trim response to save context
-    const trimmedResult = trimResponse(result);
-
-    return {
-      content: [
-        { type: 'text', text: JSON.stringify(trimmedResult, null, 2) }
-      ]
-    };
   } catch (err) {
-    logger.error(`MCP tool "${name}" failed: ${err.message}`);
-    return {
-      content: [{ type: 'text', text: `Error: ${err.message}` }],
-      isError: true
-    };
+    const msg = formatError(err, name);
+    logger.error(`MCP tool "${name}" failed: ${err.message}`, { provider: name });
+    return { content: [{ type: 'text', text: `Error: ${msg}` }], isError: true };
   }
 });
 
-// Start server
+// ── Start ─────────────────────────────────────────────────────────────────────
 const transport = new StdioServerTransport();
 await server.connect(transport);
-logger.info('✨ Bemora MCP server running!');
-logger.info('📦 Version: 3.4.0');
-logger.info(`🔧 ${allTools.length} tools available!`);
+logger.info(`Bemora MCP server v${VERSION} running — ${allTools.length} tools available`);

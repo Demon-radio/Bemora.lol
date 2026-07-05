@@ -185,25 +185,90 @@ export async function shortenURL({ url }) {
 // ─── Timezone ───────────────────────────────────────────────────────────────
 
 export async function getTime({ timezone }) {
-  const { data } = await axios.get(`https://worldtimeapi.org/api/timezone/${encodeURIComponent(timezone)}`);
-  return {
-    timezone: data.timezone,
-    datetime: data.datetime,
-    utc_offset: data.utc_offset,
-    day_of_week: data.day_of_week,
-    week_number: data.week_number,
-    dst: data.dst,
-    unixtime: data.unixtime,
-  };
+  // Primary: WorldTimeAPI (known to ECONNRESET intermittently)
+  try {
+    const { data } = await axios.get(
+      `https://worldtimeapi.org/api/timezone/${encodeURIComponent(timezone)}`,
+      { timeout: 8000 },
+    );
+    return {
+      timezone: data.timezone,
+      datetime: data.datetime,
+      utc_offset: data.utc_offset,
+      day_of_week: data.day_of_week,
+      week_number: data.week_number,
+      dst: data.dst,
+      unixtime: data.unixtime,
+      _provider: 'worldtimeapi',
+    };
+  } catch {
+    // Fallback 1: timeapi.io
+    try {
+      const { data } = await axios.get(
+        `https://timeapi.io/api/time/current/zone?timeZone=${encodeURIComponent(timezone)}`,
+        { timeout: 8000 },
+      );
+      return {
+        timezone: data.timeZone,
+        datetime: data.dateTime,
+        utc_offset: data.utcOffset,
+        day_of_week: new Date(data.dateTime).getDay(),
+        week_number: null,
+        dst: data.dstActive,
+        unixtime: Math.floor(new Date(data.dateTime).getTime() / 1000),
+        _provider: 'timeapi.io',
+      };
+    } catch {
+      // Ultimate fallback: Intl API — always available, zero network needed
+      const now = new Date();
+      const fmt = new Intl.DateTimeFormat('sv-SE', {
+        timeZone: timezone,
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+        hour12: false,
+      });
+      const parts = Object.fromEntries(fmt.formatToParts(now).map((p) => [p.type, p.value]));
+      return {
+        timezone,
+        datetime: `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}`,
+        utc_offset: null,
+        day_of_week: now.getDay(),
+        week_number: null,
+        dst: null,
+        unixtime: Math.floor(now.getTime() / 1000),
+        _provider: 'Intl',
+      };
+    }
+  }
 }
 
 export async function listTimezones() {
   const cacheKey = 'utils:timezones';
   const cached = cache.get(cacheKey);
   if (cached) return cached;
-  const { data } = await axios.get('https://worldtimeapi.org/api/timezone');
-  cache.set(cacheKey, data, 86400);
-  return data;
+
+  // Primary: WorldTimeAPI
+  try {
+    const { data } = await axios.get('https://worldtimeapi.org/api/timezone', { timeout: 8000 });
+    cache.set(cacheKey, data, 86400);
+    return data;
+  } catch {
+    // Fallback: timeapi.io available timezones list
+    try {
+      const { data } = await axios.get('https://timeapi.io/api/timezone/availabletimezones', { timeout: 8000 });
+      cache.set(cacheKey, data, 86400);
+      return data;
+    } catch {
+      // Ultimate fallback: IANA tz subset guaranteed by Intl
+      const zones = Intl.supportedValuesOf
+        ? Intl.supportedValuesOf('timeZone')
+        : ['UTC', 'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles',
+           'Europe/London', 'Europe/Paris', 'Europe/Berlin', 'Asia/Tokyo', 'Asia/Shanghai',
+           'Asia/Dubai', 'Asia/Cairo', 'Africa/Johannesburg', 'Australia/Sydney', 'Pacific/Auckland'];
+      cache.set(cacheKey, zones, 86400);
+      return zones;
+    }
+  }
 }
 
 // ─── Public Holidays ─────────────────────────────────────────────────────────

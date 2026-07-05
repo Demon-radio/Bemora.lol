@@ -6,8 +6,33 @@ export async function getRandomDog() {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get('https://dog.ceo/api/breeds/image/random');
-  const result = { image: data.message, _cached: false };
+  // Primary: dog.ceo (occasionally returns Cloudflare 520)
+  // Fallback 1: random.dog
+  // Fallback 2: The Dog API (no key needed for basic image search)
+  let image = null;
+  let source = 'dog.ceo';
+
+  try {
+    const { data } = await axios.get('https://dog.ceo/api/breeds/image/random', { timeout: 8000 });
+    image = data.message;
+  } catch {
+    try {
+      source = 'random.dog';
+      const { data } = await axios.get('https://random.dog/woof.json', { timeout: 8000 });
+      // random.dog may return video files — skip those
+      if (data.url && /\.(jpg|jpeg|png|gif|webp)$/i.test(data.url)) {
+        image = data.url;
+      } else {
+        throw new Error('non-image filetype');
+      }
+    } catch {
+      source = 'thedogapi';
+      const { data } = await axios.get('https://api.thedogapi.com/v1/images/search', { timeout: 8000 });
+      image = data[0]?.url ?? null;
+    }
+  }
+
+  const result = { image, _source: source, _cached: false };
   cache.set(cacheKey, result, 60);
   return result;
 }
