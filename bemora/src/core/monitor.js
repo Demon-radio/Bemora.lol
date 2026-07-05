@@ -1,5 +1,23 @@
-import { EventEmitter } from 'events';
 import { logger } from './logger.js';
+
+// Lazy-load EventEmitter so this module is safe in edge/browser runtimes.
+let _EventEmitter;
+try {
+  const mod = await import('events');
+  _EventEmitter = mod.EventEmitter || mod.default?.EventEmitter || mod.default;
+} catch {
+  // Edge / browser runtime — provide a minimal stub
+  _EventEmitter = class MinimalEmitter {
+    constructor() { this._h = {}; }
+    on(ev, fn)  { (this._h[ev] ??= []).push(fn); return this; }
+    off(ev, fn) { this._h[ev] = (this._h[ev] || []).filter((h) => h !== fn); return this; }
+    emit(ev, ...a) { (this._h[ev] || []).forEach((fn) => fn(...a)); return this; }
+    once(ev, fn) {
+      const w = (...a) => { fn(...a); this.off(ev, w); };
+      return this.on(ev, w);
+    }
+  };
+}
 
 /**
  * Monitor & Alert System
@@ -19,11 +37,11 @@ import { logger } from './logger.js';
  * mon.stop('btc-alert'); // stop a watcher
  * mon.stopAll();          // stop everything
  */
-export class BemoraMonitor extends EventEmitter {
+export class BemoraMonitor extends _EventEmitter {
   constructor() {
     super();
     this._watchers = new Map();
-    this._running = new Set();
+    this._running  = new Set();
   }
 
   /**
