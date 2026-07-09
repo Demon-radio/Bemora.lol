@@ -1,5 +1,6 @@
 import axios from 'axios';
 import * as cache from '../core/cache.js';
+import { USER_AGENT } from '../core/headers.js';
 
 /**
  * Parse RSS/Atom feed into clean article objects (no key needed)
@@ -8,7 +9,7 @@ import * as cache from '../core/cache.js';
  */
 async function parseFeed(url) {
   const { data } = await axios.get(url, {
-    headers: { 'User-Agent': 'bemora/1.0', Accept: 'application/rss+xml, application/xml, text/xml' },
+    headers: { 'User-Agent': USER_AGENT, Accept: 'application/rss+xml, application/xml, text/xml' },
     timeout: 10000,
   });
 

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import * as cache from '../core/cache.js';
+import { USER_AGENT } from '../core/headers.js';
 
 /**
  * Developer tools & utilities — all free, no key
@@ -69,7 +70,7 @@ export async function githubRepos({ username, sort = 'stars', limit = 10 }) {
 
   const { data } = await axios.get(`https://api.github.com/users/${username}/repos`, {
     params: { sort, per_page: limit },
-    headers: { 'User-Agent': 'bemora/1.0' },
+    headers: { 'User-Agent': USER_AGENT },
   });
 
   const result = {
@@ -100,7 +101,7 @@ export async function githubReleases({ owner, repo, limit = 5 }) {
 
   const { data } = await axios.get(
     `https://api.github.com/repos/${owner}/${repo}/releases`,
-    { params: { per_page: limit }, headers: { 'User-Agent': 'bemora/1.0' } }
+    { params: { per_page: limit }, headers: { 'User-Agent': USER_AGENT } }
   );
 
   const result = {

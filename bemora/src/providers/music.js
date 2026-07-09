@@ -1,8 +1,9 @@
 import axios from 'axios';
 import * as cache from '../core/cache.js';
+import { USER_AGENT } from '../core/headers.js';
 
 const MB = 'https://musicbrainz.org/ws/2';
-const MB_HEADERS = { 'User-Agent': 'bemora/1.0 (bemora.dev)' };
+const MB_HEADERS = { 'User-Agent': USER_AGENT };
 
 /**
  * Search artists (MusicBrainz — Free, no key)

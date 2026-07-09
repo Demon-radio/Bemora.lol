@@ -1,8 +1,17 @@
+import { createRequire } from 'node:module';
 
-
-// Load .env in Node.js environments; no-op in edge/browser runtimes
+// Load .env in Node.js environments; no-op in edge/browser runtimes.
+// Loaded synchronously via createRequire (a plain static import, not a
+// top-level `await`) so:
+//   - bundlers that don't target es2022 (webpack/esbuild defaults) can still
+//     consume this package, and
+//   - env vars are guaranteed available before any provider code runs, i.e.
+//     `new Bemora()` immediately after import never races the .env load.
+// dotenv ships a CJS build, so this works even though bemora itself is ESM.
 if (typeof process !== 'undefined' && process.versions?.node) {
-  try { await import('dotenv/config'); } catch { /* edge or dotenv absent */ }
+  try {
+    createRequire(import.meta.url)('dotenv/config');
+  } catch { /* edge, dotenv absent, or no filesystem access */ }
 }
 import * as weather from './providers/weather.js';
 import * as currency from './providers/currency.js';

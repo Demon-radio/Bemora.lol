@@ -8,7 +8,7 @@
 [![npm downloads](https://img.shields.io/npm/dm/bemora?style=for-the-badge&color=8b5cf6)](https://www.npmjs.com/package/bemora)
 [![license](https://img.shields.io/npm/l/bemora?style=for-the-badge&color=06b6d4)](LICENSE)
 [![node](https://img.shields.io/node/v/bemora?style=for-the-badge&color=10b981)](package.json)
-[![GitHub stars](https://img.shields.io/github/stars/bemora/bemora?style=for-the-badge&color=f59e0b)](https://github.com/bemora/bemora/stargazers)
+[![GitHub stars](https://img.shields.io/github/stars/Demon-radio/Bemora.lol?style=for-the-badge&color=f59e0b)](https://github.com/Demon-radio/Bemora.lol/stargazers)
 
 <br />
 
@@ -888,7 +888,7 @@ bemora/
 
 ## 📄 License
 
-MIT © [bemora](https://github.com/bemora)
+MIT © [bemora](https://github.com/Demon-radio/Bemora.lol)
 
 ---
 
