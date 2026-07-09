@@ -1,0 +1,135 @@
+Hey — I evaluated the `bemora` npm package (v3.6.0, unified API client, 94+ providers, single maintainer, repo: Demon-radio/Bemora.lol) for company-level production use. It works for hobby stuff but has real blockers. I want you to fork it internally and ship a `bemora-enterprise` v1.0 in one pass. Here's the full scope — do it all in one PR (or one coordinated set of PRs), not phased.
+
+═══════════════════════════════════════════════════════════
+PART A — FIX EXISTING BUGS (non-negotiable)
+═══════════════════════════════════════════════════════════
+
+1. CLI + MCP shebang bug: `src/cli.js` and `src/mcp-server/index.js` start with a blank line then `#!/usr/bin/env node` on line 2, which Node's ESM parser rejects. Move the shebang to line 1 in both files. Verify `npx bemora crypto bitcoin` works after the fix.
+
+2. Add a real LICENSE file (MIT, matching package.json) at repo root. Add SECURITY.md with a vulnerability reporting policy. Add CHANGELOG.md starting at the fork version.
+
+3. Add `.github/workflows/ci.yml` running the existing 13 unit tests + integration tests on Node 18/20/22, plus `npm audit` and a license-check step. No `.github` folder ships today — unclear if upstream even has CI.
+
+4. Add axios `timeout: 8000` + `AbortController` signal to EVERY provider. Currently only ~10 of 94 providers set a timeout; a hung upstream hangs the whole service. The `signal` plumbing already exists in function signatures, just nobody passes it through.
+
+5. Replace every `throw new Error(string)` with structured error classes:
+   - `BemoraError` (base, has `provider`, `code`, `requestId`)
+   - `BemoraProviderError` (extends base, adds `httpStatus`, `upstreamRequestId`)
+   - `BemoraRateLimitError` (extends BemoraProviderError, adds `retryAfter`, `limit`, `remaining`)
+   - `BemoraTimeoutError`, `BemoraAuthError`
+   Update all ~30 provider files to throw these.
+
+6. Centralize User-Agent into `src/core/headers.js`. Today there are 5 different UAs (`bemora/1.0`, `bemora-npm-library`, `bemora (https://...)`, etc.). Wikipedia 403'd because of this. One constant, exported, used everywhere.
+
+7. Add request/response log redaction. The built-in logger logs full URLs; if a key is in the querystring (`appid=`, `apikey=`, `Authorization=`) it leaks. Add a logger interceptor that scrubs these before any `logger.info()`.
+
+8. Fix the README repo links — badges point to `github.com/bemora/bemora` which doesn't exist. Point to the new internal fork.
+
+9. Replace top-level `await import()` in `src/index.js` and `src/core/cache.js` with dynamic imports inside async functions so webpack/esbuild can consume the package without `target: 'es2022'`.
+
+═══════════════════════════════════════════════════════════
+PART B — ADD MISSING PROVIDERS (Tier 1 + Tier 2)
+═══════════════════════════════════════════════════════════
+
+Tier 1 (must-have, build these first):
+- payments/stripe.js — Charge, Customer, Subscription, Webhook signature verify, Refund
+- payments/paypal.js — Order, Capture, Refund
+- email/sendgrid.js, email/ses.js, email/resend.js — send(), batch(), webhook verify
+- sms/twilio.js — send(), lookup(), webhook verify
+- auth/jwt.js — sign(), verify(), refresh() helpers (no external dep)
+- auth/clerk.js, auth/auth0.js — getUser, verifySession, listUsers
+- storage/s3.js, storage/r2.js, storage/gcs.js — presigned URL, upload, download, delete
+- ai/anthropic.js — messages(), with streaming via async iterator
+- ai/gemini.js — generateContent(), streaming
+- ai/cohere.js, ai/mistral.js, ai/together.js, ai/perplexity.js
+- Add streaming variants to ALL ai/* providers: `ai.anthropic.stream({ messages })` returns an async iterable of chunks
+- vectordb/pinecone.js, vectordb/qdrant.js, vectordb/weaviate.js, vectordb/pgvector.js — upsert(), query(), delete()
+- webhooks/verify.js — `webhooks.verify('stripe', { payload, signature, secret })`, `webhooks.verify('twilio', ...)`, `webhooks.verify('github', ...)`, `webhooks.verify('clerk', ...)`, `webhooks.verify('resend', ...)` returning boolean. Cover at least Stripe, Twilio, GitHub, Clerk, Resend, SendGrid, PayPal.
+
+Tier 2 (operational):
+- observability/sentry.js — captureException, captureMessage
+- observability/otel.js — auto-span every provider call as `bemora.{provider}.{method}` with status, latency, cache hit. Wire the existing event bus (`api.on('request'|'response'|'error'|'cache:hit')`) to OpenTelemetry traces + metrics.
+- notifications/onesignal.js, notifications/pusher.js, notifications/fcm.js
+- maps/google.js, maps/mapbox.js — geocode, directions, distance matrix, static map
+- search/algolia.js, search/meilisearch.js
+- calendar/google.js, calendar/calendly.js
+- captcha/recaptcha.js, captcha/hcaptcha.js, captcha/turnstile.js — verify()
+- security/hibp.js, security/virustotal.js, security/safebrowsing.js, security/urlscan.js
+- cloudflare/dns.js, cloudflare/r2.js, cloudflare/cache.js, cloudflare/workers.js — all the Cloudflare API surface
+
+═══════════════════════════════════════════════════════════
+PART C — ADD PLATFORM FEATURES (not providers, capabilities)
+═══════════════════════════════════════════════════════════
+
+1. Multi-tenant key management: `api.withTenant(tenantId, keys)` returns a scoped sub-instance. Per-customer keys for SaaS use cases. Backed by a tenant registry so the same provider can serve N tenants with different keys.
+
+2. Key rotation: `api.keys.rotate('stripe', newKey)` — invalidates caches, swaps the live key atomically, emits a `keys:rotated` event.
+
+3. Circuit breaker: `core/circuit.js`. After N consecutive failures from a provider, open the circuit for a cooldown window. `api.circuit.status('weather')` returns `{ state: 'closed'|'open'|'half-open', failures, lastFailure }`. Wire into the retry layer.
+
+4. Cost tracking: emit `ai:response` events with `{ provider, model, inputTokens, outputTokens, costUsd }`. Add `api.costs.snapshot()` returning per-provider/per-tenant spend. Critical for AI products.
+
+5. PII redaction: `core/pii.js`. Auto-scrub emails, phones, SSNs, card numbers from logs AND from data sent to LLMs (configurable). Apply via the middleware layer.
+
+6. Request signing helpers: `signing/awsSigV4.js`, `signing/hmac.js`, `signing/cloudflare.js`. Today every caller writes their own.
+
+7. Pagination helper: `api.helpers.paginate(fn, { cursor | offset | page })` — unified across cursor/offset/page strategies. Each provider exports its pagination type.
+
+8. GraphQL client: `api.gql(endpoint, query, variables, { headers })`. Many modern APIs (Shopify, GitHub v4, Hasura) are GraphQL-only.
+
+9. Multipart upload support: `api.helpers.upload(url, file, { fields, headers })`. Needed for S3 presigned POST, Cloudinary, etc.
+
+10. Schema enforcement: every provider exports a zod schema for its response. Validate on the way out. Reject malformed data with `BemoraProviderError` instead of crashing callers. zod is already a dep, just barely used today.
+
+11. Fallback chains beyond AI: extend `core/fallback.js` to non-AI providers. Ship with: weather → OpenWeatherMap → Open-Meteo → WeatherAPI → NWS; news → NewsAPI → RSS aggregation; currency → ExchangeRate-API → Frankfurter → ECB. One dead upstream no longer breaks the app.
+
+12. Redis cache adapter: `core/cache-redis.js`. The library already exposes `cache.setAdapter(adapter)` — just ship the Redis implementation so multi-instance deploys share cache.
+
+13. Webhook receiver router: `api.webhooks.route('stripe', req)` — parse, verify, dispatch to handler. Today bemora only does outbound; inbound webhooks are manual.
+
+14. Per-provider axios instances: `core/http.js` exports `httpClient({ timeout, retries, headers })` factory. Every provider uses it instead of raw `axios.get`. Centralizes timeout/retry/header/interceptor config.
+
+═══════════════════════════════════════════════════════════
+PART D — PRUNE
+═══════════════════════════════════════════════════════════
+
+Delete these 13+ "fun" providers — they add bundle size and attack surface but no business value: chucknorris, kanye, rickmorty, harrypotter, starwars, pokemon, dadjokes, bored, memes, zodiac, advice, randomuser, fun. If anyone actually needs them, they can install the upstream API client directly.
+
+═══════════════════════════════════════════════════════════
+PART E — ACCEPTANCE CRITERIA (definition of done)
+═══════════════════════════════════════════════════════════
+
+- `npx bemora crypto bitcoin` works (CLI shebang fixed)
+- LICENSE, SECURITY.md, CHANGELOG.md exist at repo root
+- CI workflow runs green on Node 18/20/22 with all unit + integration tests
+- Every provider call has an 8s timeout and accepts an AbortSignal
+- Every thrown error is an instance of `BemoraError` with `provider`, `code`, `requestId`
+- One User-Agent constant used across all providers
+- No API key ever appears in logs (automated test asserts this)
+- Stripe, Twilio, SendGrid, SES, S3, Anthropic, Gemini, Pinecone providers all functional with at least one integration test each
+- AI streaming works: `for await (const chunk of api.anthropic.stream({...}))` yields text deltas
+- `webhooks.verify('stripe', ...)` returns true for valid signatures, false for tampered
+- `api.withTenant('cust_123', { stripe: 'sk_...' })` isolates keys per tenant
+- Circuit breaker opens after 5 consecutive failures and auto-recovers
+- Cost tracking: `api.costs.snapshot()` returns per-tenant LLM spend
+- PII redaction: emails/phones/cards scrubbed from logs (automated test)
+- Redis cache adapter works in a 2-instance integration test
+- Fallback chain: kill OpenWeatherMap mock → weather call still succeeds via Open-Meteo
+- zod schema validation on at least 5 provider responses
+- Bundle size (published tarball) is smaller than upstream bemora 3.6.0
+- README is rewritten with the new provider list, correct repo links, and a "Migrating from upstream bemora" section
+
+═══════════════════════════════════════════════════════════
+PART F — TECH CONSTRAINTS
+═══════════════════════════════════════════════════════════
+
+- Keep ESM-only, Node ≥18, MIT license
+- Keep the existing `api.<namespace>.<method>()` interface — don't break callers
+- Keep axios as the HTTP layer (don't swap to fetch/undici)
+- Keep zod as the schema layer
+- Keep the event bus, plugin system, batch(), health() APIs
+- Publish as a scoped private package: `@yourcompany/bemora` (or whatever your npm org is)
+- Pin all transitive deps with package-lock.json committed
+- Add a CODEOWNERS file
+
+If you hit a scope question, default to "do the Tier 1 providers + Part A bug fixes first, ship that as v1.0.0-alpha.1, then iterate to v1.0.0 with the rest." But the goal is one coordinated effort, not a multi-month phased rollout. Ping me when you have a working branch and I'll review.
