@@ -1,5 +1,6 @@
 import axios from 'axios';
 import * as cache from '../core/cache.js';
+import { USER_AGENT } from '../core/headers.js';
 
 /**
  * DuckDuckGo Instant Answers (Free, no key)
@@ -55,7 +56,7 @@ export async function webSearch({ query, language = 'en', limit = 5 }) {
         srlimit: limit, srinfo: 'totalhits', srprop: 'snippet|titlesnippet',
         format: 'json', origin: '*',
       },
-      headers: { 'User-Agent': 'bemora-npm-library (+https://github.com/Demon-radio/Bemora.lol)' },
+      headers: { 'User-Agent': USER_AGENT },
     }
   );
 

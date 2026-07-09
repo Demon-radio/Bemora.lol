@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const HEADERS = { Accept: 'application/json', 'User-Agent': 'bemora (https://github.com/Demon-radio/Bemora.lol)' };
+import { USER_AGENT } from '../core/headers.js';
+
+const HEADERS = { Accept: 'application/json', 'User-Agent': USER_AGENT };
 
 export async function getRandomDadJoke() {
   const { data } = await axios.get('https://icanhazdadjoke.com/', { headers: HEADERS });

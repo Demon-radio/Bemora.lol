@@ -1,5 +1,6 @@
 import axios from 'axios';
 import * as cache from '../core/cache.js';
+import { USER_AGENT } from '../core/headers.js';
 
 /**
  * Open-Meteo — completely free weather, no key, no registration
@@ -56,7 +57,7 @@ export async function wttrWeather({ city, format = 'short' }) {
 
   if (format === 'short') {
     const { data } = await axios.get(`https://wttr.in/${encodeURIComponent(city)}?format=%l:+%C+%t+💧%h+💨%w`, {
-      headers: { 'User-Agent': 'bemora/1.0' },
+      headers: { 'User-Agent': USER_AGENT },
     });
     const result = { city, summary: data.trim(), provider: 'wttr.in', _cached: false };
     cache.set(cacheKey, result, 600);
@@ -64,7 +65,7 @@ export async function wttrWeather({ city, format = 'short' }) {
   }
 
   const { data } = await axios.get(`https://wttr.in/${encodeURIComponent(city)}?format=j1`, {
-    headers: { 'User-Agent': 'bemora/1.0' },
+    headers: { 'User-Agent': USER_AGENT },
   });
 
   const cur = data.current_condition?.[0];

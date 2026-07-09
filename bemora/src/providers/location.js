@@ -1,8 +1,9 @@
 import axios from 'axios';
 import * as cache from '../core/cache.js';
+import { USER_AGENT } from '../core/headers.js';
 
 const GEO = 'https://nominatim.openstreetmap.org';
-const HEADERS = { 'User-Agent': 'bemora/1.0' };
+const HEADERS = { 'User-Agent': USER_AGENT };
 
 /**
  * Geocode an address → coordinates (Free, no key needed)

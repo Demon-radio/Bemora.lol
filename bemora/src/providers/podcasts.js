@@ -1,5 +1,6 @@
 import axios from 'axios';
 import * as cache from '../core/cache.js';
+import { USER_AGENT } from '../core/headers.js';
 
 /**
  * Search podcasts via iTunes (Free, no key)
@@ -46,7 +47,7 @@ export async function getPodcastEpisodes({ feedUrl, limit = 10 }) {
   if (cached) return { ...cached, _cached: true };
 
   const { data } = await axios.get(feedUrl, {
-    headers: { 'User-Agent': 'bemora/1.0', Accept: 'application/rss+xml, text/xml' },
+    headers: { 'User-Agent': USER_AGENT, Accept: 'application/rss+xml, text/xml' },
     timeout: 10000,
   });
 
@@ -91,7 +92,7 @@ export async function searchPodcastIndex({ query, limit = 10 }) {
   const { data } = await axios.get('https://api.podcastindex.org/api/1.0/search/byterm', {
     params: { q: query, max: limit },
     headers: {
-      'User-Agent': 'bemora/1.0',
+      'User-Agent': USER_AGENT,
       'X-Auth-Date': Math.floor(Date.now() / 1000).toString(),
     },
   }).catch(() => ({ data: { feeds: [] } }));
