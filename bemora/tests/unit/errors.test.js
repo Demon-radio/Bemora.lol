@@ -4,6 +4,15 @@ import {
   ConfigurationError,
   ProviderError,
   ValidationError,
+  RateLimitError,
+  TimeoutError,
+  AuthError,
+  CircuitBreakerError,
+  BemoraProviderError,
+  BemoraRateLimitError,
+  BemoraTimeoutError,
+  BemoraAuthError,
+  wrapProviderError,
 } from '../../src/core/errors.js';
 
 describe('BemoraError', () => {
@@ -106,5 +115,108 @@ describe('ValidationError', () => {
     const errors = [{ path: ['x'], message: 'Invalid' }];
     const json = new ValidationError('msg', { errors }).toJSON();
     expect(json.errors).toEqual(errors);
+  });
+});
+
+// ── requestId ────────────────────────────────────────────────────────────────
+
+describe('BemoraError.requestId', () => {
+  it('auto-generates a requestId when not provided', () => {
+    const e = new BemoraError('msg');
+    expect(typeof e.requestId).toBe('string');
+    expect(e.requestId.length).toBeGreaterThan(5);
+  });
+
+  it('accepts a caller-supplied requestId', () => {
+    const e = new BemoraError('msg', { requestId: 'req-abc-123' });
+    expect(e.requestId).toBe('req-abc-123');
+  });
+
+  it('each error gets a unique requestId by default', () => {
+    const ids = Array.from({ length: 10 }, () => new BemoraError('x').requestId);
+    expect(new Set(ids).size).toBe(10);
+  });
+
+  it('includes requestId in toJSON output', () => {
+    const e = new BemoraError('msg', { requestId: 'req-xyz' });
+    expect(e.toJSON().requestId).toBe('req-xyz');
+  });
+
+  it('subclasses inherit requestId', () => {
+    const e = new ProviderError('msg', { provider: 'test' });
+    expect(typeof e.requestId).toBe('string');
+    expect(e.requestId.length).toBeGreaterThan(5);
+  });
+});
+
+// ── Spec-named aliases ────────────────────────────────────────────────────────
+
+describe('Spec-named alias exports', () => {
+  it('BemoraProviderError is the same class as ProviderError', () => {
+    expect(BemoraProviderError).toBe(ProviderError);
+  });
+
+  it('BemoraRateLimitError is the same class as RateLimitError', () => {
+    expect(BemoraRateLimitError).toBe(RateLimitError);
+  });
+
+  it('BemoraTimeoutError is the same class as TimeoutError', () => {
+    expect(BemoraTimeoutError).toBe(TimeoutError);
+  });
+
+  it('BemoraAuthError is the same class as AuthError', () => {
+    expect(BemoraAuthError).toBe(AuthError);
+  });
+
+  it('instanceof works with both names', () => {
+    const e = new ProviderError('msg');
+    expect(e).toBeInstanceOf(BemoraProviderError);
+    expect(e).toBeInstanceOf(BemoraError);
+  });
+});
+
+// ── wrapProviderError ─────────────────────────────────────────────────────────
+
+describe('wrapProviderError', () => {
+  it('passes BemoraError through unchanged', () => {
+    const original = new BemoraError('original');
+    expect(wrapProviderError(original, 'test')).toBe(original);
+  });
+
+  it('wraps a 401 into AuthError', () => {
+    const err = { response: { status: 401, data: { message: 'Unauthorized' } } };
+    const wrapped = wrapProviderError(err, 'stripe');
+    expect(wrapped).toBeInstanceOf(AuthError);
+    expect(wrapped.httpStatus).toBe(401);
+    expect(wrapped.provider).toBe('stripe');
+  });
+
+  it('wraps a 429 into RateLimitError with retryAfter', () => {
+    const err = {
+      response: {
+        status: 429,
+        data: { message: 'Too Many Requests' },
+        headers: { 'retry-after': '60', 'x-ratelimit-limit': '100', 'x-ratelimit-remaining': '0' },
+      },
+    };
+    const wrapped = wrapProviderError(err, 'openai');
+    expect(wrapped).toBeInstanceOf(RateLimitError);
+    expect(wrapped.retryAfter).toBe('60');
+    expect(wrapped.limit).toBe('100');
+    expect(wrapped.remaining).toBe('0');
+  });
+
+  it('wraps a timeout into TimeoutError', () => {
+    const err = { code: 'ECONNABORTED', message: 'timeout of 8000ms exceeded' };
+    const wrapped = wrapProviderError(err, 'weather');
+    expect(wrapped).toBeInstanceOf(TimeoutError);
+    expect(wrapped.provider).toBe('weather');
+  });
+
+  it('wraps unknown errors into ProviderError', () => {
+    const err = { response: { status: 500, data: { message: 'Internal Server Error' } } };
+    const wrapped = wrapProviderError(err, 'payments');
+    expect(wrapped).toBeInstanceOf(ProviderError);
+    expect(wrapped.httpStatus).toBe(500);
   });
 });

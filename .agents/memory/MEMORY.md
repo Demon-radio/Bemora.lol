@@ -3,3 +3,4 @@
 - [Bemora dead/broken APIs](bemora-dead-apis.md) — known dead endpoints and missing files found in this library; check before assuming a provider works.
 - [Fandom Wiki MediaWiki API pattern](bemora-fandom-wiki-api.md) — how bemora's gaming provider sources data for games with no official API (CrossFire etc.) via the generic Fandom MediaWiki API; also covers host-injection and Wikipedia User-Agent quirks.
 - [Bemora production audit fixes](bemora-production-audit.md) — what was fixed vs. intentionally skipped from a third-party production-readiness audit, and why.
+- [Bemora test patterns and key naming](bemora-test-patterns.md) — vi.hoisted+vi.mock pattern for ESM, constructor uses long-form keys (stripeKey) but short-form (stripe) added as aliases; pinecone stored as plain string; cache-redis needs operationTimeoutMs for hang resilience.

@@ -175,7 +175,13 @@ export { staleWhileRevalidate } from './core/stale.js';
 export { BinanceStream, KrakenStream, getRealtimePrice } from './providers/realtime.js';
 export { BemoraMonitor } from './core/monitor.js';
 export { fallbackChain, aggregate } from './core/fallback.js';
-export { BemoraError, ConfigurationError, ProviderError, ValidationError, CircuitBreakerError, TimeoutError } from './core/errors.js';
+export {
+  BemoraError, ConfigurationError, ProviderError, ValidationError, CircuitBreakerError, TimeoutError,
+  RateLimitError, AuthError,
+  // Spec-required prefixed aliases
+  BemoraProviderError, BemoraRateLimitError, BemoraTimeoutError, BemoraAuthError,
+  wrapProviderError,
+} from './core/errors.js';
 export { setAdapter } from './core/cache.js';
 export * as registry from './core/registry.js';
 export { Interceptors } from './core/interceptors.js';
@@ -208,10 +214,10 @@ export class Bemora {
       nasa:        keys.nasaKey         || process.env.BEMORA_NASA_KEY,
       movies:      keys.moviesKey       || process.env.BEMORA_MOVIES_KEY,
       stocks:      keys.stocksKey       || process.env.BEMORA_STOCKS_KEY,
-      openai:      keys.openaiKey       || process.env.BEMORA_OPENAI_KEY,
-      groq:        keys.groqKey         || process.env.BEMORA_GROQ_KEY,
-      anthropic:   keys.anthropicKey    || process.env.BEMORA_ANTHROPIC_KEY,
-      gemini:      keys.geminiKey       || process.env.BEMORA_GEMINI_KEY,
+      openai:      keys.openaiKey       || keys.openai      || process.env.BEMORA_OPENAI_KEY,
+      groq:        keys.groqKey         || keys.groq        || process.env.BEMORA_GROQ_KEY,
+      anthropic:   keys.anthropicKey    || keys.anthropic   || process.env.BEMORA_ANTHROPIC_KEY,
+      gemini:      keys.geminiKey       || keys.gemini      || process.env.BEMORA_GEMINI_KEY,
       spoonacular: keys.spoonacularKey  || process.env.BEMORA_SPOONACULAR_KEY,
       edamamAppId: keys.edamamAppId     || process.env.BEMORA_EDAMAM_APP_ID,
       edamamAppKey:keys.edamamAppKey    || process.env.BEMORA_EDAMAM_APP_KEY,
@@ -219,44 +225,51 @@ export class Bemora {
       spotifyClientSecret: keys.spotifyClientSecret || process.env.BEMORA_SPOTIFY_CLIENT_SECRET,
       steam:          keys.steamKey           || process.env.BEMORA_STEAM_KEY,
       // ── Enterprise keys ──────────────────────────────────────────────────
-      stripe:         keys.stripeKey          || process.env.BEMORA_STRIPE_KEY,
-      stripeWebhook:  keys.stripeWebhookSecret|| process.env.BEMORA_STRIPE_WEBHOOK_SECRET,
-      paypal:         { clientId: keys.paypalClientId || process.env.BEMORA_PAYPAL_CLIENT_ID, clientSecret: keys.paypalClientSecret || process.env.BEMORA_PAYPAL_CLIENT_SECRET, sandbox: keys.paypalSandbox ?? (process.env.BEMORA_PAYPAL_SANDBOX === 'true') },
-      sendgrid:       keys.sendgridKey        || process.env.BEMORA_SENDGRID_KEY,
-      ses:            { accessKeyId: keys.sesAccessKeyId || process.env.BEMORA_SES_ACCESS_KEY_ID, secretAccessKey: keys.sesSecretAccessKey || process.env.BEMORA_SES_SECRET_ACCESS_KEY, region: keys.sesRegion || process.env.BEMORA_SES_REGION || 'us-east-1' },
-      resend:         keys.resendKey          || process.env.BEMORA_RESEND_KEY,
-      twilio:         { accountSid: keys.twilioAccountSid || process.env.BEMORA_TWILIO_ACCOUNT_SID, authToken: keys.twilioAuthToken || process.env.BEMORA_TWILIO_AUTH_TOKEN },
-      clerk:          keys.clerkSecretKey     || process.env.BEMORA_CLERK_SECRET_KEY,
-      auth0:          { domain: keys.auth0Domain || process.env.BEMORA_AUTH0_DOMAIN, clientId: keys.auth0ClientId || process.env.BEMORA_AUTH0_CLIENT_ID, clientSecret: keys.auth0ClientSecret || process.env.BEMORA_AUTH0_CLIENT_SECRET },
+      // Each key accepts both the long-form (e.g. stripeKey) for backward
+      // compatibility and the short-form (e.g. stripe) required by withTenant().
+      stripe:         keys.stripeKey          || keys.stripe         || process.env.BEMORA_STRIPE_KEY,
+      stripeWebhook:  keys.stripeWebhookSecret|| keys.stripeWebhook  || process.env.BEMORA_STRIPE_WEBHOOK_SECRET,
+      paypal:         keys.paypal             || { clientId: keys.paypalClientId || process.env.BEMORA_PAYPAL_CLIENT_ID, clientSecret: keys.paypalClientSecret || process.env.BEMORA_PAYPAL_CLIENT_SECRET, sandbox: keys.paypalSandbox ?? (process.env.BEMORA_PAYPAL_SANDBOX === 'true') },
+      sendgrid:       keys.sendgridKey        || keys.sendgrid       || process.env.BEMORA_SENDGRID_KEY,
+      ses:            keys.ses                || { accessKeyId: keys.sesAccessKeyId || process.env.BEMORA_SES_ACCESS_KEY_ID, secretAccessKey: keys.sesSecretAccessKey || process.env.BEMORA_SES_SECRET_ACCESS_KEY, region: keys.sesRegion || process.env.BEMORA_SES_REGION || 'us-east-1' },
+      resend:         keys.resendKey          || keys.resend         || process.env.BEMORA_RESEND_KEY,
+      twilio:         keys.twilio             || { accountSid: keys.twilioAccountSid || process.env.BEMORA_TWILIO_ACCOUNT_SID, authToken: keys.twilioAuthToken || process.env.BEMORA_TWILIO_AUTH_TOKEN },
+      clerk:          keys.clerkSecretKey     || keys.clerk          || process.env.BEMORA_CLERK_SECRET_KEY,
+      auth0:          keys.auth0              || { domain: keys.auth0Domain || process.env.BEMORA_AUTH0_DOMAIN, clientId: keys.auth0ClientId || process.env.BEMORA_AUTH0_CLIENT_ID, clientSecret: keys.auth0ClientSecret || process.env.BEMORA_AUTH0_CLIENT_SECRET },
       jwtSecret:      keys.jwtSecret          || process.env.BEMORA_JWT_SECRET,
-      s3:             { accessKeyId: keys.s3AccessKeyId || process.env.BEMORA_S3_ACCESS_KEY_ID, secretAccessKey: keys.s3SecretAccessKey || process.env.BEMORA_S3_SECRET_ACCESS_KEY, region: keys.s3Region || process.env.BEMORA_S3_REGION || 'us-east-1', bucket: keys.s3Bucket || process.env.BEMORA_S3_BUCKET },
-      r2:             { accessKeyId: keys.r2AccessKeyId || process.env.BEMORA_R2_ACCESS_KEY_ID, secretAccessKey: keys.r2SecretAccessKey || process.env.BEMORA_R2_SECRET_ACCESS_KEY, accountId: keys.r2AccountId || process.env.BEMORA_R2_ACCOUNT_ID, bucket: keys.r2Bucket || process.env.BEMORA_R2_BUCKET },
-      gcs:            { projectId: keys.gcsProjectId || process.env.BEMORA_GCS_PROJECT_ID, clientEmail: keys.gcsClientEmail || process.env.BEMORA_GCS_CLIENT_EMAIL, privateKey: keys.gcsPrivateKey || process.env.BEMORA_GCS_PRIVATE_KEY, bucket: keys.gcsBucket || process.env.BEMORA_GCS_BUCKET },
-      pinecone:       { apiKey: keys.pineconeKey || process.env.BEMORA_PINECONE_KEY, host: keys.pineconeHost || process.env.BEMORA_PINECONE_HOST },
-      qdrant:         { url: keys.qdrantUrl || process.env.BEMORA_QDRANT_URL, apiKey: keys.qdrantKey || process.env.BEMORA_QDRANT_KEY },
-      weaviate:       { url: keys.weaviateUrl || process.env.BEMORA_WEAVIATE_URL, apiKey: keys.weaviateKey || process.env.BEMORA_WEAVIATE_KEY },
-      sentry:         keys.sentryDsn          || process.env.BEMORA_SENTRY_DSN,
-      onesignal:      { appId: keys.onesignalAppId || process.env.BEMORA_ONESIGNAL_APP_ID, apiKey: keys.onesignalKey || process.env.BEMORA_ONESIGNAL_KEY },
-      pusher:         { appId: keys.pusherAppId || process.env.BEMORA_PUSHER_APP_ID, key: keys.pusherKey || process.env.BEMORA_PUSHER_KEY, secret: keys.pusherSecret || process.env.BEMORA_PUSHER_SECRET, cluster: keys.pusherCluster || process.env.BEMORA_PUSHER_CLUSTER || 'mt1' },
-      fcm:            { projectId: keys.fcmProjectId || process.env.BEMORA_FCM_PROJECT_ID },
-      googleMaps:     keys.googleMapsKey      || process.env.BEMORA_GOOGLE_MAPS_KEY,
-      mapbox:         keys.mapboxKey          || process.env.BEMORA_MAPBOX_KEY,
-      algolia:        { appId: keys.algoliaAppId || process.env.BEMORA_ALGOLIA_APP_ID, apiKey: keys.algoliaKey || process.env.BEMORA_ALGOLIA_KEY },
-      meilisearch:    { url: keys.meilisearchUrl || process.env.BEMORA_MEILISEARCH_URL, apiKey: keys.meilisearchKey || process.env.BEMORA_MEILISEARCH_KEY },
-      googleCal:      keys.googleCalToken     || process.env.BEMORA_GOOGLE_CAL_TOKEN,
-      calendly:       keys.calendlyKey        || process.env.BEMORA_CALENDLY_KEY,
-      recaptcha:      keys.recaptchaSecret    || process.env.BEMORA_RECAPTCHA_SECRET,
-      hcaptcha:       keys.hcaptchaSecret     || process.env.BEMORA_HCAPTCHA_SECRET,
-      turnstile:      keys.turnstileSecret    || process.env.BEMORA_TURNSTILE_SECRET,
-      hibp:           keys.hibpKey            || process.env.BEMORA_HIBP_KEY,
-      virustotal:     keys.virustotalKey      || process.env.BEMORA_VIRUSTOTAL_KEY,
-      safebrowsing:   keys.safebrowsingKey    || process.env.BEMORA_SAFEBROWSING_KEY,
-      urlscan:        keys.urlscanKey         || process.env.BEMORA_URLSCAN_KEY,
-      cloudflare:     { token: keys.cloudflareToken || process.env.BEMORA_CLOUDFLARE_TOKEN, apiKey: keys.cloudflareApiKey || process.env.BEMORA_CLOUDFLARE_API_KEY, email: keys.cloudflareEmail || process.env.BEMORA_CLOUDFLARE_EMAIL, accountId: keys.cloudflareAccountId || process.env.BEMORA_CLOUDFLARE_ACCOUNT_ID },
-      cohere:         keys.cohereKey          || process.env.BEMORA_COHERE_KEY,
-      mistral:        keys.mistralKey         || process.env.BEMORA_MISTRAL_KEY,
-      together:       keys.togetherKey        || process.env.BEMORA_TOGETHER_KEY,
-      perplexity:     keys.perplexityKey      || process.env.BEMORA_PERPLEXITY_KEY,
+      s3:             keys.s3                 || { accessKeyId: keys.s3AccessKeyId || process.env.BEMORA_S3_ACCESS_KEY_ID, secretAccessKey: keys.s3SecretAccessKey || process.env.BEMORA_S3_SECRET_ACCESS_KEY, region: keys.s3Region || process.env.BEMORA_S3_REGION || 'us-east-1', bucket: keys.s3Bucket || process.env.BEMORA_S3_BUCKET },
+      r2:             keys.r2                 || { accessKeyId: keys.r2AccessKeyId || process.env.BEMORA_R2_ACCESS_KEY_ID, secretAccessKey: keys.r2SecretAccessKey || process.env.BEMORA_R2_SECRET_ACCESS_KEY, accountId: keys.r2AccountId || process.env.BEMORA_R2_ACCOUNT_ID, bucket: keys.r2Bucket || process.env.BEMORA_R2_BUCKET },
+      gcs:            keys.gcs                || { projectId: keys.gcsProjectId || process.env.BEMORA_GCS_PROJECT_ID, clientEmail: keys.gcsClientEmail || process.env.BEMORA_GCS_CLIENT_EMAIL, privateKey: keys.gcsPrivateKey || process.env.BEMORA_GCS_PRIVATE_KEY, bucket: keys.gcsBucket || process.env.BEMORA_GCS_BUCKET },
+      // Pinecone: accept plain API-key string OR { apiKey, host } object shape.
+      // Normalize to a string so all pineconeProvider.*() calls receive a plain key.
+      pinecone: (() => {
+        const raw = keys.pineconeKey || keys.pinecone || process.env.BEMORA_PINECONE_KEY;
+        return raw && typeof raw === 'object' ? raw.apiKey : raw;
+      })(),
+      qdrant:         keys.qdrant             || { url: keys.qdrantUrl || process.env.BEMORA_QDRANT_URL, apiKey: keys.qdrantKey || process.env.BEMORA_QDRANT_KEY },
+      weaviate:       keys.weaviate           || { url: keys.weaviateUrl || process.env.BEMORA_WEAVIATE_URL, apiKey: keys.weaviateKey || process.env.BEMORA_WEAVIATE_KEY },
+      sentry:         keys.sentryDsn          || keys.sentry         || process.env.BEMORA_SENTRY_DSN,
+      onesignal:      keys.onesignal          || { appId: keys.onesignalAppId || process.env.BEMORA_ONESIGNAL_APP_ID, apiKey: keys.onesignalKey || process.env.BEMORA_ONESIGNAL_KEY },
+      pusher:         keys.pusher             || { appId: keys.pusherAppId || process.env.BEMORA_PUSHER_APP_ID, key: keys.pusherKey || process.env.BEMORA_PUSHER_KEY, secret: keys.pusherSecret || process.env.BEMORA_PUSHER_SECRET, cluster: keys.pusherCluster || process.env.BEMORA_PUSHER_CLUSTER || 'mt1' },
+      fcm:            keys.fcm                || { projectId: keys.fcmProjectId || process.env.BEMORA_FCM_PROJECT_ID },
+      googleMaps:     keys.googleMapsKey      || keys.googleMaps     || process.env.BEMORA_GOOGLE_MAPS_KEY,
+      mapbox:         keys.mapboxKey          || keys.mapbox         || process.env.BEMORA_MAPBOX_KEY,
+      algolia:        keys.algolia            || { appId: keys.algoliaAppId || process.env.BEMORA_ALGOLIA_APP_ID, apiKey: keys.algoliaKey || process.env.BEMORA_ALGOLIA_KEY },
+      meilisearch:    keys.meilisearch        || { url: keys.meilisearchUrl || process.env.BEMORA_MEILISEARCH_URL, apiKey: keys.meilisearchKey || process.env.BEMORA_MEILISEARCH_KEY },
+      googleCal:      keys.googleCalToken     || keys.googleCal      || process.env.BEMORA_GOOGLE_CAL_TOKEN,
+      calendly:       keys.calendlyKey        || keys.calendly       || process.env.BEMORA_CALENDLY_KEY,
+      recaptcha:      keys.recaptchaSecret    || keys.recaptcha      || process.env.BEMORA_RECAPTCHA_SECRET,
+      hcaptcha:       keys.hcaptchaSecret     || keys.hcaptcha       || process.env.BEMORA_HCAPTCHA_SECRET,
+      turnstile:      keys.turnstileSecret    || keys.turnstile      || process.env.BEMORA_TURNSTILE_SECRET,
+      hibp:           keys.hibpKey            || keys.hibp           || process.env.BEMORA_HIBP_KEY,
+      virustotal:     keys.virustotalKey      || keys.virustotal     || process.env.BEMORA_VIRUSTOTAL_KEY,
+      safebrowsing:   keys.safebrowsingKey    || keys.safebrowsing   || process.env.BEMORA_SAFEBROWSING_KEY,
+      urlscan:        keys.urlscanKey         || keys.urlscan        || process.env.BEMORA_URLSCAN_KEY,
+      cloudflare:     keys.cloudflare         || { token: keys.cloudflareToken || process.env.BEMORA_CLOUDFLARE_TOKEN, apiKey: keys.cloudflareApiKey || process.env.BEMORA_CLOUDFLARE_API_KEY, email: keys.cloudflareEmail || process.env.BEMORA_CLOUDFLARE_EMAIL, accountId: keys.cloudflareAccountId || process.env.BEMORA_CLOUDFLARE_ACCOUNT_ID },
+      cohere:         keys.cohereKey          || keys.cohere         || process.env.BEMORA_COHERE_KEY,
+      mistral:        keys.mistralKey         || keys.mistral        || process.env.BEMORA_MISTRAL_KEY,
+      together:       keys.togetherKey        || keys.together       || process.env.BEMORA_TOGETHER_KEY,
+      perplexity:     keys.perplexityKey      || keys.perplexity     || process.env.BEMORA_PERPLEXITY_KEY,
     };
 
     this._options = { retries: 2, validateResponses: false, fallbacks: {}, ...options };
@@ -431,6 +444,7 @@ export class Bemora {
   setKey(name, value) {
     this._keys[name] = value;
     logger.info(`Key "${name}" rotated.`, { provider: name });
+    this._events.emit('keys:rotated', { name });
     return this;
   }
 
@@ -1114,13 +1128,14 @@ export class Bemora {
         addDevice:       this._wrap('onesignal', (p) => onesignalProvider.addDevice(p, this._keys.onesignal.apiKey)),
       },
       pusher: {
-        trigger:              (p) => pusherProvider.trigger({ ...p, ...this._keys.pusher }),
-        authenticateChannel:  (p) => pusherProvider.authenticateChannel({ ...p, ...this._keys.pusher }),
-        getChannel:           (p) => pusherProvider.getChannel({ ...p, ...this._keys.pusher }),
+        trigger:             this._wrap('pusher', (p) => pusherProvider.trigger({ ...p, ...this._keys.pusher })),
+        // authenticateChannel is synchronous — no circuit-breaker needed
+        authenticateChannel: (p) => pusherProvider.authenticateChannel({ ...p, ...this._keys.pusher }),
+        getChannel:          this._wrap('pusher', (p) => pusherProvider.getChannel({ ...p, ...this._keys.pusher })),
       },
       fcm: {
-        send:          (p) => fcmProvider.send({ ...p, projectId: this._keys.fcm.projectId }, p.accessToken),
-        sendMulticast: (p) => fcmProvider.sendMulticast({ ...p, projectId: this._keys.fcm.projectId }, p.accessToken),
+        send:          this._wrap('fcm', (p) => fcmProvider.send({ ...p, projectId: this._keys.fcm.projectId }, p.accessToken)),
+        sendMulticast: this._wrap('fcm', (p) => fcmProvider.sendMulticast({ ...p, projectId: this._keys.fcm.projectId }, p.accessToken)),
       },
     };
   }

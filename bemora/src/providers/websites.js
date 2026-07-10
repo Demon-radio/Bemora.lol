@@ -3,6 +3,32 @@ import { ValidationError, wrapProviderError } from '../core/errors.js';
 
 const http = httpClient();
 
+// ── SSRF guard ────────────────────────────────────────────────────────────────
+// Block requests to private / link-local / loopback address spaces so a
+// multi-tenant caller cannot exfiltrate cloud metadata or internal services.
+const BLOCKED_HOST_RE = /^(localhost|127\.|0\.0\.0\.0|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.|::1|fd[0-9a-f]{2}:)/i;
+
+function assertNoSSRF(rawUrl) {
+  let parsed;
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    throw new ValidationError(`[websites] Invalid URL: ${rawUrl}`, { provider: 'websites' });
+  }
+  if (!['http:', 'https:'].includes(parsed.protocol)) {
+    throw new ValidationError(
+      `[websites] Blocked protocol "${parsed.protocol}" — only http: and https: are allowed.`,
+      { provider: 'websites' }
+    );
+  }
+  if (BLOCKED_HOST_RE.test(parsed.hostname)) {
+    throw new ValidationError(
+      `[websites] Blocked internal host "${parsed.hostname}" — SSRF protection.`,
+      { provider: 'websites' }
+    );
+  }
+}
+
 const KNOWN_HEADERS = {
   server: 'server',
   'x-powered-by': 'poweredBy',
@@ -17,6 +43,7 @@ const KNOWN_HEADERS = {
  */
 export async function status({ url }) {
   const target = normalizeUrl(url);
+  assertNoSSRF(target);
   const start = Date.now();
   try {
     const res = await http.get(target, {
@@ -46,6 +73,7 @@ export async function status({ url }) {
  */
 export async function detectTechStack({ url }) {
   const target = normalizeUrl(url);
+  assertNoSSRF(target);
   try {
     const { data: html, headers } = await http.get(target, {
       timeout: 10000,
@@ -97,6 +125,7 @@ export async function detectTechStack({ url }) {
  */
 export async function getMeta({ url }) {
   const target = normalizeUrl(url);
+  assertNoSSRF(target);
   try {
     const { data: html } = await http.get(target, {
       timeout: 10000,

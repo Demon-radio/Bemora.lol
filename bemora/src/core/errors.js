@@ -5,6 +5,7 @@ export class BemoraError extends Error {
     this.name = 'BemoraError';
     this.code = options.code || 'UNKNOWN_ERROR';
     this.provider = options.provider;
+    this.requestId = options.requestId || _generateRequestId();
     this.cause = options.cause;
     this.timestamp = new Date().toISOString();
     if (Error.captureStackTrace) {
@@ -18,10 +19,22 @@ export class BemoraError extends Error {
       message: this.message,
       code: this.code,
       provider: this.provider,
+      requestId: this.requestId,
       timestamp: this.timestamp,
       stack: this.stack
     };
   }
+}
+
+// ── Private helpers ───────────────────────────────────────────────────────────
+
+function _generateRequestId() {
+  // Lightweight UUID-v4-like ID without external deps.
+  // crypto.randomUUID is available on Node ≥14.17 and modern browsers.
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'req-' + Math.random().toString(36).slice(2, 11) + '-' + Date.now().toString(36);
 }
 
 export class ConfigurationError extends BemoraError {
@@ -132,6 +145,18 @@ export class AuthError extends ProviderError {
  *     throw wrapProviderError(err, 'weather');
  *   }
  */
+// ── Spec-named aliases ────────────────────────────────────────────────────────
+// The spec requires `BemoraProviderError`, `BemoraRateLimitError`,
+// `BemoraTimeoutError`, and `BemoraAuthError` as the canonical export names.
+// Aliased here so callers can `import { BemoraProviderError } from 'bemora-enterprise'`
+// while internal code and existing tests continue to use the shorter names.
+export const BemoraProviderError  = ProviderError;
+export const BemoraRateLimitError = RateLimitError;
+export const BemoraTimeoutError   = TimeoutError;
+export const BemoraAuthError      = AuthError;
+
+// ── wrapProviderError ─────────────────────────────────────────────────────────
+
 export function wrapProviderError(err, provider) {
   if (err instanceof BemoraError) return err;
 

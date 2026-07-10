@@ -18,17 +18,46 @@
  */
 
 /**
+ * Race a promise against a wall-clock timeout so that a stalled Redis
+ * connection never causes bemora callers to hang indefinitely.
+ *
+ * Rejects with a plain Error when the timeout fires; the adapter's outer
+ * try/catch converts that into the appropriate safe default.
+ *
+ * @param {Promise<T>} promise
+ * @param {number} ms
+ * @returns {Promise<T>}
+ */
+function withTimeout(promise, ms) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(
+      () => reject(new Error(`[bemora-redis] operation timed out after ${ms}ms`)),
+      ms,
+    );
+    promise.then(
+      (v) => { clearTimeout(timer); resolve(v); },
+      (e) => { clearTimeout(timer); reject(e); },
+    );
+  });
+}
+
+/**
  * @param {object} redisClient — any client with `get(key)`, `set(key, value, options?)`, `del(key)`, `keys(pattern)` methods.
- * @param {{ prefix?: string, defaultTtl?: number }} [opts]
+ * @param {{ prefix?: string, defaultTtl?: number, operationTimeoutMs?: number }} [opts]
  * @returns {object} bemora cache adapter
  */
-export function createRedisAdapter(redisClient, { prefix = 'bemora:', defaultTtl = 300 } = {}) {
+export function createRedisAdapter(redisClient, {
+  prefix = 'bemora:',
+  defaultTtl = 300,
+  operationTimeoutMs = 2000,
+} = {}) {
   function k(key) { return prefix + key; }
+  function safe(promise) { return withTimeout(promise, operationTimeoutMs); }
 
   return {
     async get(key) {
       try {
-        const raw = await redisClient.get(k(key));
+        const raw = await safe(redisClient.get(k(key)));
         if (raw === null || raw === undefined) return undefined;
         return JSON.parse(raw);
       } catch {
@@ -43,10 +72,10 @@ export function createRedisAdapter(redisClient, { prefix = 'bemora:', defaultTtl
         if (typeof redisClient.set === 'function') {
           try {
             // ioredis: set(key, val, 'EX', ttl)
-            await redisClient.set(k(key), serialized, 'EX', ttlSeconds);
+            await safe(redisClient.set(k(key), serialized, 'EX', ttlSeconds));
           } catch {
             // @redis/client: set(key, val, { EX: ttl })
-            await redisClient.set(k(key), serialized, { EX: ttlSeconds });
+            await safe(redisClient.set(k(key), serialized, { EX: ttlSeconds }));
           }
         }
         return true;
@@ -57,7 +86,7 @@ export function createRedisAdapter(redisClient, { prefix = 'bemora:', defaultTtl
 
     async del(key) {
       try {
-        await redisClient.del(k(key));
+        await safe(redisClient.del(k(key)));
         return true;
       } catch {
         return false;
@@ -67,9 +96,9 @@ export function createRedisAdapter(redisClient, { prefix = 'bemora:', defaultTtl
     async flush() {
       try {
         // Get all bemora keys and delete them
-        const keys = await redisClient.keys(`${prefix}*`);
-        if (keys.length > 0) {
-          await redisClient.del(...keys);
+        const allKeys = await safe(redisClient.keys(`${prefix}*`));
+        if (allKeys.length > 0) {
+          await safe(redisClient.del(...allKeys));
         }
         return true;
       } catch {
@@ -79,7 +108,7 @@ export function createRedisAdapter(redisClient, { prefix = 'bemora:', defaultTtl
 
     async has(key) {
       try {
-        const exists = await redisClient.exists(k(key));
+        const exists = await safe(redisClient.exists(k(key)));
         return exists > 0;
       } catch {
         return false;
@@ -88,7 +117,7 @@ export function createRedisAdapter(redisClient, { prefix = 'bemora:', defaultTtl
 
     async ttl(key) {
       try {
-        return await redisClient.ttl(k(key));
+        return await safe(redisClient.ttl(k(key)));
       } catch {
         return -1;
       }
@@ -96,7 +125,7 @@ export function createRedisAdapter(redisClient, { prefix = 'bemora:', defaultTtl
 
     async keys(pattern = '*') {
       try {
-        const allKeys = await redisClient.keys(`${prefix}${pattern}`);
+        const allKeys = await safe(redisClient.keys(`${prefix}${pattern}`));
         return allKeys.map((kk) => kk.slice(prefix.length));
       } catch {
         return [];
@@ -106,6 +135,7 @@ export function createRedisAdapter(redisClient, { prefix = 'bemora:', defaultTtl
     /** Adapter metadata for health/debug endpoints */
     _type: 'redis',
     _prefix: prefix,
+    _operationTimeoutMs: operationTimeoutMs,
   };
 }
 
