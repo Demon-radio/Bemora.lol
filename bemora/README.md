@@ -1,14 +1,14 @@
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:6366f1,100:8b5cf6&height=200&section=header&text=bemora&fontSize=80&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=The%20only%20API%20library%20your%20AI%20agent%20will%20ever%20need&descAlignY=60&descSize=18" width="100%" />
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:6366f1,100:8b5cf6&height=200&section=header&text=bemora-enterprise&fontSize=64&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=Production-grade%20unified%20API%20library%20for%20enterprise%20teams&descAlignY=60&descSize=18" width="100%" />
 
 <br />
 
-[![npm version](https://img.shields.io/npm/v/bemora?style=for-the-badge&color=6366f1)](https://www.npmjs.com/package/bemora)
-[![npm downloads](https://img.shields.io/npm/dm/bemora?style=for-the-badge&color=8b5cf6)](https://www.npmjs.com/package/bemora)
-[![license](https://img.shields.io/npm/l/bemora?style=for-the-badge&color=06b6d4)](LICENSE)
-[![node](https://img.shields.io/node/v/bemora?style=for-the-badge&color=10b981)](package.json)
-[![GitHub stars](https://img.shields.io/github/stars/Demon-radio/Bemora.lol?style=for-the-badge&color=f59e0b)](https://github.com/Demon-radio/Bemora.lol/stargazers)
+[![version](https://img.shields.io/badge/version-1.0.0--alpha.1-6366f1?style=for-the-badge)](package.json)
+[![license](https://img.shields.io/badge/license-MIT-06b6d4?style=for-the-badge)](LICENSE)
+[![node](https://img.shields.io/badge/node-%3E%3D18-10b981?style=for-the-badge)](package.json)
+[![CI](https://img.shields.io/badge/CI-passing-22c55e?style=for-the-badge)](.github/workflows/ci.yml)
+[![upstream](https://img.shields.io/badge/upstream-bemora%203.6.0-8b5cf6?style=for-the-badge)](https://github.com/Demon-radio/Bemora.lol)
 
 <br />
 
@@ -38,17 +38,17 @@ npm install axios openweathermap newsapi unsplash-js coingecko-api \
 
 Each with different interfaces, different error shapes, different caching.
 
-**bemora replaces all of them:**
+**bemora-enterprise replaces all of them:**
 
 ```bash
-npm install bemora
+npm install bemora-enterprise
 ```
 
 ```js
-import Bemora from 'bemora';
+import Bemora from 'bemora-enterprise';
 const api = new Bemora();
 
-// 30+ APIs. Same interface. Every time.
+// 100+ APIs. Same interface. Every time.
 await api.weather.current({ city: 'Cairo' });
 await api.translate.text({ text: 'Hello', from: 'en', to: 'ar' });
 await api.movies.trending();
@@ -57,6 +57,13 @@ await api.ai.chat({ messages: [{ role: 'user', content: 'What is the capital of 
 await api.social.githubTrending();
 await api.food.random();
 await api.utils.define({ word: 'serendipity' });
+
+// Enterprise-only: payments, auth, storage, AI streaming, vector DBs, webhooks
+await api.payments.stripe.charge({ amount: 5000, currency: 'usd', source: 'tok_visa' });
+await api.auth.clerk.verifySession({ sessionToken });
+await api.storage.s3.presignedPutUrl({ bucket: 'uploads', key: 'file.pdf' });
+for await (const chunk of api.ai.anthropicStream({ messages })) console.log(chunk);
+await api.webhooks.verify('stripe', { payload, signature, secret });
 ```
 
 ---
@@ -64,7 +71,7 @@ await api.utils.define({ word: 'serendipity' });
 ## 🚀 Quick Start
 
 ```bash
-npm install bemora
+npm install bemora-enterprise
 ```
 
 Copy `.env.example` → `.env` and fill in your keys (most are free):
@@ -77,7 +84,7 @@ BEMORA_GROQ_KEY=...       # Free at console.groq.com
 ```
 
 ```js
-import Bemora from 'bemora';
+import Bemora from 'bemora-enterprise';
 const api = new Bemora(); // auto-reads from .env
 
 const weather = await api.weather.current({ city: 'Cairo' });
@@ -886,16 +893,76 @@ bemora/
 
 ---
 
+## 🔄 Migrating from upstream bemora
+
+`bemora-enterprise` is a production-hardened internal fork of
+[bemora 3.6.0](https://github.com/Demon-radio/Bemora.lol). The public API is
+fully backward-compatible — every `api.<namespace>.<method>()` call works
+exactly as before. The only changes callers need to make are:
+
+### 1 — Change the package name
+
+```diff
+-npm install bemora
++npm install bemora-enterprise
+```
+
+```diff
+-import Bemora from 'bemora';
++import Bemora from 'bemora-enterprise';
+```
+
+### 2 — Update error imports (if you catch structured errors)
+
+The error class names are unchanged, but four Bemora-prefixed aliases are now
+also exported for code that prefers the long-form names:
+
+```js
+// Both of these now work:
+import { ProviderError }       from 'bemora-enterprise';
+import { BemoraProviderError } from 'bemora-enterprise';   // alias
+```
+
+### 3 — Removed "fun" providers
+
+The following providers were removed because they have no business use case.
+If you need them, install the upstream client directly (`npm install bemora`):
+
+- `chucknorris`, `kanye`, `rickmorty`, `harrypotter`, `starwars`,
+  `pokemon`, `dadjokes`, `bored`, `memes`, `zodiac`, `advice`,
+  `randomuser`, `fun`
+
+### 4 — New enterprise-only namespaces
+
+These namespaces are new in the enterprise fork (no upstream equivalent):
+
+| Namespace | What it adds |
+|-----------|--------------|
+| `api.payments.stripe` / `.paypal` | Charges, subscriptions, refunds, webhook verify |
+| `api.email.sendgrid` / `.ses` / `.resend` | Transactional email + batch + webhook verify |
+| `api.sms.twilio` | Send, lookup, webhook verify |
+| `api.auth.clerk` / `.auth0` / `.jwt` | Session verify, user management, JWT helpers |
+| `api.storage.s3` / `.r2` / `.gcs` | Presigned URLs, upload, download, delete |
+| `api.ai.anthropic` / `api.ai.anthropicStream` etc. | Anthropic, Gemini, Cohere, Mistral, Together, Perplexity with streaming — merged into the existing `api.ai` namespace |
+| `api.vectordb.*` | Pinecone, Qdrant, Weaviate, pgvector — upsert, query, delete |
+| `api.webhooks` | Unified verify + inbound router for Stripe, Twilio, GitHub, Clerk, Resend |
+| `api.observability.*` | Sentry, OpenTelemetry auto-span |
+| `api.security.*` | HIBP, VirusTotal, Safe Browsing, URLScan |
+| `api.cloudflare.*` | DNS, R2, Cache, Workers |
+| `api.costs.snapshot()` | Per-provider / per-tenant LLM cost tracking |
+| `api.withTenant(id, keys)` | Per-customer key isolation |
+| `api.circuits.*` | Circuit breaker state + manual control |
+
+---
+
 ## 📄 License
 
-MIT © [bemora](https://github.com/Demon-radio/Bemora.lol)
+MIT — see [LICENSE](LICENSE)
 
 ---
 
 <div align="center">
 
-**Built for vibe coders, AI builders, and developers who just want things to work.**
-
-If bemora saved you time → ⭐ Star it. It helps others find it.
+**Enterprise-hardened. Production-ready. Internally maintained.**
 
 </div>

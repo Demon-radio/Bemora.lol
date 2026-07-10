@@ -54,7 +54,7 @@ async function getOtelApi() {
  * @param {import('../../index.js').Bemora} api - Bemora instance
  * @param {{ tracer?, meter?, serviceName? }} [opts]
  */
-export async function wireOtel(api, { tracer, meter, serviceName = 'bemora' } = {}) {
+export async function wireOtel(api, { tracer, meter, serviceName = 'bemora', propagateContext = true } = {}) {
   const otel = await getOtelApi();
 
   const t = tracer || otel.trace.getTracer(serviceName);
@@ -96,6 +96,24 @@ export async function wireOtel(api, { tracer, meter, serviceName = 'bemora' } = 
       cacheCounter.add(1, { provider });
     } catch {}
   });
+
+  // ── W3C trace-context propagation through outbound HTTP ───────────────────
+  // Registers a header provider with httpClient so every provider call
+  // carries traceparent/tracestate, connecting distributed traces end-to-end.
+  if (propagateContext) {
+    try {
+      const { setTracingHeadersProvider } = await import('../../core/http.js');
+      setTracingHeadersProvider(() => {
+        // Try to use the real OTel propagation API if available
+        if (otel.propagation && otel.context) {
+          const carrier = {};
+          otel.propagation.inject(otel.context.active(), carrier);
+          return Object.keys(carrier).length ? carrier : null;
+        }
+        return null;
+      });
+    } catch {}
+  }
 
   return { tracer: t, meter: m };
 }

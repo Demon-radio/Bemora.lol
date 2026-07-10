@@ -1,5 +1,6 @@
 import * as cache from '../core/cache.js';
 import { httpClient } from '../core/http.js';
+import { wrapProviderError } from '../core/errors.js';
 
 const http = httpClient();
 
@@ -25,7 +26,9 @@ export async function getRandomAnimalFact() {
     cache.set(cacheKey, result, 3600);
     return result;
   } catch (e) {
+    // Wrap so the error is a typed BemoraError before falling back gracefully.
+    const wrapped = wrapProviderError(e, 'wildlife');
     const fact = FALLBACK_FACTS[Math.floor(Math.random() * FALLBACK_FACTS.length)];
-    return { fact, _cached: false, _source: 'fallback' };
+    return { fact, _cached: false, _source: 'fallback', _providerError: wrapped.message };
   }
 }

@@ -25,7 +25,15 @@
       "import": "./src/index.js",
       "default": "./src/index.js"
     },
-    "./edge": "./src/edge.js"
+    "./edge": "./src/edge.js",
+    "./redis": "./src/core/cache-redis.js",
+    "./paginate": "./src/core/paginate.js",
+    "./gql": "./src/core/gql.js",
+    "./upload": "./src/core/upload.js",
+    "./batch": "./src/core/batch.js",
+    "./webhooks": "./src/core/webhooks.js",
+    "./audit": "./src/core/audit.js",
+    "./errors": "./src/core/errors.js"
   },
   "keywords": [
     "api",
@@ -153,6 +161,16 @@
     "ws": "^8.16.0",
     "zod": "^4.4.3"
   },
+  "peerDependencies": {
+    "axios": ">=1.0.0",
+    "node-cache": ">=5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "ioredis": {
+      "optional": true
+    }
+  },
+  "optionalDependencies": {},
   "engines": {
     "node": ">=18.0.0"
   },

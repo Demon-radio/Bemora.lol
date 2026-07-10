@@ -6,8 +6,18 @@
  */
 
 import { httpClient } from '../../core/http.js';
-import { wrapProviderError, AuthError } from '../../core/errors.js';
+import { wrapProviderError, AuthError, ConfigurationError } from '../../core/errors.js';
 import { verifyStripeWebhook } from '../webhooks/verify.js';
+
+/** Validate that an API key is present before making any network call. */
+function requireKey(apiKey) {
+  if (!apiKey) {
+    throw new ConfigurationError(
+      '[stripe] Missing apiKey — pass your Stripe secret key as the second argument.',
+      { provider: 'stripe' }
+    );
+  }
+}
 
 const BASE = 'https://api.stripe.com/v1';
 
@@ -43,13 +53,15 @@ function encode(obj, prefix = '') {
 
 /**
  * Create a charge.
- * @param {{ amount: number, currency: string, source?: string, customerId?: string, description?: string, metadata?: object, signal?: AbortSignal }} params
+ * @param {{ amount: number, currency: string, source?: string, customerId?: string, description?: string, metadata?: object, idempotencyKey?: string, signal?: AbortSignal }} params
  * @param {string} apiKey
  */
-export async function createCharge({ amount, currency, source, customerId, description, metadata, signal } = {}, apiKey) {
+export async function createCharge({ amount, currency, source, customerId, description, metadata, idempotencyKey, signal } = {}, apiKey) {
+  requireKey(apiKey);
   try {
     const body = encode({ amount, currency, source, customer: customerId, description, metadata });
-    const { data } = await client(apiKey).post(`${BASE}/charges`, body, { signal });
+    const headers = idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {};
+    const { data } = await client(apiKey).post(`${BASE}/charges`, body, { signal, headers });
     return data;
   } catch (err) {
     throw wrapProviderError(err, 'stripe');
@@ -85,8 +97,11 @@ export async function listCharges({ limit = 10, customerId, signal } = {}, apiKe
 
 /**
  * Create a PaymentIntent (preferred over raw charges).
+ * @param {{ amount: number, currency: string, customerId?: string, paymentMethodId?: string, confirm?: boolean, metadata?: object, idempotencyKey?: string, signal?: AbortSignal }} params
+ * @param {string} apiKey
  */
-export async function createPaymentIntent({ amount, currency, customerId, paymentMethodId, confirm = false, metadata, signal } = {}, apiKey) {
+export async function createPaymentIntent({ amount, currency, customerId, paymentMethodId, confirm = false, metadata, idempotencyKey, signal } = {}, apiKey) {
+  requireKey(apiKey);
   try {
     const body = encode({
       amount, currency,
@@ -95,7 +110,8 @@ export async function createPaymentIntent({ amount, currency, customerId, paymen
       confirm,
       metadata,
     });
-    const { data } = await client(apiKey).post(`${BASE}/payment_intents`, body, { signal });
+    const headers = idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {};
+    const { data } = await client(apiKey).post(`${BASE}/payment_intents`, body, { signal, headers });
     return data;
   } catch (err) {
     throw wrapProviderError(err, 'stripe');
@@ -103,6 +119,7 @@ export async function createPaymentIntent({ amount, currency, customerId, paymen
 }
 
 export async function confirmPaymentIntent({ id, paymentMethodId, signal } = {}, apiKey) {
+  requireKey(apiKey);
   try {
     const body = encode({ payment_method: paymentMethodId });
     const { data } = await client(apiKey).post(`${BASE}/payment_intents/${id}/confirm`, body, { signal });
@@ -115,6 +132,7 @@ export async function confirmPaymentIntent({ id, paymentMethodId, signal } = {},
 // ── Customers ─────────────────────────────────────────────────────────────────
 
 export async function createCustomer({ email, name, phone, metadata, signal } = {}, apiKey) {
+  requireKey(apiKey);
   try {
     const { data } = await client(apiKey).post(`${BASE}/customers`, encode({ email, name, phone, metadata }), { signal });
     return data;
@@ -124,6 +142,7 @@ export async function createCustomer({ email, name, phone, metadata, signal } = 
 }
 
 export async function getCustomer({ id, signal } = {}, apiKey) {
+  requireKey(apiKey);
   try {
     const { data } = await client(apiKey).get(`${BASE}/customers/${id}`, { signal });
     return data;
@@ -133,6 +152,7 @@ export async function getCustomer({ id, signal } = {}, apiKey) {
 }
 
 export async function updateCustomer({ id, email, name, phone, metadata, signal } = {}, apiKey) {
+  requireKey(apiKey);
   try {
     const { data } = await client(apiKey).post(`${BASE}/customers/${id}`, encode({ email, name, phone, metadata }), { signal });
     return data;
@@ -142,6 +162,7 @@ export async function updateCustomer({ id, email, name, phone, metadata, signal 
 }
 
 export async function listCustomers({ limit = 10, email, signal } = {}, apiKey) {
+  requireKey(apiKey);
   try {
     const { data } = await client(apiKey).get(`${BASE}/customers`, { params: { limit, email }, signal });
     return data;
@@ -151,6 +172,7 @@ export async function listCustomers({ limit = 10, email, signal } = {}, apiKey) 
 }
 
 export async function deleteCustomer({ id, signal } = {}, apiKey) {
+  requireKey(apiKey);
   try {
     const { data } = await client(apiKey).delete(`${BASE}/customers/${id}`, { signal });
     return data;
@@ -162,6 +184,7 @@ export async function deleteCustomer({ id, signal } = {}, apiKey) {
 // ── Subscriptions ────────────────────────────────────────────────────────────
 
 export async function createSubscription({ customerId, items, trialDays, metadata, signal } = {}, apiKey) {
+  requireKey(apiKey);
   try {
     const body = {
       customer: customerId,
@@ -177,6 +200,7 @@ export async function createSubscription({ customerId, items, trialDays, metadat
 }
 
 export async function getSubscription({ id, signal } = {}, apiKey) {
+  requireKey(apiKey);
   try {
     const { data } = await client(apiKey).get(`${BASE}/subscriptions/${id}`, { signal });
     return data;
@@ -186,6 +210,7 @@ export async function getSubscription({ id, signal } = {}, apiKey) {
 }
 
 export async function cancelSubscription({ id, immediately = false, signal } = {}, apiKey) {
+  requireKey(apiKey);
   try {
     if (immediately) {
       const { data } = await client(apiKey).delete(`${BASE}/subscriptions/${id}`, { signal });
@@ -199,6 +224,7 @@ export async function cancelSubscription({ id, immediately = false, signal } = {
 }
 
 export async function listSubscriptions({ customerId, status, limit = 10, signal } = {}, apiKey) {
+  requireKey(apiKey);
   try {
     const { data } = await client(apiKey).get(`${BASE}/subscriptions`, {
       params: { customer: customerId, status, limit },
@@ -213,6 +239,7 @@ export async function listSubscriptions({ customerId, status, limit = 10, signal
 // ── Refunds ───────────────────────────────────────────────────────────────────
 
 export async function createRefund({ chargeId, paymentIntentId, amount, reason, signal } = {}, apiKey) {
+  requireKey(apiKey);
   try {
     const body = encode({
       charge: chargeId,
@@ -228,6 +255,7 @@ export async function createRefund({ chargeId, paymentIntentId, amount, reason, 
 }
 
 export async function getRefund({ id, signal } = {}, apiKey) {
+  requireKey(apiKey);
   try {
     const { data } = await client(apiKey).get(`${BASE}/refunds/${id}`, { signal });
     return data;

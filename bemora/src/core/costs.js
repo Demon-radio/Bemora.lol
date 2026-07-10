@@ -58,6 +58,52 @@ const _byTenant   = new Map();
 let   _totalCostUsd = 0;
 const _events     = [];
 
+// ── Per-tenant budget ceilings ────────────────────────────────────────────────
+
+/** @type {Map<string, number>} tenantId → limitUsd */
+const _budgets = new Map();
+/** @type {Function[]} over-budget event listeners */
+const _budgetListeners = [];
+
+/**
+ * Set a spending ceiling for a tenant.
+ * Once the tenant's cumulative spend reaches limitUsd, every subsequent
+ * `recordCost` for that tenant emits an `overBudget` event instead of
+ * silently accumulating spend.
+ *
+ * @param {string} tenantId
+ * @param {number} limitUsd
+ */
+export function setBudget(tenantId, limitUsd) {
+  if (typeof limitUsd !== 'number' || limitUsd <= 0) {
+    throw new TypeError('[costs] limitUsd must be a positive number');
+  }
+  _budgets.set(tenantId, limitUsd);
+}
+
+/**
+ * Remove a tenant's budget ceiling.
+ * @param {string} tenantId
+ */
+export function clearBudget(tenantId) {
+  _budgets.delete(tenantId);
+}
+
+/**
+ * Register a listener for over-budget events.
+ * The callback receives { tenantId, limitUsd, totalUsd, entry }.
+ * @param {Function} fn
+ */
+export function onOverBudget(fn) {
+  _budgetListeners.push(fn);
+}
+
+function _emitOverBudget(payload) {
+  for (const fn of _budgetListeners) {
+    try { fn(payload); } catch {}
+  }
+}
+
 // ── Core ──────────────────────────────────────────────────────────────────────
 
 /**
@@ -99,6 +145,15 @@ export function recordCost({ provider, model, inputTokens = 0, outputTokens = 0,
 
   const entry = { provider, model, inputTokens, outputTokens, costUsd, tenantId, requestId, ts: new Date().toISOString() };
   _events.push(entry);
+
+  // ── Budget ceiling check ─────────────────────────────────────────────────
+  if (tenantId && _budgets.has(tenantId)) {
+    const limitUsd = _budgets.get(tenantId);
+    const tenantTotal = Object.values(_byTenant.get(tenantId) || {}).reduce((acc, v) => acc + v.costUsd, 0);
+    if (tenantTotal >= limitUsd) {
+      _emitOverBudget({ tenantId, limitUsd, totalUsd: tenantTotal, entry });
+    }
+  }
 
   return entry;
 }
