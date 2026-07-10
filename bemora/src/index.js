@@ -612,6 +612,9 @@ export class Bemora {
       recordRequest(provider);
       this._events.emit('request', { provider });
 
+      // ── 3b. Plugin beforeRequest hooks ───────────────────────────────────
+      await this._plugins.runBeforeRequest({ provider, args });
+
       // ── 4. Request interceptors ──────────────────────────────────────────
       const config = await this.interceptors.request.run({ provider, args });
 
@@ -671,6 +674,9 @@ export class Bemora {
         this._events.emit('response', { provider, latencyMs });
         logger.debug(`${provider} OK (${latencyMs}ms)`, { provider, latencyMs, cacheStatus: result?._cacheStatus });
 
+        // ── 11b. Plugin afterResponse hooks ──────────────────────────────
+        await this._plugins.runAfterResponse({ provider, args: config.args, result });
+
         return result;
       } catch (e) {
         const latencyMs = Date.now() - startTime;
@@ -682,6 +688,9 @@ export class Bemora {
         if (breakerDecision === 'probe') breaker.endProbe();
         this._events.emit('error', { provider, error: e.message });
         logger.warn(`Provider "${provider}" failed: ${e.message}`, { provider, latencyMs });
+
+        // ── 12b. Plugin onError hooks ─────────────────────────────────────
+        await this._plugins.runOnError({ provider, args: config?.args ?? args, error: e });
 
         if (e instanceof BemoraError) throw e;
         throw new ProviderError(e.message, { provider, cause: e });
