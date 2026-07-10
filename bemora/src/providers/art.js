@@ -1,5 +1,8 @@
-import axios from 'axios';
+import { httpClient } from '../core/http.js';
+import { wrapProviderError } from '../core/errors.js';
 import * as cache from '../core/cache.js';
+
+const http = httpClient();
 
 /**
  * Art Institute of Chicago — Free, no key
@@ -16,36 +19,40 @@ export async function searchArtworks({ query, limit = 10, page = 1 }) {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get(`${AIC}/artworks/search`, {
-    params: {
-      q: query,
-      limit,
-      page,
-      fields: 'id,title,artist_display,date_display,medium_display,dimensions,place_of_origin,style_title,image_id,department_title,artwork_type_title',
-    },
-  });
+  try {
+    const { data } = await http.get(`${AIC}/artworks/search`, {
+      params: {
+        q: query,
+        limit,
+        page,
+        fields: 'id,title,artist_display,date_display,medium_display,dimensions,place_of_origin,style_title,image_id,department_title,artwork_type_title',
+      },
+    });
 
-  const result = {
-    total: data.pagination?.total,
-    artworks: data.data.map((a) => ({
-      id: a.id,
-      title: a.title,
-      artist: a.artist_display,
-      date: a.date_display,
-      medium: a.medium_display,
-      dimensions: a.dimensions,
-      origin: a.place_of_origin,
-      style: a.style_title,
-      type: a.artwork_type_title,
-      department: a.department_title,
-      image: a.image_id ? `https://www.artic.edu/iiif/2/${a.image_id}/full/843,/0/default.jpg` : null,
-      url: `https://www.artic.edu/artworks/${a.id}`,
-    })),
-    _cached: false,
-  };
+    const result = {
+      total: data.pagination?.total,
+      artworks: data.data.map((a) => ({
+        id: a.id,
+        title: a.title,
+        artist: a.artist_display,
+        date: a.date_display,
+        medium: a.medium_display,
+        dimensions: a.dimensions,
+        origin: a.place_of_origin,
+        style: a.style_title,
+        type: a.artwork_type_title,
+        department: a.department_title,
+        image: a.image_id ? `https://www.artic.edu/iiif/2/${a.image_id}/full/843,/0/default.jpg` : null,
+        url: `https://www.artic.edu/artworks/${a.id}`,
+      })),
+      _cached: false,
+    };
 
-  cache.set(cacheKey, result, 86400);
-  return result;
+    cache.set(cacheKey, result, 86400);
+    return result;
+  } catch (err) {
+    throw wrapProviderError(err, 'art');
+  }
 }
 
 /**
@@ -57,21 +64,25 @@ export async function getArtwork({ id }) {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get(`${AIC}/artworks/${id}`);
-  const a = data.data;
+  try {
+    const { data } = await http.get(`${AIC}/artworks/${id}`);
+    const a = data.data;
 
-  const result = {
-    id: a.id, title: a.title, artist: a.artist_display,
-    date: a.date_display, medium: a.medium_display,
-    dimensions: a.dimensions, origin: a.place_of_origin,
-    style: a.style_title, description: a.description,
-    image: a.image_id ? `https://www.artic.edu/iiif/2/${a.image_id}/full/843,/0/default.jpg` : null,
-    url: `https://www.artic.edu/artworks/${a.id}`,
-    _cached: false,
-  };
+    const result = {
+      id: a.id, title: a.title, artist: a.artist_display,
+      date: a.date_display, medium: a.medium_display,
+      dimensions: a.dimensions, origin: a.place_of_origin,
+      style: a.style_title, description: a.description,
+      image: a.image_id ? `https://www.artic.edu/iiif/2/${a.image_id}/full/843,/0/default.jpg` : null,
+      url: `https://www.artic.edu/artworks/${a.id}`,
+      _cached: false,
+    };
 
-  cache.set(cacheKey, result, 86400);
-  return result;
+    cache.set(cacheKey, result, 86400);
+    return result;
+  } catch (err) {
+    throw wrapProviderError(err, 'art');
+  }
 }
 
 /**
@@ -93,23 +104,27 @@ export async function searchMet({ query, isHighlight = false, hasImages = true }
   if (isHighlight) params.isHighlight = true;
   if (hasImages) params.hasImages = true;
 
-  const { data } = await axios.get(`${MET}/search`, { params });
+  try {
+    const { data } = await http.get(`${MET}/search`, { params });
 
-  if (!data.total) return { total: 0, artworks: [], _cached: false };
+    if (!data.total) return { total: 0, artworks: [], _cached: false };
 
-  const ids = data.objectIDs.slice(0, 10);
-  const artworks = await Promise.allSettled(ids.map((id) => getMetArtwork({ id })));
+    const ids = data.objectIDs.slice(0, 10);
+    const artworks = await Promise.allSettled(ids.map((id) => getMetArtwork({ id })));
 
-  const result = {
-    total: data.total,
-    artworks: artworks
-      .filter((r) => r.status === 'fulfilled')
-      .map((r) => r.value),
-    _cached: false,
-  };
+    const result = {
+      total: data.total,
+      artworks: artworks
+        .filter((r) => r.status === 'fulfilled')
+        .map((r) => r.value),
+      _cached: false,
+    };
 
-  cache.set(cacheKey, result, 86400);
-  return result;
+    cache.set(cacheKey, result, 86400);
+    return result;
+  } catch (err) {
+    throw wrapProviderError(err, 'art');
+  }
 }
 
 /**
@@ -121,24 +136,28 @@ export async function getMetArtwork({ id }) {
   const cached = cache.get(cacheKey);
   if (cached) return cached;
 
-  const { data } = await axios.get(`${MET}/objects/${id}`);
+  try {
+    const { data } = await http.get(`${MET}/objects/${id}`);
 
-  const result = {
-    id: data.objectID,
-    title: data.title,
-    artist: data.artistDisplayName,
-    date: data.objectDate,
-    medium: data.medium,
-    classification: data.classification,
-    department: data.department,
-    country: data.country,
-    period: data.period,
-    image: data.primaryImageSmall || data.primaryImage,
-    url: data.objectURL,
-    is_highlight: data.isHighlight,
-    is_public_domain: data.isPublicDomain,
-  };
+    const result = {
+      id: data.objectID,
+      title: data.title,
+      artist: data.artistDisplayName,
+      date: data.objectDate,
+      medium: data.medium,
+      classification: data.classification,
+      department: data.department,
+      country: data.country,
+      period: data.period,
+      image: data.primaryImageSmall || data.primaryImage,
+      url: data.objectURL,
+      is_highlight: data.isHighlight,
+      is_public_domain: data.isPublicDomain,
+    };
 
-  cache.set(cacheKey, result, 86400);
-  return result;
+    cache.set(cacheKey, result, 86400);
+    return result;
+  } catch (err) {
+    throw wrapProviderError(err, 'art');
+  }
 }

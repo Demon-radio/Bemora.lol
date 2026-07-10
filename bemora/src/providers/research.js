@@ -1,6 +1,9 @@
-import axios from 'axios';
+import { httpClient } from '../core/http.js';
+import { wrapProviderError } from '../core/errors.js';
 import * as cache from '../core/cache.js';
 import { logger } from '../core/logger.js';
+
+const http = httpClient();
 
 /**
  * Search Wikipedia
@@ -15,19 +18,24 @@ export async function searchWikipedia({ query, language = 'en', limit = 5 }) {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get(
-    `https://${language}.wikipedia.org/w/api.php`,
-    {
-      params: {
-        action: 'query',
-        list: 'search',
-        srsearch: query,
-        srlimit: limit,
-        format: 'json',
-        origin: '*',
-      },
-    }
-  );
+  let data;
+  try {
+    ({ data } = await http.get(
+      `https://${language}.wikipedia.org/w/api.php`,
+      {
+        params: {
+          action: 'query',
+          list: 'search',
+          srsearch: query,
+          srlimit: limit,
+          format: 'json',
+          origin: '*',
+        },
+      }
+    ));
+  } catch (err) {
+    throw wrapProviderError(err, 'research');
+  }
 
   const result = {
     query,
@@ -59,9 +67,14 @@ export async function getWikipediaArticle({ title, language = 'en' }) {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get(
-    `https://${language}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`
-  );
+  let data;
+  try {
+    ({ data } = await http.get(
+      `https://${language}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`
+    ));
+  } catch (err) {
+    throw wrapProviderError(err, 'research');
+  }
 
   const result = {
     title: data.title,
@@ -88,9 +101,14 @@ export async function searchBooks({ query, limit = 10 }) {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get('https://openlibrary.org/search.json', {
-    params: { q: query, limit },
-  });
+  let data;
+  try {
+    ({ data } = await http.get('https://openlibrary.org/search.json', {
+      params: { q: query, limit },
+    }));
+  } catch (err) {
+    throw wrapProviderError(err, 'research');
+  }
 
   const result = {
     total: data.numFound,

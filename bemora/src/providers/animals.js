@@ -1,5 +1,8 @@
-import axios from 'axios';
+import { httpClient } from '../core/http.js';
+import { wrapProviderError } from '../core/errors.js';
 import * as cache from '../core/cache.js';
+
+const http = httpClient();
 
 export async function getRandomDog() {
   const cacheKey = 'animals:dog:random';
@@ -13,12 +16,12 @@ export async function getRandomDog() {
   let source = 'dog.ceo';
 
   try {
-    const { data } = await axios.get('https://dog.ceo/api/breeds/image/random', { timeout: 8000 });
+    const { data } = await http.get('https://dog.ceo/api/breeds/image/random');
     image = data.message;
   } catch {
     try {
       source = 'random.dog';
-      const { data } = await axios.get('https://random.dog/woof.json', { timeout: 8000 });
+      const { data } = await http.get('https://random.dog/woof.json');
       // random.dog may return video files — skip those
       if (data.url && /\.(jpg|jpeg|png|gif|webp)$/i.test(data.url)) {
         image = data.url;
@@ -27,7 +30,7 @@ export async function getRandomDog() {
       }
     } catch {
       source = 'thedogapi';
-      const { data } = await axios.get('https://api.thedogapi.com/v1/images/search', { timeout: 8000 });
+      const { data } = await http.get('https://api.thedogapi.com/v1/images/search');
       image = data[0]?.url ?? null;
     }
   }
@@ -42,10 +45,14 @@ export async function getRandomCat() {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get('https://api.thecatapi.com/v1/images/search');
-  const result = { image: data[0].url, _cached: false };
-  cache.set(cacheKey, result, 60);
-  return result;
+  try {
+    const { data } = await http.get('https://api.thecatapi.com/v1/images/search');
+    const result = { image: data[0].url, _cached: false };
+    cache.set(cacheKey, result, 60);
+    return result;
+  } catch (err) {
+    throw wrapProviderError(err, 'animals');
+  }
 }
 
 export async function getRandomFox() {
@@ -53,10 +60,14 @@ export async function getRandomFox() {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get('https://randomfox.ca/floof/');
-  const result = { image: data.image, _cached: false };
-  cache.set(cacheKey, result, 60);
-  return result;
+  try {
+    const { data } = await http.get('https://randomfox.ca/floof/');
+    const result = { image: data.image, _cached: false };
+    cache.set(cacheKey, result, 60);
+    return result;
+  } catch (err) {
+    throw wrapProviderError(err, 'animals');
+  }
 }
 
 export async function getRandomDuck() {
@@ -64,10 +75,14 @@ export async function getRandomDuck() {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get('https://random-d.uk/api/v2/random');
-  const result = { image: data.url, _cached: false };
-  cache.set(cacheKey, result, 60);
-  return result;
+  try {
+    const { data } = await http.get('https://random-d.uk/api/v2/random');
+    const result = { image: data.url, _cached: false };
+    cache.set(cacheKey, result, 60);
+    return result;
+  } catch (err) {
+    throw wrapProviderError(err, 'animals');
+  }
 }
 
 export async function getRandomPanda() {
@@ -76,12 +91,12 @@ export async function getRandomPanda() {
   if (cached) return { ...cached, _cached: true };
 
   try {
-    const { data } = await axios.get('https://some-random-api.com/animal/panda', { timeout: 5000 });
+    const { data } = await http.get('https://some-random-api.com/animal/panda');
     const result = { image: data.image, fact: data.fact, _cached: false, _source: 'some-random-api' };
     cache.set(cacheKey, result, 60);
     return result;
   } catch (e) {
-    const { data } = await axios.get('https://api.thecatapi.com/v1/images/search', { params: { limit: 1 } });
+    const { data } = await http.get('https://api.thecatapi.com/v1/images/search', { params: { limit: 1 } });
     return { image: data[0]?.url, fact: 'Pandas spend up to 14 hours a day eating bamboo.', _cached: false, _source: 'fallback' };
   }
 }
@@ -92,12 +107,12 @@ export async function getRandomBird() {
   if (cached) return { ...cached, _cached: true };
 
   try {
-    const { data } = await axios.get('https://some-random-api.com/animal/bird', { timeout: 5000 });
+    const { data } = await http.get('https://some-random-api.com/animal/bird');
     const result = { image: data.image, fact: data.fact, _cached: false, _source: 'some-random-api' };
     cache.set(cacheKey, result, 60);
     return result;
   } catch (e) {
-    const { data } = await axios.get('https://shibe.online/api/birds', { params: { count: 1 } });
+    const { data } = await http.get('https://shibe.online/api/birds', { params: { count: 1 } });
     return { image: Array.isArray(data) ? data[0] : null, fact: 'Birds are the only living descendants of dinosaurs.', _cached: false, _source: 'fallback' };
   }
 }

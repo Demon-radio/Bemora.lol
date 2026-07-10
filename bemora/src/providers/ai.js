@@ -1,5 +1,8 @@
 
-import axios from 'axios';
+import { httpClient } from '../core/http.js';
+import { ValidationError, wrapProviderError } from '../core/errors.js';
+
+const http = httpClient();
 
 /**
  * AI provider — lightweight wrappers for LLM APIs.
@@ -13,27 +16,31 @@ import axios from 'axios';
  * @yields {{content: string}}
  */
 export async function* openaiChatStream({ messages, model = 'gpt-4o-mini', temperature = 0.7 }, apiKey) {
-  const response = await axios.post(
-    'https://api.openai.com/v1/chat/completions',
-    { model, messages, temperature, stream: true },
-    { 
-      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      responseType: 'stream'
-    }
-  );
+  try {
+    const response = await http.post(
+      'https://api.openai.com/v1/chat/completions',
+      { model, messages, temperature, stream: true },
+      {
+        headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+        responseType: 'stream'
+      }
+    );
 
-  for await (const chunk of response.data) {
-    const lines = chunk.toString('utf8').split('\n').filter(line => line.trim() !== '');
-    for (const line of lines) {
-      const message = line.replace(/^data: /, '');
-      if (message === '[DONE]') return;
-      try {
-        const parsed = JSON.parse(message);
-        if (parsed.choices[0]?.delta?.content) {
-          yield { content: parsed.choices[0].delta.content };
-        }
-      } catch (e) { /* ignore */ }
+    for await (const chunk of response.data) {
+      const lines = chunk.toString('utf8').split('\n').filter(line => line.trim() !== '');
+      for (const line of lines) {
+        const message = line.replace(/^data: /, '');
+        if (message === '[DONE]') return;
+        try {
+          const parsed = JSON.parse(message);
+          if (parsed.choices[0]?.delta?.content) {
+            yield { content: parsed.choices[0].delta.content };
+          }
+        } catch (e) { /* ignore */ }
+      }
     }
+  } catch (err) {
+    throw wrapProviderError(err, 'ai');
   }
 }
 
@@ -43,17 +50,21 @@ export async function* openaiChatStream({ messages, model = 'gpt-4o-mini', tempe
  * @param {string} apiKey — OpenAI API key
  */
 export async function openaiChat({ messages, model = 'gpt-4o-mini', temperature = 0.7 }, apiKey) {
-  const { data } = await axios.post(
-    'https://api.openai.com/v1/chat/completions',
-    { model, messages, temperature },
-    { headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' } }
-  );
-  return {
-    content: data.choices[0].message.content,
-    model: data.model,
-    tokens: data.usage,
-    provider: 'openai',
-  };
+  try {
+    const { data } = await http.post(
+      'https://api.openai.com/v1/chat/completions',
+      { model, messages, temperature },
+      { headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' } }
+    );
+    return {
+      content: data.choices[0].message.content,
+      model: data.model,
+      tokens: data.usage,
+      provider: 'openai',
+    };
+  } catch (err) {
+    throw wrapProviderError(err, 'ai');
+  }
 }
 
 /**
@@ -62,12 +73,16 @@ export async function openaiChat({ messages, model = 'gpt-4o-mini', temperature 
  * @param {string} apiKey
  */
 export async function generateImage({ prompt, size = '1024x1024', quality = 'standard' }, apiKey) {
-  const { data } = await axios.post(
-    'https://api.openai.com/v1/images/generations',
-    { model: 'dall-e-3', prompt, size, quality, n: 1 },
-    { headers: { Authorization: `Bearer ${apiKey}` } }
-  );
-  return { url: data.data[0].url, revised_prompt: data.data[0].revised_prompt };
+  try {
+    const { data } = await http.post(
+      'https://api.openai.com/v1/images/generations',
+      { model: 'dall-e-3', prompt, size, quality, n: 1 },
+      { headers: { Authorization: `Bearer ${apiKey}` } }
+    );
+    return { url: data.data[0].url, revised_prompt: data.data[0].revised_prompt };
+  } catch (err) {
+    throw wrapProviderError(err, 'ai');
+  }
 }
 
 /**
@@ -78,27 +93,31 @@ export async function generateImage({ prompt, size = '1024x1024', quality = 'sta
  * @yields {{content: string}}
  */
 export async function* groqChatStream({ messages, model = 'llama3-8b-8192', temperature = 0.7 }, apiKey) {
-  const response = await axios.post(
-    'https://api.groq.com/openai/v1/chat/completions',
-    { model, messages, temperature, stream: true },
-    { 
-      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      responseType: 'stream'
-    }
-  );
+  try {
+    const response = await http.post(
+      'https://api.groq.com/openai/v1/chat/completions',
+      { model, messages, temperature, stream: true },
+      {
+        headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+        responseType: 'stream'
+      }
+    );
 
-  for await (const chunk of response.data) {
-    const lines = chunk.toString('utf8').split('\n').filter(line => line.trim() !== '');
-    for (const line of lines) {
-      const message = line.replace(/^data: /, '');
-      if (message === '[DONE]') return;
-      try {
-        const parsed = JSON.parse(message);
-        if (parsed.choices[0]?.delta?.content) {
-          yield { content: parsed.choices[0].delta.content };
-        }
-      } catch (e) { /* ignore */ }
+    for await (const chunk of response.data) {
+      const lines = chunk.toString('utf8').split('\n').filter(line => line.trim() !== '');
+      for (const line of lines) {
+        const message = line.replace(/^data: /, '');
+        if (message === '[DONE]') return;
+        try {
+          const parsed = JSON.parse(message);
+          if (parsed.choices[0]?.delta?.content) {
+            yield { content: parsed.choices[0].delta.content };
+          }
+        } catch (e) { /* ignore */ }
+      }
     }
+  } catch (err) {
+    throw wrapProviderError(err, 'ai');
   }
 }
 
@@ -109,17 +128,21 @@ export async function* groqChatStream({ messages, model = 'llama3-8b-8192', temp
  * @param {string} apiKey — Groq API key
  */
 export async function groqChat({ messages, model = 'llama3-8b-8192', temperature = 0.7 }, apiKey) {
-  const { data } = await axios.post(
-    'https://api.groq.com/openai/v1/chat/completions',
-    { model, messages, temperature },
-    { headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' } }
-  );
-  return {
-    content: data.choices[0].message.content,
-    model: data.model,
-    tokens: data.usage,
-    provider: 'groq',
-  };
+  try {
+    const { data } = await http.post(
+      'https://api.groq.com/openai/v1/chat/completions',
+      { model, messages, temperature },
+      { headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' } }
+    );
+    return {
+      content: data.choices[0].message.content,
+      model: data.model,
+      tokens: data.usage,
+      provider: 'groq',
+    };
+  } catch (err) {
+    throw wrapProviderError(err, 'ai');
+  }
 }
 
 /**
@@ -147,40 +170,44 @@ export async function* openaiStream({ messages, model = 'gpt-4o-mini', temperatu
  * @private
  */
 async function* streamChatCompletions(url, body, apiKey, signal) {
-  const response = await axios.post(
-    url,
-    { ...body, stream: true },
-    {
-      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      responseType: 'stream',
-      signal,
-    }
-  );
-
-  let buffer = '';
-  for await (const chunk of response.data) {
-    buffer += chunk.toString('utf8');
-    const lines = buffer.split('\n');
-    buffer = lines.pop() ?? '';
-
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed.startsWith('data:')) continue;
-      const payload = trimmed.slice(5).trim();
-      if (payload === '[DONE]') {
-        yield { content: '', done: true };
-        return;
+  try {
+    const response = await http.post(
+      url,
+      { ...body, stream: true },
+      {
+        headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+        responseType: 'stream',
+        signal,
       }
-      try {
-        const parsed = JSON.parse(payload);
-        const delta = parsed.choices?.[0]?.delta?.content;
-        if (delta) yield { content: delta, done: false };
-      } catch (_) {
-        // ignore malformed partial JSON chunks
+    );
+
+    let buffer = '';
+    for await (const chunk of response.data) {
+      buffer += chunk.toString('utf8');
+      const lines = buffer.split('\n');
+      buffer = lines.pop() ?? '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith('data:')) continue;
+        const payload = trimmed.slice(5).trim();
+        if (payload === '[DONE]') {
+          yield { content: '', done: true };
+          return;
+        }
+        try {
+          const parsed = JSON.parse(payload);
+          const delta = parsed.choices?.[0]?.delta?.content;
+          if (delta) yield { content: delta, done: false };
+        } catch (_) {
+          // ignore malformed partial JSON chunks
+        }
       }
     }
+    yield { content: '', done: true };
+  } catch (err) {
+    throw wrapProviderError(err, 'ai');
   }
-  yield { content: '', done: true };
 }
 
 /**
@@ -189,29 +216,33 @@ async function* streamChatCompletions(url, body, apiKey, signal) {
  * @param {string} apiKey — Anthropic API key
  */
 export async function anthropicChat({ messages, model = 'claude-3-5-sonnet-20241022', temperature = 0.7, maxTokens = 1024 }, apiKey) {
-  const { data } = await axios.post(
-    'https://api.anthropic.com/v1/messages',
-    {
-      model,
-      messages,
-      temperature,
-      max_tokens: maxTokens,
-      anthropic_version: '2023-06-01'
-    },
-    {
-      headers: {
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'Content-Type': 'application/json'
+  try {
+    const { data } = await http.post(
+      'https://api.anthropic.com/v1/messages',
+      {
+        model,
+        messages,
+        temperature,
+        max_tokens: maxTokens,
+        anthropic_version: '2023-06-01'
+      },
+      {
+        headers: {
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'Content-Type': 'application/json'
+        }
       }
-    }
-  );
-  return {
-    content: data.content[0].text,
-    model: data.model,
-    tokens: { input: data.usage.input_tokens, output: data.usage.output_tokens },
-    provider: 'anthropic',
-  };
+    );
+    return {
+      content: data.content[0].text,
+      model: data.model,
+      tokens: { input: data.usage.input_tokens, output: data.usage.output_tokens },
+      provider: 'anthropic',
+    };
+  } catch (err) {
+    throw wrapProviderError(err, 'ai');
+  }
 }
 
 /**
@@ -224,19 +255,23 @@ export async function geminiChat({ messages, model = 'gemini-1.5-flash', tempera
     role: msg.role === 'assistant' ? 'model' : 'user',
     parts: [{ text: msg.content }]
   }));
-  const { data } = await axios.post(
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-    { contents, generationConfig: { temperature } }
-  );
-  return {
-    content: data.candidates[0].content.parts[0].text,
-    model,
-    tokens: {
-      input: data.usageMetadata?.promptTokenCount || 0,
-      output: data.usageMetadata?.candidatesTokenCount || 0
-    },
-    provider: 'google',
-  };
+  try {
+    const { data } = await http.post(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+      { contents, generationConfig: { temperature } }
+    );
+    return {
+      content: data.candidates[0].content.parts[0].text,
+      model,
+      tokens: {
+        input: data.usageMetadata?.promptTokenCount || 0,
+        output: data.usageMetadata?.candidatesTokenCount || 0
+      },
+      provider: 'google',
+    };
+  } catch (err) {
+    throw wrapProviderError(err, 'ai');
+  }
 }
 
 /**
@@ -265,10 +300,11 @@ export async function smartChat({ messages, system }, { groqKey, openaiKey, anth
     return await geminiChat({ messages: msgs }, geminiKey);
   }
 
-  throw new Error(
+  throw new ValidationError(
     '[bemora] AI chat requires at least one key: groqKey, openaiKey, anthropicKey, or geminiKey.\n' +
     '  → Free keys: https://console.groq.com (Groq), https://aistudio.google.com/app/apikey (Gemini)\n' +
-    '  → Paid keys: https://platform.openai.com, https://console.anthropic.com'
+    '  → Paid keys: https://platform.openai.com, https://console.anthropic.com',
+    { provider: 'ai' }
   );
 }
 
@@ -278,15 +314,18 @@ export async function smartChat({ messages, system }, { groqKey, openaiKey, anth
  * @param {string} apiKey
  */
 export async function embed({ input, model = 'text-embedding-3-small' }, apiKey) {
-  const { data } = await axios.post(
-    'https://api.openai.com/v1/embeddings',
-    { model, input },
-    { headers: { Authorization: `Bearer ${apiKey}` } }
-  );
-  return {
-    embeddings: data.data.map((d) => d.embedding),
-    model: data.model,
-    tokens: data.usage.total_tokens,
-  };
+  try {
+    const { data } = await http.post(
+      'https://api.openai.com/v1/embeddings',
+      { model, input },
+      { headers: { Authorization: `Bearer ${apiKey}` } }
+    );
+    return {
+      embeddings: data.data.map((d) => d.embedding),
+      model: data.model,
+      tokens: data.usage.total_tokens,
+    };
+  } catch (err) {
+    throw wrapProviderError(err, 'ai');
+  }
 }
-

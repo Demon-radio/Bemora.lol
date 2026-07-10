@@ -33,8 +33,18 @@ export class ConfigurationError extends BemoraError {
 
 export class ProviderError extends BemoraError {
   constructor(message, options = {}) {
-    super(message, { ...options, code: 'PROVIDER_ERROR' });
+    super(message, { ...options, code: options.code || 'PROVIDER_ERROR' });
     this.name = 'ProviderError';
+    this.httpStatus = options.httpStatus;
+    this.upstreamRequestId = options.upstreamRequestId;
+  }
+
+  toJSON() {
+    return {
+      ...super.toJSON(),
+      httpStatus: this.httpStatus,
+      upstreamRequestId: this.upstreamRequestId,
+    };
   }
 }
 
@@ -73,4 +83,85 @@ export class TimeoutError extends BemoraError {
     super(message, { ...options, code: 'TIMEOUT' });
     this.name = 'TimeoutError';
   }
+}
+
+/**
+ * Thrown when an upstream API returns a non-2xx response. Carries the
+ * upstream HTTP status and (when available) the upstream's own request id,
+ * in addition to the base `provider`/`code` fields.
+ */
+export class RateLimitError extends ProviderError {
+  constructor(message, options = {}) {
+    super(message, { ...options, code: 'RATE_LIMITED' });
+    this.name = 'RateLimitError';
+    this.retryAfter = options.retryAfter;
+    this.limit = options.limit;
+    this.remaining = options.remaining;
+  }
+
+  toJSON() {
+    return {
+      ...super.toJSON(),
+      retryAfter: this.retryAfter,
+      limit: this.limit,
+      remaining: this.remaining,
+    };
+  }
+}
+
+/**
+ * Thrown when a provider call fails because of missing/invalid credentials
+ * (HTTP 401/403 from the upstream, or a locally-detected missing API key).
+ */
+export class AuthError extends ProviderError {
+  constructor(message, options = {}) {
+    super(message, { ...options, code: 'AUTH_ERROR' });
+    this.name = 'AuthError';
+  }
+}
+
+/**
+ * Wraps an axios error into the appropriate Bemora* error class, attaching
+ * `provider`, upstream HTTP status, and (for 429s) rate-limit metadata.
+ * Non-axios errors are wrapped in a plain ProviderError.
+ *
+ * Usage in a provider:
+ *   try {
+ *     const { data } = await http.get(url);
+ *   } catch (err) {
+ *     throw wrapProviderError(err, 'weather');
+ *   }
+ */
+export function wrapProviderError(err, provider) {
+  if (err instanceof BemoraError) return err;
+
+  const status = err?.response?.status;
+  const upstreamMessage = err?.response?.data?.message || err?.response?.data?.error || err?.message;
+
+  if (err?.code === 'ECONNABORTED' || err?.name === 'AbortError' || /timeout/i.test(err?.message || '')) {
+    return new TimeoutError(`[${provider}] request timed out: ${upstreamMessage}`, { provider, cause: err });
+  }
+  if (status === 401 || status === 403) {
+    return new AuthError(`[${provider}] authentication failed: ${upstreamMessage}`, {
+      provider,
+      cause: err,
+      httpStatus: status,
+    });
+  }
+  if (status === 429) {
+    const headers = err?.response?.headers || {};
+    return new RateLimitError(`[${provider}] rate limited: ${upstreamMessage}`, {
+      provider,
+      cause: err,
+      httpStatus: status,
+      retryAfter: headers['retry-after'],
+      limit: headers['x-ratelimit-limit'],
+      remaining: headers['x-ratelimit-remaining'],
+    });
+  }
+  return new ProviderError(`[${provider}] request failed: ${upstreamMessage}`, {
+    provider,
+    cause: err,
+    httpStatus: status,
+  });
 }

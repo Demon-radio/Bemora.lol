@@ -1,34 +1,31 @@
-import axios from 'axios';
+import { httpClient } from '../core/http.js';
+import { wrapProviderError } from '../core/errors.js';
 import * as cache from '../core/cache.js';
 
-/**
- * Enriched weather — current conditions + air quality + UV index in one call.
- * This is the "wow" endpoint that no other library offers.
- *
- * @param {Object} params
- * @param {string} params.city
- * @param {string} [params.units]
- * @param {string} weatherKey - OpenWeatherMap API key (supports air quality & UV)
- * @returns {Promise<Object>}
- */
+const http = httpClient();
+
 export async function getEnrichedWeather({ city, units = 'metric' }, weatherKey) {
   const cacheKey = `enriched:weather:${city}:${units}`;
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  // 1. Current weather
-  const { data: w } = await axios.get('https://api.openweathermap.org/data/2.5/weather', {
-    params: { q: city, units, appid: weatherKey },
-  });
+  let w;
+  try {
+    const res = await http.get('https://api.openweathermap.org/data/2.5/weather', {
+      params: { q: city, units, appid: weatherKey },
+    });
+    w = res.data;
+  } catch (err) {
+    throw wrapProviderError(err, 'enriched');
+  }
 
   const { lat, lon } = w.coord;
 
-  // 2. Air quality + UV — fetch in parallel
   const [aqRes, uvRes] = await Promise.allSettled([
-    axios.get('https://api.openweathermap.org/data/2.5/air_pollution', {
+    http.get('https://api.openweathermap.org/data/2.5/air_pollution', {
       params: { lat, lon, appid: weatherKey },
     }),
-    axios.get('https://api.openweathermap.org/data/2.5/uvi', {
+    http.get('https://api.openweathermap.org/data/2.5/uvi', {
       params: { lat, lon, appid: weatherKey },
     }),
   ]);
@@ -79,18 +76,10 @@ export async function getEnrichedWeather({ city, units = 'metric' }, weatherKey)
   return result;
 }
 
-/**
- * Multi-city weather comparison — get weather for multiple cities at once.
- * @param {Object} params
- * @param {string[]} params.cities
- * @param {string} [params.units]
- * @param {string} weatherKey
- * @returns {Promise<Object[]>}
- */
 export async function compareCities({ cities, units = 'metric' }, weatherKey) {
   const results = await Promise.allSettled(
     cities.map((city) =>
-      axios
+      http
         .get('https://api.openweathermap.org/data/2.5/weather', {
           params: { q: city, units, appid: weatherKey },
         })

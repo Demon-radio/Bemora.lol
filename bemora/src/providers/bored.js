@@ -1,4 +1,6 @@
-import axios from 'axios';
+import { httpClient } from '../core/http.js';
+
+const http = httpClient();
 
 const FALLBACK_ACTIVITIES = [
   { activity: 'Learn a new programming language', type: 'education' },
@@ -14,7 +16,7 @@ const FALLBACK_ACTIVITIES = [
 export async function getActivity({ type } = {}) {
   try {
     const params = type ? { type } : {};
-    const { data } = await axios.get('https://bored-api.appbrewery.com/random', { params, timeout: 5000 });
+    const { data } = await http.get('https://bored-api.appbrewery.com/random', { params });
     return { activity: data.activity, type: data.type, participants: data.participants, price: data.price, _source: 'bored-api' };
   } catch (e) {
     const pool = type ? FALLBACK_ACTIVITIES.filter((a) => a.type === type) : FALLBACK_ACTIVITIES;

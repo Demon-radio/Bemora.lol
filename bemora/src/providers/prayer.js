@@ -1,6 +1,8 @@
-import axios from 'axios';
+import { httpClient } from '../core/http.js';
+import { wrapProviderError } from '../core/errors.js';
 import * as cache from '../core/cache.js';
 
+const http = httpClient();
 const BASE = 'https://api.aladhan.com/v1';
 
 const METHODS = {
@@ -29,9 +31,14 @@ export async function timingsByCity({ city, country = 'EG', method = 5, date }) 
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get(`${BASE}/timingsByCity/${d}`, {
-    params: { city, country, method },
-  });
+  let data;
+  try {
+    ({ data } = await http.get(`${BASE}/timingsByCity/${d}`, {
+      params: { city, country, method },
+    }));
+  } catch (err) {
+    throw wrapProviderError(err, 'prayer');
+  }
 
   if (data.code !== 200) throw new Error(data.status);
 
@@ -73,9 +80,14 @@ export async function timingsByCoords({ lat, lon, method = 5 }) {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get(`${BASE}/timings/${d}`, {
-    params: { latitude: lat, longitude: lon, method },
-  });
+  let data;
+  try {
+    ({ data } = await http.get(`${BASE}/timings/${d}`, {
+      params: { latitude: lat, longitude: lon, method },
+    }));
+  } catch (err) {
+    throw wrapProviderError(err, 'prayer');
+  }
 
   const t = data.data.timings;
   const result = {
@@ -104,9 +116,14 @@ export async function monthlyTimings({ city, country = 'EG', method = 5, month, 
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get(`${BASE}/calendarByCity/${y}/${m}`, {
-    params: { city, country, method },
-  });
+  let data;
+  try {
+    ({ data } = await http.get(`${BASE}/calendarByCity/${y}/${m}`, {
+      params: { city, country, method },
+    }));
+  } catch (err) {
+    throw wrapProviderError(err, 'prayer');
+  }
 
   const result = {
     city, country, month: m, year: y,

@@ -1,6 +1,10 @@
-import axios from 'axios';
+import { httpClient } from '../core/http.js';
+import { wrapProviderError } from '../core/errors.js';
+import { ValidationError } from '../core/errors.js';
 import * as cache from '../core/cache.js';
 import { USER_AGENT } from '../core/headers.js';
+
+const http = httpClient({ headers: { 'User-Agent': USER_AGENT } });
 
 /**
  * Parse RSS/Atom feed into clean article objects (no key needed)
@@ -8,10 +12,14 @@ import { USER_AGENT } from '../core/headers.js';
  * @returns {Promise<Object[]>}
  */
 async function parseFeed(url) {
-  const { data } = await axios.get(url, {
-    headers: { 'User-Agent': USER_AGENT, Accept: 'application/rss+xml, application/xml, text/xml' },
-    timeout: 10000,
-  });
+  let data;
+  try {
+    ({ data } = await http.get(url, {
+      headers: { 'User-Agent': USER_AGENT, Accept: 'application/rss+xml, application/xml, text/xml' },
+    }));
+  } catch (err) {
+    throw wrapProviderError(err, 'rss');
+  }
 
   // lightweight regex parser — no external lib needed
   const items = [];
@@ -81,7 +89,7 @@ const RSS_SOURCES = {
  */
 export async function fetchFeed({ source, limit = 20 }) {
   const url = RSS_SOURCES[source];
-  if (!url) throw new Error(`Unknown RSS source: "${source}". Available: ${Object.keys(RSS_SOURCES).join(', ')}`);
+  if (!url) throw new ValidationError(`Unknown RSS source: "${source}". Available: ${Object.keys(RSS_SOURCES).join(', ')}`, { provider: 'rss' });
 
   const cacheKey = `rss:${source}:${limit}`;
   const cached = cache.get(cacheKey);

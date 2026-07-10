@@ -1,9 +1,10 @@
-import axios from 'axios';
+import { httpClient } from '../core/http.js';
+import { wrapProviderError } from '../core/errors.js';
 import * as cache from '../core/cache.js';
 import { USER_AGENT } from '../core/headers.js';
 
+const http = httpClient({ headers: { 'User-Agent': USER_AGENT } });
 const MB = 'https://musicbrainz.org/ws/2';
-const MB_HEADERS = { 'User-Agent': USER_AGENT };
 
 /**
  * Search artists (MusicBrainz — Free, no key)
@@ -14,10 +15,14 @@ export async function searchArtist({ name, limit = 5 }) {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get(`${MB}/artist`, {
-    params: { query: name, limit, fmt: 'json' },
-    headers: MB_HEADERS,
-  });
+  let data;
+  try {
+    ({ data } = await http.get(`${MB}/artist`, {
+      params: { query: name, limit, fmt: 'json' },
+    }));
+  } catch (err) {
+    throw wrapProviderError(err, 'music');
+  }
 
   const result = {
     artists: data.artists.map((a) => ({
@@ -47,10 +52,14 @@ export async function searchAlbum({ query, artist, limit = 5 }) {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get(`${MB}/release-group`, {
-    params: { query: q, limit, type: 'album', fmt: 'json' },
-    headers: MB_HEADERS,
-  });
+  let data;
+  try {
+    ({ data } = await http.get(`${MB}/release-group`, {
+      params: { query: q, limit, type: 'album', fmt: 'json' },
+    }));
+  } catch (err) {
+    throw wrapProviderError(err, 'music');
+  }
 
   const result = {
     albums: (data['release-groups'] || []).map((r) => ({
@@ -85,9 +94,14 @@ export async function itunesSearch({ term, media = 'music', limit = 10 }) {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get('https://itunes.apple.com/search', {
-    params: { term, media, limit },
-  });
+  let data;
+  try {
+    ({ data } = await http.get('https://itunes.apple.com/search', {
+      params: { term, media, limit },
+    }));
+  } catch (err) {
+    throw wrapProviderError(err, 'music');
+  }
 
   const result = {
     total: data.resultCount,

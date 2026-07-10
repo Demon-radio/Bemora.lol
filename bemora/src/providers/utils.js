@@ -1,7 +1,10 @@
 
-import axios from 'axios';
 import * as cache from '../core/cache.js';
 import crypto from 'crypto';
+import { httpClient } from '../core/http.js';
+import { wrapProviderError } from '../core/errors.js';
+
+const http = httpClient();
 
 // ─── QR Code ──────────────────────────────────────────────────────────────────
 
@@ -132,8 +135,8 @@ export function emojiSearch({ query, category, limit = 10 }) {
   let results = [...EMOJIS];
   if (query) {
     const q = query.toLowerCase();
-    results = results.filter(e => 
-      e.name.toLowerCase().includes(q) || 
+    results = results.filter(e =>
+      e.name.toLowerCase().includes(q) ||
       e.category.toLowerCase().includes(q)
     );
   }
@@ -177,9 +180,13 @@ export function httpStatus({ code }) { return { code, message: HTTP_STATUS_CODES
 // ─── URL Shortener ─────────────────────────────────────────────────────────
 
 export async function shortenURL({ url }) {
-  const { data } = await axios.get('https://is.gd/create.php', { params: { format: 'json', url } });
-  if (data.errorcode) throw new Error(data.errormessage);
-  return { original: url, short: data.shorturl };
+  try {
+    const { data } = await http.get('https://is.gd/create.php', { params: { format: 'json', url } });
+    if (data.errorcode) throw new Error(data.errormessage);
+    return { original: url, short: data.shorturl };
+  } catch (err) {
+    throw wrapProviderError(err, 'utils');
+  }
 }
 
 // ─── Timezone ───────────────────────────────────────────────────────────────
@@ -187,9 +194,8 @@ export async function shortenURL({ url }) {
 export async function getTime({ timezone }) {
   // Primary: WorldTimeAPI (known to ECONNRESET intermittently)
   try {
-    const { data } = await axios.get(
+    const { data } = await http.get(
       `https://worldtimeapi.org/api/timezone/${encodeURIComponent(timezone)}`,
-      { timeout: 8000 },
     );
     return {
       timezone: data.timezone,
@@ -204,9 +210,8 @@ export async function getTime({ timezone }) {
   } catch {
     // Fallback 1: timeapi.io
     try {
-      const { data } = await axios.get(
+      const { data } = await http.get(
         `https://timeapi.io/api/time/current/zone?timeZone=${encodeURIComponent(timezone)}`,
-        { timeout: 8000 },
       );
       return {
         timezone: data.timeZone,
@@ -249,13 +254,13 @@ export async function listTimezones() {
 
   // Primary: WorldTimeAPI
   try {
-    const { data } = await axios.get('https://worldtimeapi.org/api/timezone', { timeout: 8000 });
+    const { data } = await http.get('https://worldtimeapi.org/api/timezone');
     cache.set(cacheKey, data, 86400);
     return data;
   } catch {
     // Fallback: timeapi.io available timezones list
     try {
-      const { data } = await axios.get('https://timeapi.io/api/timezone/availabletimezones', { timeout: 8000 });
+      const { data } = await http.get('https://timeapi.io/api/timezone/availabletimezones');
       cache.set(cacheKey, data, 86400);
       return data;
     } catch {
@@ -278,21 +283,25 @@ export async function getHolidays({ country, year }) {
   const cacheKey = `utils:holidays:${country}:${y}`;
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
-  const { data } = await axios.get(`https://date.nager.at/api/v3/PublicHolidays/${y}/${country.toUpperCase()}`);
-  const result = {
-    country,
-    year: y,
-    holidays: data.map((h) => ({
-      date: h.date,
-      name: h.name,
-      local_name: h.localName,
-      type: h.types?.[0],
-      global: h.global,
-    })),
-    _cached: false,
-  };
-  cache.set(cacheKey, result, 86400);
-  return result;
+  try {
+    const { data } = await http.get(`https://date.nager.at/api/v3/PublicHolidays/${y}/${country.toUpperCase()}`);
+    const result = {
+      country,
+      year: y,
+      holidays: data.map((h) => ({
+        date: h.date,
+        name: h.name,
+        local_name: h.localName,
+        type: h.types?.[0],
+        global: h.global,
+      })),
+      _cached: false,
+    };
+    cache.set(cacheKey, result, 86400);
+    return result;
+  } catch (err) {
+    throw wrapProviderError(err, 'utils');
+  }
 }
 
 // ─── Quotes ───────────────────────────────────────────────────────────────────
@@ -308,7 +317,7 @@ const FALLBACK_QUOTES = [
 export async function getQuote({ tag } = {}) {
   const params = tag ? { tags: tag } : {};
   try {
-    const { data } = await axios.get('https://api.quotable.io/random', { params });
+    const { data } = await http.get('https://api.quotable.io/random', { params });
     return { content: data.content, author: data.author, tags: data.tags, length: data.length };
   } catch (e) {
     // Fallback if quotable is down
@@ -321,7 +330,7 @@ export async function getQuotes({ limit = 5, tag } = {}) {
   const params = { limit };
   if (tag) params.tags = tag;
   try {
-    const { data } = await axios.get('https://api.quotable.io/quotes', { params });
+    const { data } = await http.get('https://api.quotable.io/quotes', { params });
     return { total: data.totalCount, quotes: data.results.map((q) => ({ content: q.content, author: q.author, tags: q.tags })) };
   } catch (e) {
     // Fallback to built-in quotes
@@ -337,25 +346,29 @@ export async function define({ word, language = 'en' }) {
   const cacheKey = `utils:define:${language}:${word}`;
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
-  const { data } = await axios.get(`https://api.dictionaryapi.dev/api/v2/entries/${language}/${encodeURIComponent(word)}`);
-  const entry = data[0];
-  const result = {
-    word: entry.word,
-    phonetic: entry.phonetic,
-    audio: entry.phonetics?.find((p) => p.audio)?.audio || null,
-    meanings: entry.meanings.map((m) => ({
-      part_of_speech: m.partOfSpeech,
-      definitions: m.definitions.slice(0, 3).map((d) => ({
-        definition: d.definition,
-        example: d.example,
-        synonyms: d.synonyms?.slice(0, 5),
-        antonyms: d.antonyms?.slice(0, 5),
+  try {
+    const { data } = await http.get(`https://api.dictionaryapi.dev/api/v2/entries/${language}/${encodeURIComponent(word)}`);
+    const entry = data[0];
+    const result = {
+      word: entry.word,
+      phonetic: entry.phonetic,
+      audio: entry.phonetics?.find((p) => p.audio)?.audio || null,
+      meanings: entry.meanings.map((m) => ({
+        part_of_speech: m.partOfSpeech,
+        definitions: m.definitions.slice(0, 3).map((d) => ({
+          definition: d.definition,
+          example: d.example,
+          synonyms: d.synonyms?.slice(0, 5),
+          antonyms: d.antonyms?.slice(0, 5),
+        })),
       })),
-    })),
-    _cached: false,
-  };
-  cache.set(cacheKey, result, 86400);
-  return result;
+      _cached: false,
+    };
+    cache.set(cacheKey, result, 86400);
+    return result;
+  } catch (err) {
+    throw wrapProviderError(err, 'utils');
+  }
 }
 
 // ─── Trivia ─────────────────────────────────────────────────────────────────
@@ -365,18 +378,22 @@ export async function getTrivia({ amount = 10, category, difficulty, type } = {}
   if (category) params.category = category;
   if (difficulty) params.difficulty = difficulty;
   if (type) params.type = type;
-  const { data } = await axios.get('https://opentdb.com/api.php', { params });
-  if (data.response_code !== 0) throw new Error('Trivia API failed');
-  return {
-    questions: data.results.map((q) => ({
-      question: q.question.replace(/&quot;/g, '"').replace(/&#039;/g, "'"),
-      correct_answer: q.correct_answer,
-      incorrect_answers: q.incorrect_answers,
-      category: q.category,
-      difficulty: q.difficulty,
-      type: q.type,
-    })),
-  };
+  try {
+    const { data } = await http.get('https://opentdb.com/api.php', { params });
+    if (data.response_code !== 0) throw new Error('Trivia API failed');
+    return {
+      questions: data.results.map((q) => ({
+        question: q.question.replace(/&quot;/g, '"').replace(/&#039;/g, "'"),
+        correct_answer: q.correct_answer,
+        incorrect_answers: q.incorrect_answers,
+        category: q.category,
+        difficulty: q.difficulty,
+        type: q.type,
+      })),
+    };
+  } catch (err) {
+    throw wrapProviderError(err, 'utils');
+  }
 }
 
 // ─── Color Info ───────────────────────────────────────────────────────────────
@@ -386,18 +403,22 @@ export async function getColor({ hex }) {
   const cacheKey = `utils:color:${clean}`;
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
-  const { data } = await axios.get(`https://www.thecolorapi.com/id?hex=${clean}&format=json`);
-  const result = {
-    hex: data.hex.value,
-    name: data.name.value,
-    rgb: data.rgb.value,
-    hsl: data.hsl.value,
-    cmyk: data.cmyk.value,
-    image: `https://www.thecolorapi.com/id?hex=${clean}&format=svg`,
-    _cached: false,
-  };
-  cache.set(cacheKey, result, 86400);
-  return result;
+  try {
+    const { data } = await http.get(`https://www.thecolorapi.com/id?hex=${clean}&format=json`);
+    const result = {
+      hex: data.hex.value,
+      name: data.name.value,
+      rgb: data.rgb.value,
+      hsl: data.hsl.value,
+      cmyk: data.cmyk.value,
+      image: `https://www.thecolorapi.com/id?hex=${clean}&format=svg`,
+      _cached: false,
+    };
+    cache.set(cacheKey, result, 86400);
+    return result;
+  } catch (err) {
+    throw wrapProviderError(err, 'utils');
+  }
 }
 
 // ─── Additional Awesome Utilities ─────────────────────────────────────────────
@@ -455,4 +476,3 @@ export function slugify({ text }) {
     .replace(/[\s_-]+/g, '-')
     .replace(/^-+|-+$/g, '');
 }
-

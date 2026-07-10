@@ -1,13 +1,22 @@
-import axios from 'axios';
+import { httpClient } from '../core/http.js';
+import { wrapProviderError } from '../core/errors.js';
 import * as cache from '../core/cache.js';
 
+const http = httpClient();
 const BASE = 'https://rickandmortyapi.com/api';
 
 export async function getCharacter({ id }) {
   const cacheKey = `rickmorty:character:${id}`;
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
-  const { data } = await axios.get(`${BASE}/character/${id}`);
+
+  let data;
+  try {
+    ({ data } = await http.get(`${BASE}/character/${id}`));
+  } catch (err) {
+    throw wrapProviderError(err, 'rickmorty');
+  }
+
   const result = {
     id: data.id,
     name: data.name,
@@ -29,7 +38,14 @@ export async function searchCharacters({ name, status, species }) {
   if (name) params.name = name;
   if (status) params.status = status;
   if (species) params.species = species;
-  const { data } = await axios.get(`${BASE}/character`, { params });
+
+  let data;
+  try {
+    ({ data } = await http.get(`${BASE}/character`, { params }));
+  } catch (err) {
+    throw wrapProviderError(err, 'rickmorty');
+  }
+
   return {
     count: data.info?.count,
     results: data.results.map((c) => ({ id: c.id, name: c.name, status: c.status, species: c.species, image: c.image })),
@@ -37,12 +53,22 @@ export async function searchCharacters({ name, status, species }) {
 }
 
 export async function getLocation({ id }) {
-  const { data } = await axios.get(`${BASE}/location/${id}`);
+  let data;
+  try {
+    ({ data } = await http.get(`${BASE}/location/${id}`));
+  } catch (err) {
+    throw wrapProviderError(err, 'rickmorty');
+  }
   return { id: data.id, name: data.name, type: data.type, dimension: data.dimension, residents_count: data.residents?.length };
 }
 
 export async function getEpisode({ id }) {
-  const { data } = await axios.get(`${BASE}/episode/${id}`);
+  let data;
+  try {
+    ({ data } = await http.get(`${BASE}/episode/${id}`));
+  } catch (err) {
+    throw wrapProviderError(err, 'rickmorty');
+  }
   return { id: data.id, name: data.name, air_date: data.air_date, episode: data.episode, characters_count: data.characters?.length };
 }
 

@@ -1,6 +1,9 @@
-import axios from 'axios';
+import { httpClient } from '../core/http.js';
+import { wrapProviderError } from '../core/errors.js';
 import * as cache from '../core/cache.js';
 import { logger } from '../core/logger.js';
+
+const http = httpClient();
 
 /**
  * Get exchange rates
@@ -16,25 +19,29 @@ export async function getRates({ base = 'USD', symbols = [] }, apiKey) {
   if (cached) return { ...cached, _cached: true };
 
   const url = `https://v6.exchangerate-api.com/v6/${apiKey}/latest/${base}`;
-  const { data } = await axios.get(url);
+  try {
+    const { data } = await http.get(url);
 
-  let rates = data.conversion_rates;
-  if (symbols.length > 0) {
-    rates = Object.fromEntries(
-      Object.entries(rates).filter(([k]) => symbols.includes(k))
-    );
+    let rates = data.conversion_rates;
+    if (symbols.length > 0) {
+      rates = Object.fromEntries(
+        Object.entries(rates).filter(([k]) => symbols.includes(k))
+      );
+    }
+
+    const result = {
+      base,
+      date: data.time_last_update_utc,
+      rates,
+      _cached: false,
+    };
+
+    cache.set(cacheKey, result, 3600);
+    logger.info(`Exchange rates fetched for base ${base}`);
+    return result;
+  } catch (err) {
+    throw wrapProviderError(err, 'currency');
   }
-
-  const result = {
-    base,
-    date: data.time_last_update_utc,
-    rates,
-    _cached: false,
-  };
-
-  cache.set(cacheKey, result, 3600);
-  logger.info(`Exchange rates fetched for base ${base}`);
-  return result;
 }
 
 /**
@@ -52,9 +59,13 @@ export async function convert({ from, to, amount }, apiKey) {
 
   if (!rates) {
     const url = `https://v6.exchangerate-api.com/v6/${apiKey}/pair/${from}/${to}`;
-    const { data } = await axios.get(url);
-    rates = data.conversion_rate;
-    cache.set(cacheKey, rates, 3600);
+    try {
+      const { data } = await http.get(url);
+      rates = data.conversion_rate;
+      cache.set(cacheKey, rates, 3600);
+    } catch (err) {
+      throw wrapProviderError(err, 'currency');
+    }
   }
 
   const converted = amount * rates;
