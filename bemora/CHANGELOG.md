@@ -5,13 +5,23 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.0-alpha.2] — 2026-07-10
+
+### Fixed
+
+- JWT constructor secret now correctly passed to `sign` and `verify` methods; now works with constructor-configured secrets
+  `api = new Bemora({ jwtSecret: 'xxx' })
+  await api.jwt.sign({ sub: 'user_123' }) → no longer throws "missing secret" error.
+
+---
+
 ## [1.0.0-alpha.1] — 2026-07-10
 
-### Forked from `bemora` v4.0.0 → `bemora-enterprise` v1.0.0-alpha.1
+### Enterprise Uplift of `bemora`
 
 This release represents a full enterprise uplift of the upstream open-source
-`bemora` library. The package has been renamed `bemora-enterprise` and is no
-longer compatible with upstream bemora releases.
+`bemora` library. The package is still published as `bemora` for backward compatibility,
+with a major version reset to 1.0.0-alpha.1.
 
 ---
 
@@ -124,7 +134,6 @@ The following providers have been removed to reduce attack surface and bundle si
 
 ### Changed
 
-- Package name: `bemora` → `bemora-enterprise`
 - Version: `4.0.0` → `1.0.0-alpha.1`
 - Constructor now accepts enterprise key groups: `stripeKey`, `paypalClientId/Secret`, `sendgridKey`, `sesAccessKeyId/SecretAccessKey/Region`, `resendKey`, `twilioAccountSid/AuthToken`, `clerkSecretKey`, `auth0Domain/ClientId/ClientSecret`, `jwtSecret`, `s3*`, `r2*`, `gcs*`, `pineconeKey/Host`, `qdrantUrl/Key`, `weaviateUrl/Key`, `sentryDsn`, `onesignalAppId/Key`, `pusherAppId/Key/Secret/Cluster`, `fcmProjectId`, `googleMapsKey`, `mapboxKey`, `algoliaAppId/Key`, `meilisearchUrl/Key`, `googleCalToken`, `calendlyKey`, `recaptchaSecret`, `hcaptchaSecret`, `turnstileSecret`, `hibpKey`, `virustotalKey`, `safebrowsingKey`, `urlscanKey`, `cloudflareToken/ApiKey/Email/AccountId`, `cohereKey`, `mistralKey`, `togetherKey`, `perplexityKey`
 - CI workflow added (`.github/workflows/ci.yml`) — Node 18/20/22 matrix, unit + integration tests, `npm audit`

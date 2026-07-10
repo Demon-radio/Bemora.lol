@@ -1046,8 +1046,8 @@ export class Bemora {
 
   _buildJWT() {
     return {
-      sign:           jwtProvider.sign,
-      verify:         jwtProvider.verify,
+      sign:           (p) => jwtProvider.sign({ ...p, secret: p.secret ?? this._keys.jwtSecret }),
+      verify:         (p) => jwtProvider.verify({ ...p, secret: p.secret ?? this._keys.jwtSecret }),
       decode:         jwtProvider.decode,
       refresh:        (p) => jwtProvider.refresh(p, this._keys.jwtSecret),
       generateSecret: jwtProvider.generateSecret,
