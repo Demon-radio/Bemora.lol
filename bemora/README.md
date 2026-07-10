@@ -10,6 +10,15 @@
 [![CI](https://img.shields.io/badge/CI-passing-22c55e?style=for-the-badge)](.github/workflows/ci.yml)
 [![upstream](https://img.shields.io/badge/upstream-bemora%203.6.0-8b5cf6?style=for-the-badge)](https://github.com/Demon-radio/Bemora.lol)
 
+<div style="background:#fff3cd;padding:16px;border-radius:8px;margin:16px 0;border:1px solid #ffc107;">
+⚠️ <strong>Transparency Note:</strong>
+<ul style="margin:8px 0 0 24px;">
+<li>This is an <strong>alpha release</strong> — not for mission‑critical use yet!</li>
+<li>Currently maintained by a single person (see "Contributing" if you want to help!)</li>
+<li>We're working on a third‑party security audit — stay tuned!</li>
+</ul>
+</div>
+
 <br />
 
 # 🚀 100+ tools for your AI agent in one install
