@@ -5,6 +5,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.0-alpha.3] — 2026-07-10
+
+### Fixed
+- Fixed npm dist‑tag chaos (latest now points to 3.6.0 stable; alpha releases tagged `next`)
+- Toned down "enterprise‑grade" claim while in alpha
+- Added transparency note in README about single maintainer, alpha status, and upcoming security audit
+
+---
+
 ## [1.0.0-alpha.2] — 2026-07-10
 
 ### Fixed
