@@ -1,30 +1,36 @@
-import axios from 'axios';
+import { httpClient } from '../core/http.js';
+import { wrapProviderError } from '../core/errors.js';
 import * as cache from '../core/cache.js';
 
+const http = httpClient();
 const BASE = 'https://air-quality-api.open-meteo.com/v1/air-quality';
 
 export async function getCurrent({ lat, lon }) {
   const cacheKey = `airquality:${lat}:${lon}`;
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
-  const { data } = await axios.get(BASE, {
-    params: { latitude: lat, longitude: lon, current: 'us_aqi,pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,ozone,sulphur_dioxide' },
-  });
-  const c = data.current || {};
-  const result = {
-    lat, lon,
-    us_aqi: c.us_aqi,
-    pm10: c.pm10,
-    pm2_5: c.pm2_5,
-    carbon_monoxide: c.carbon_monoxide,
-    nitrogen_dioxide: c.nitrogen_dioxide,
-    ozone: c.ozone,
-    sulphur_dioxide: c.sulphur_dioxide,
-    time: c.time,
-    _cached: false,
-  };
-  cache.set(cacheKey, result, 900);
-  return result;
+  try {
+    const { data } = await http.get(BASE, {
+      params: { latitude: lat, longitude: lon, current: 'us_aqi,pm10,pm2_5,carbon_monoxide,nitrogen_dioxide,ozone,sulphur_dioxide' },
+    });
+    const c = data.current || {};
+    const result = {
+      lat, lon,
+      us_aqi: c.us_aqi,
+      pm10: c.pm10,
+      pm2_5: c.pm2_5,
+      carbon_monoxide: c.carbon_monoxide,
+      nitrogen_dioxide: c.nitrogen_dioxide,
+      ozone: c.ozone,
+      sulphur_dioxide: c.sulphur_dioxide,
+      time: c.time,
+      _cached: false,
+    };
+    cache.set(cacheKey, result, 900);
+    return result;
+  } catch (err) {
+    throw wrapProviderError(err, 'airquality');
+  }
 }
 
 export function classifyAQI({ aqi }) {
@@ -37,8 +43,12 @@ export function classifyAQI({ aqi }) {
 }
 
 export async function getForecast({ lat, lon, days = 3 }) {
-  const { data } = await axios.get(BASE, {
-    params: { latitude: lat, longitude: lon, hourly: 'us_aqi,pm2_5', forecast_days: days },
-  });
-  return { lat, lon, days, hourly: data.hourly };
+  try {
+    const { data } = await http.get(BASE, {
+      params: { latitude: lat, longitude: lon, hourly: 'us_aqi,pm2_5', forecast_days: days },
+    });
+    return { lat, lon, days, hourly: data.hourly };
+  } catch (err) {
+    throw wrapProviderError(err, 'airquality');
+  }
 }

@@ -1,5 +1,7 @@
-import axios from 'axios';
 import * as cache from '../core/cache.js';
+import { httpClient } from '../core/http.js';
+
+const http = httpClient();
 
 const FALLBACK_FACTS = [
   'A group of flamingos is called a "flamboyance".',
@@ -17,7 +19,7 @@ export async function getRandomAnimalFact() {
   if (cached) return { ...cached, _cached: true };
 
   try {
-    const { data } = await axios.get('https://some-random-api.com/facts/animal', { timeout: 5000 });
+    const { data } = await http.get('https://some-random-api.com/facts/animal', { timeout: 5000 });
     const fact = typeof data === 'string' ? data : data.fact;
     const result = { fact, _cached: false, _source: 'some-random-api' };
     cache.set(cacheKey, result, 3600);

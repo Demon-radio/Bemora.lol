@@ -1,6 +1,9 @@
-import axios from 'axios';
+import { httpClient } from '../core/http.js';
+import { wrapProviderError } from '../core/errors.js';
 import * as cache from '../core/cache.js';
 import { USER_AGENT } from '../core/headers.js';
+
+const http = httpClient({ headers: { 'User-Agent': USER_AGENT } });
 
 /**
  * Search podcasts via iTunes (Free, no key)
@@ -14,7 +17,12 @@ export async function searchPodcasts({ query, limit = 10, country = 'us', langua
   const params = { term: query, media: 'podcast', limit, country };
   if (language) params.language = language;
 
-  const { data } = await axios.get('https://itunes.apple.com/search', { params });
+  let data;
+  try {
+    ({ data } = await http.get('https://itunes.apple.com/search', { params }));
+  } catch (err) {
+    throw wrapProviderError(err, 'podcasts');
+  }
 
   const result = {
     total: data.resultCount,
@@ -46,10 +54,14 @@ export async function getPodcastEpisodes({ feedUrl, limit = 10 }) {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get(feedUrl, {
-    headers: { 'User-Agent': USER_AGENT, Accept: 'application/rss+xml, text/xml' },
-    timeout: 10000,
-  });
+  let data;
+  try {
+    ({ data } = await http.get(feedUrl, {
+      headers: { 'User-Agent': USER_AGENT, Accept: 'application/rss+xml, text/xml' },
+    }));
+  } catch (err) {
+    throw wrapProviderError(err, 'podcasts');
+  }
 
   const episodes = [];
   const itemRegex = /<item>([\s\S]*?)<\/item>/gi;
@@ -89,7 +101,7 @@ export async function searchPodcastIndex({ query, limit = 10 }) {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get('https://api.podcastindex.org/api/1.0/search/byterm', {
+  const { data } = await http.get('https://api.podcastindex.org/api/1.0/search/byterm', {
     params: { q: query, max: limit },
     headers: {
       'User-Agent': USER_AGENT,

@@ -1,6 +1,8 @@
-import axios from 'axios';
+import { httpClient } from '../core/http.js';
+import { wrapProviderError } from '../core/errors.js';
 import * as cache from '../core/cache.js';
 
+const http = httpClient();
 const BASE = 'https://pokeapi.co/api/v2';
 
 export async function getPokemon({ name }) {
@@ -9,7 +11,13 @@ export async function getPokemon({ name }) {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get(`${BASE}/pokemon/${encodeURIComponent(key)}`);
+  let data;
+  try {
+    ({ data } = await http.get(`${BASE}/pokemon/${encodeURIComponent(key)}`));
+  } catch (err) {
+    throw wrapProviderError(err, 'pokemon');
+  }
+
   const result = {
     id: data.id,
     name: data.name,
@@ -28,7 +36,12 @@ export async function getPokemon({ name }) {
 }
 
 export async function getAbility({ name }) {
-  const { data } = await axios.get(`${BASE}/ability/${encodeURIComponent(String(name).toLowerCase())}`);
+  let data;
+  try {
+    ({ data } = await http.get(`${BASE}/ability/${encodeURIComponent(String(name).toLowerCase())}`));
+  } catch (err) {
+    throw wrapProviderError(err, 'pokemon');
+  }
   return {
     name: data.name,
     effect: data.effect_entries?.find((e) => e.language.name === 'en')?.effect,
@@ -37,7 +50,12 @@ export async function getAbility({ name }) {
 }
 
 export async function getSpecies({ name }) {
-  const { data } = await axios.get(`${BASE}/pokemon-species/${encodeURIComponent(String(name).toLowerCase())}`);
+  let data;
+  try {
+    ({ data } = await http.get(`${BASE}/pokemon-species/${encodeURIComponent(String(name).toLowerCase())}`));
+  } catch (err) {
+    throw wrapProviderError(err, 'pokemon');
+  }
   return {
     name: data.name,
     color: data.color?.name,
@@ -51,7 +69,12 @@ export async function getSpecies({ name }) {
 
 export async function random() {
   const id = Math.floor(Math.random() * 1010) + 1;
-  const { data } = await axios.get(`${BASE}/pokemon/${id}`);
+  let data;
+  try {
+    ({ data } = await http.get(`${BASE}/pokemon/${id}`));
+  } catch (err) {
+    throw wrapProviderError(err, 'pokemon');
+  }
   return {
     id: data.id,
     name: data.name,

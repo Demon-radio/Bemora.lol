@@ -1,6 +1,9 @@
-import axios from 'axios';
+import { httpClient } from '../core/http.js';
+import { wrapProviderError } from '../core/errors.js';
 import * as cache from '../core/cache.js';
 import { USER_AGENT } from '../core/headers.js';
+
+const http = httpClient();
 
 /**
  * Developer tools & utilities — all free, no key
@@ -15,30 +18,34 @@ export async function npmPackage({ name }) {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get(`https://registry.npmjs.org/${encodeURIComponent(name)}`);
+  try {
+    const { data } = await http.get(`https://registry.npmjs.org/${encodeURIComponent(name)}`);
 
-  const latest = data['dist-tags']?.latest;
-  const v = data.versions?.[latest];
+    const latest = data['dist-tags']?.latest;
+    const v = data.versions?.[latest];
 
-  const result = {
-    name: data.name,
-    version: latest,
-    description: data.description,
-    author: data.author?.name || data.author,
-    license: v?.license,
-    homepage: data.homepage,
-    repository: data.repository?.url?.replace(/^git\+/, '').replace(/\.git$/, ''),
-    keywords: data.keywords,
-    dependencies: Object.keys(v?.dependencies || {}),
-    dev_dependencies: Object.keys(v?.devDependencies || {}),
-    weekly_downloads: null,
-    published: data.time?.[latest],
-    versions_count: Object.keys(data.versions || {}).length,
-    _cached: false,
-  };
+    const result = {
+      name: data.name,
+      version: latest,
+      description: data.description,
+      author: data.author?.name || data.author,
+      license: v?.license,
+      homepage: data.homepage,
+      repository: data.repository?.url?.replace(/^git\+/, '').replace(/\.git$/, ''),
+      keywords: data.keywords,
+      dependencies: Object.keys(v?.dependencies || {}),
+      dev_dependencies: Object.keys(v?.devDependencies || {}),
+      weekly_downloads: null,
+      published: data.time?.[latest],
+      versions_count: Object.keys(data.versions || {}).length,
+      _cached: false,
+    };
 
-  cache.set(cacheKey, result, 3600);
-  return result;
+    cache.set(cacheKey, result, 3600);
+    return result;
+  } catch (err) {
+    throw wrapProviderError(err, 'dev');
+  }
 }
 
 /**
@@ -50,13 +57,17 @@ export async function npmDownloads({ name }) {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get(
-    `https://api.npmjs.org/downloads/point/last-week/${encodeURIComponent(name)}`
-  );
+  try {
+    const { data } = await http.get(
+      `https://api.npmjs.org/downloads/point/last-week/${encodeURIComponent(name)}`
+    );
 
-  const result = { package: name, weekly_downloads: data.downloads, period: 'last-week', _cached: false };
-  cache.set(cacheKey, result, 3600);
-  return result;
+    const result = { package: name, weekly_downloads: data.downloads, period: 'last-week', _cached: false };
+    cache.set(cacheKey, result, 3600);
+    return result;
+  } catch (err) {
+    throw wrapProviderError(err, 'dev');
+  }
 }
 
 /**
@@ -68,26 +79,30 @@ export async function githubRepos({ username, sort = 'stars', limit = 10 }) {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get(`https://api.github.com/users/${username}/repos`, {
-    params: { sort, per_page: limit },
-    headers: { 'User-Agent': USER_AGENT },
-  });
+  try {
+    const { data } = await http.get(`https://api.github.com/users/${username}/repos`, {
+      params: { sort, per_page: limit },
+      headers: { 'User-Agent': USER_AGENT },
+    });
 
-  const result = {
-    username,
-    repos: data.map((r) => ({
-      name: r.name, description: r.description, url: r.html_url,
-      stars: r.stargazers_count, forks: r.forks_count,
-      language: r.language, topics: r.topics,
-      open_issues: r.open_issues_count,
-      updated: r.updated_at, size_kb: r.size,
-      license: r.license?.name,
-    })),
-    _cached: false,
-  };
+    const result = {
+      username,
+      repos: data.map((r) => ({
+        name: r.name, description: r.description, url: r.html_url,
+        stars: r.stargazers_count, forks: r.forks_count,
+        language: r.language, topics: r.topics,
+        open_issues: r.open_issues_count,
+        updated: r.updated_at, size_kb: r.size,
+        license: r.license?.name,
+      })),
+      _cached: false,
+    };
 
-  cache.set(cacheKey, result, 600);
-  return result;
+    cache.set(cacheKey, result, 600);
+    return result;
+  } catch (err) {
+    throw wrapProviderError(err, 'dev');
+  }
 }
 
 /**
@@ -99,27 +114,31 @@ export async function githubReleases({ owner, repo, limit = 5 }) {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get(
-    `https://api.github.com/repos/${owner}/${repo}/releases`,
-    { params: { per_page: limit }, headers: { 'User-Agent': USER_AGENT } }
-  );
+  try {
+    const { data } = await http.get(
+      `https://api.github.com/repos/${owner}/${repo}/releases`,
+      { params: { per_page: limit }, headers: { 'User-Agent': USER_AGENT } }
+    );
 
-  const result = {
-    repo: `${owner}/${repo}`,
-    releases: data.map((r) => ({
-      name: r.name,
-      tag: r.tag_name,
-      published: r.published_at,
-      prerelease: r.prerelease,
-      body: r.body?.slice(0, 500),
-      url: r.html_url,
-      assets: r.assets?.map((a) => ({ name: a.name, downloads: a.download_count, url: a.browser_download_url })),
-    })),
-    _cached: false,
-  };
+    const result = {
+      repo: `${owner}/${repo}`,
+      releases: data.map((r) => ({
+        name: r.name,
+        tag: r.tag_name,
+        published: r.published_at,
+        prerelease: r.prerelease,
+        body: r.body?.slice(0, 500),
+        url: r.html_url,
+        assets: r.assets?.map((a) => ({ name: a.name, downloads: a.download_count, url: a.browser_download_url })),
+      })),
+      _cached: false,
+    };
 
-  cache.set(cacheKey, result, 3600);
-  return result;
+    cache.set(cacheKey, result, 3600);
+    return result;
+  } catch (err) {
+    throw wrapProviderError(err, 'dev');
+  }
 }
 
 /**
@@ -133,7 +152,7 @@ export async function validateEmail({ email }) {
 
   let has_mx = false;
   try {
-    await axios.get(`https://dns.google/resolve?name=${domain}&type=MX`, { timeout: 3000 });
+    await http.get(`https://dns.google/resolve?name=${domain}&type=MX`);
     has_mx = true;
   } catch (_) {}
 
@@ -155,20 +174,24 @@ export async function dnsLookup({ domain, type = 'A' }) {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get(
-    `https://dns.google/resolve?name=${domain}&type=${type}`
-  );
+  try {
+    const { data } = await http.get(
+      `https://dns.google/resolve?name=${domain}&type=${type}`
+    );
 
-  const result = {
-    domain,
-    type,
-    status: data.Status === 0 ? 'ok' : 'error',
-    answers: (data.Answer || []).map((a) => ({ name: a.name, ttl: a.TTL, data: a.data })),
-    _cached: false,
-  };
+    const result = {
+      domain,
+      type,
+      status: data.Status === 0 ? 'ok' : 'error',
+      answers: (data.Answer || []).map((a) => ({ name: a.name, ttl: a.TTL, data: a.data })),
+      _cached: false,
+    };
 
-  cache.set(cacheKey, result, 300);
-  return result;
+    cache.set(cacheKey, result, 300);
+    return result;
+  } catch (err) {
+    throw wrapProviderError(err, 'dev');
+  }
 }
 
 /**
@@ -176,7 +199,7 @@ export async function dnsLookup({ domain, type = 'A' }) {
  * @param {{ paragraphs?: number, type?: 'paras'|'sentences'|'words', amount?: number }} params
  */
 export async function loremIpsum({ paragraphs = 1, type = 'paras', amount = 1 } = {}) {
-  const { data } = await axios.get('https://loripsum.net/api', {
+  const { data } = await http.get('https://loripsum.net/api', {
     params: { [type]: amount, format: 'text' },
   }).catch(() => ({ data: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.' }));
   return { text: typeof data === 'string' ? data.trim() : 'Lorem ipsum dolor sit amet.' };

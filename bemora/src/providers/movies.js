@@ -1,13 +1,13 @@
-import axios from 'axios';
+import { httpClient } from '../core/http.js';
+import { wrapProviderError } from '../core/errors.js';
 import * as cache from '../core/cache.js';
 
 const BASE = 'https://api.themoviedb.org/3';
 const IMG = 'https://image.tmdb.org/t/p/w500';
 
 function client(apiKey) {
-  return axios.create({
-    baseURL: BASE,
-    params: { api_key: apiKey },
+  return httpClient({
+    headers: {},
   });
 }
 
@@ -21,8 +21,13 @@ export async function searchMovies({ query, year, page = 1 }, apiKey) {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const http = client(apiKey);
-  const { data } = await http.get('/search/movie', { params: { query, year, page } });
+  const http = httpClient();
+  let data;
+  try {
+    ({ data } = await http.get(`${BASE}/search/movie`, { params: { api_key: apiKey, query, year, page } }));
+  } catch (err) {
+    throw wrapProviderError(err, 'movies');
+  }
 
   const result = {
     total: data.total_results,
@@ -45,8 +50,13 @@ export async function getMovie({ id }, apiKey) {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const http = client(apiKey);
-  const { data } = await http.get(`/movie/${id}`, { params: { append_to_response: 'credits,videos' } });
+  const http = httpClient();
+  let data;
+  try {
+    ({ data } = await http.get(`${BASE}/movie/${id}`, { params: { api_key: apiKey, append_to_response: 'credits,videos' } }));
+  } catch (err) {
+    throw wrapProviderError(err, 'movies');
+  }
 
   const result = {
     id: data.id,
@@ -91,8 +101,13 @@ export async function getTrending({ window = 'week' } = {}, apiKey) {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const http = client(apiKey);
-  const { data } = await http.get(`/trending/movie/${window}`);
+  const http = httpClient();
+  let data;
+  try {
+    ({ data } = await http.get(`${BASE}/trending/movie/${window}`, { params: { api_key: apiKey } }));
+  } catch (err) {
+    throw wrapProviderError(err, 'movies');
+  }
 
   const result = { movies: data.results.map(formatMovie), _cached: false };
   cache.set(cacheKey, result, 3600);
@@ -109,8 +124,13 @@ export async function searchTV({ query, page = 1 }, apiKey) {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const http = client(apiKey);
-  const { data } = await http.get('/search/tv', { params: { query, page } });
+  const http = httpClient();
+  let data;
+  try {
+    ({ data } = await http.get(`${BASE}/search/tv`, { params: { api_key: apiKey, query, page } }));
+  } catch (err) {
+    throw wrapProviderError(err, 'movies');
+  }
 
   const result = {
     total: data.total_results,

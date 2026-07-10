@@ -1,9 +1,10 @@
-import axios from 'axios';
+import { httpClient } from '../core/http.js';
+import { wrapProviderError } from '../core/errors.js';
 import * as cache from '../core/cache.js';
 import { USER_AGENT } from '../core/headers.js';
 
+const http = httpClient({ headers: { 'User-Agent': USER_AGENT } });
 const GEO = 'https://nominatim.openstreetmap.org';
-const HEADERS = { 'User-Agent': USER_AGENT };
 
 /**
  * Geocode an address → coordinates (Free, no key needed)
@@ -14,10 +15,14 @@ export async function geocode({ address, limit = 1 }) {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get(`${GEO}/search`, {
-    params: { q: address, format: 'json', limit, addressdetails: 1 },
-    headers: HEADERS,
-  });
+  let data;
+  try {
+    ({ data } = await http.get(`${GEO}/search`, {
+      params: { q: address, format: 'json', limit, addressdetails: 1 },
+    }));
+  } catch (err) {
+    throw wrapProviderError(err, 'location');
+  }
 
   const result = {
     results: data.map((r) => ({
@@ -43,10 +48,14 @@ export async function reverseGeocode({ lat, lon }) {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get(`${GEO}/reverse`, {
-    params: { lat, lon, format: 'json', addressdetails: 1 },
-    headers: HEADERS,
-  });
+  let data;
+  try {
+    ({ data } = await http.get(`${GEO}/reverse`, {
+      params: { lat, lon, format: 'json', addressdetails: 1 },
+    }));
+  } catch (err) {
+    throw wrapProviderError(err, 'location');
+  }
 
   const result = {
     display_name: data.display_name,

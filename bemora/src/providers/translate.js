@@ -1,5 +1,8 @@
-import axios from 'axios';
 import * as cache from '../core/cache.js';
+import { httpClient } from '../core/http.js';
+import { ValidationError, wrapProviderError } from '../core/errors.js';
+
+const http = httpClient();
 
 /**
  * Translate text using MyMemory API (Free — 1000 words/day, no key)
@@ -16,21 +19,25 @@ export async function translate({ text, from = 'auto', to, email }) {
   const params = { q: text, langpair: `${from}|${to}` };
   if (email) params.de = email;
 
-  const { data } = await axios.get('https://api.mymemory.translated.net/get', { params });
+  try {
+    const { data } = await http.get('https://api.mymemory.translated.net/get', { params });
 
-  if (data.responseStatus !== 200) throw new Error(data.responseDetails);
+    if (data.responseStatus !== 200) throw new ValidationError(data.responseDetails, { provider: 'translate' });
 
-  const result = {
-    original: text,
-    translated: data.responseData.translatedText,
-    from,
-    to,
-    quality: data.responseData.match,
-    _cached: false,
-  };
+    const result = {
+      original: text,
+      translated: data.responseData.translatedText,
+      from,
+      to,
+      quality: data.responseData.match,
+      _cached: false,
+    };
 
-  cache.set(cacheKey, result, 3600);
-  return result;
+    cache.set(cacheKey, result, 3600);
+    return result;
+  } catch (err) {
+    throw wrapProviderError(err, 'translate');
+  }
 }
 
 /**
@@ -56,11 +63,15 @@ export async function translateMany({ text, from = 'auto', targets }) {
  * @param {{ text: string }} params
  */
 export async function detectLanguage({ text }) {
-  const { data } = await axios.get('https://api.mymemory.translated.net/get', {
-    params: { q: text, langpair: 'auto|en' },
-  });
-  return {
-    text,
-    detected: data.responseData?.detectedLanguage || 'unknown',
-  };
+  try {
+    const { data } = await http.get('https://api.mymemory.translated.net/get', {
+      params: { q: text, langpair: 'auto|en' },
+    });
+    return {
+      text,
+      detected: data.responseData?.detectedLanguage || 'unknown',
+    };
+  } catch (err) {
+    throw wrapProviderError(err, 'translate');
+  }
 }

@@ -1,14 +1,20 @@
 
-import axios from 'axios';
+import { httpClient } from '../core/http.js';
+import { wrapProviderError } from '../core/errors.js';
 import * as cache from '../core/cache.js';
 
+const http = httpClient();
 const COUNTRIES_URL = 'https://raw.githubusercontent.com/mledoze/countries/master/dist/countries.json';
 
 let _allCountriesCache = null;
 async function getAllCountriesRaw() {
   if (!_allCountriesCache) {
-    const { data } = await axios.get(COUNTRIES_URL);
-    _allCountriesCache = data;
+    try {
+      const { data } = await http.get(COUNTRIES_URL);
+      _allCountriesCache = data;
+    } catch (err) {
+      throw wrapProviderError(err, 'countries');
+    }
   }
   return _allCountriesCache;
 }

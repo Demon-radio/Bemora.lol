@@ -1,6 +1,9 @@
-import axios from 'axios';
+import { httpClient } from '../core/http.js';
+import { wrapProviderError } from '../core/errors.js';
 import * as cache from '../core/cache.js';
 import { logger } from '../core/logger.js';
+
+const http = httpClient();
 
 /**
  * Get top headlines
@@ -17,9 +20,14 @@ export async function getHeadlines({ country = 'us', category, q, pageSize = 10 
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get('https://newsapi.org/v2/top-headlines', {
-    params: { country, category, q, pageSize, apiKey },
-  });
+  let data;
+  try {
+    ({ data } = await http.get('https://newsapi.org/v2/top-headlines', {
+      params: { country, category, q, pageSize, apiKey },
+    }));
+  } catch (err) {
+    throw wrapProviderError(err, 'news');
+  }
 
   const result = {
     total: data.totalResults,
@@ -54,9 +62,14 @@ export async function searchNews({ q, language = 'en', sortBy = 'publishedAt', p
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get('https://newsapi.org/v2/everything', {
-    params: { q, language, sortBy, pageSize, apiKey },
-  });
+  let data;
+  try {
+    ({ data } = await http.get('https://newsapi.org/v2/everything', {
+      params: { q, language, sortBy, pageSize, apiKey },
+    }));
+  } catch (err) {
+    throw wrapProviderError(err, 'news');
+  }
 
   const result = {
     total: data.totalResults,

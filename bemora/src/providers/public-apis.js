@@ -1,6 +1,9 @@
-import axios from 'axios';
+import { httpClient } from '../core/http.js';
+import { wrapProviderError } from '../core/errors.js';
 import * as cache from '../core/cache.js';
 import { USER_AGENT } from '../core/headers.js';
+
+const http = httpClient({ headers: { 'User-Agent': USER_AGENT } });
 
 /**
  * Open-Meteo — completely free weather, no key, no registration
@@ -13,16 +16,21 @@ export async function openMeteoWeather({ lat, lon, units = 'celsius' }) {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get('https://api.open-meteo.com/v1/forecast', {
-    params: {
-      latitude: lat, longitude: lon,
-      current_weather: true,
-      hourly: 'temperature_2m,relativehumidity_2m,windspeed_10m,weathercode',
-      temperature_unit: units,
-      timezone: 'auto',
-      forecast_days: 1,
-    },
-  });
+  let data;
+  try {
+    ({ data } = await http.get('https://api.open-meteo.com/v1/forecast', {
+      params: {
+        latitude: lat, longitude: lon,
+        current_weather: true,
+        hourly: 'temperature_2m,relativehumidity_2m,windspeed_10m,weathercode',
+        temperature_unit: units,
+        timezone: 'auto',
+        forecast_days: 1,
+      },
+    }));
+  } catch (err) {
+    throw wrapProviderError(err, 'public-apis');
+  }
 
   const c = data.current_weather;
   const WMO_CODES = {
@@ -56,17 +64,23 @@ export async function wttrWeather({ city, format = 'short' }) {
   if (cached) return { ...cached, _cached: true };
 
   if (format === 'short') {
-    const { data } = await axios.get(`https://wttr.in/${encodeURIComponent(city)}?format=%l:+%C+%t+💧%h+💨%w`, {
-      headers: { 'User-Agent': USER_AGENT },
-    });
+    let data;
+    try {
+      ({ data } = await http.get(`https://wttr.in/${encodeURIComponent(city)}?format=%l:+%C+%t+💧%h+💨%w`));
+    } catch (err) {
+      throw wrapProviderError(err, 'public-apis');
+    }
     const result = { city, summary: data.trim(), provider: 'wttr.in', _cached: false };
     cache.set(cacheKey, result, 600);
     return result;
   }
 
-  const { data } = await axios.get(`https://wttr.in/${encodeURIComponent(city)}?format=j1`, {
-    headers: { 'User-Agent': USER_AGENT },
-  });
+  let data;
+  try {
+    ({ data } = await http.get(`https://wttr.in/${encodeURIComponent(city)}?format=j1`));
+  } catch (err) {
+    throw wrapProviderError(err, 'public-apis');
+  }
 
   const cur = data.current_condition?.[0];
   const result = {
@@ -98,7 +112,12 @@ export async function freeExchangeRates({ base = 'USD', symbols = [] } = {}) {
   const params = { base };
   if (symbols.length) params.symbols = symbols.join(',');
 
-  const { data } = await axios.get('https://api.exchangerate.host/latest', { params });
+  let data;
+  try {
+    ({ data } = await http.get('https://api.exchangerate.host/latest', { params }));
+  } catch (err) {
+    throw wrapProviderError(err, 'public-apis');
+  }
 
   let rates = data.rates || {};
   if (symbols.length) {
@@ -124,7 +143,12 @@ export async function openLigaFixtures({ league = 'bl1', season } = {}) {
     ? `https://api.openligadb.de/getmatchdata/${league}/${season}`
     : `https://api.openligadb.de/getmatchdata/${league}`;
 
-  const { data } = await axios.get(url);
+  let data;
+  try {
+    ({ data } = await http.get(url));
+  } catch (err) {
+    throw wrapProviderError(err, 'public-apis');
+  }
 
   const result = {
     provider: 'openligadb',
@@ -155,10 +179,14 @@ export async function freeMetalPrice({ metal = 'XAU', currency = 'USD' } = {}) {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  // Use frankfurter.app with gold commodity approximation
-  const { data } = await axios.get(
-    `https://api.frankfurter.app/latest?from=${metal}&to=${currency}`
-  );
+  let data;
+  try {
+    ({ data } = await http.get(
+      `https://api.frankfurter.app/latest?from=${metal}&to=${currency}`
+    ));
+  } catch (err) {
+    throw wrapProviderError(err, 'public-apis');
+  }
 
   const result = {
     provider: 'frankfurter.app',
@@ -182,9 +210,14 @@ export async function binanceTicker({ symbol }) {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const { data } = await axios.get('https://api.binance.com/api/v3/ticker/24hr', {
-    params: { symbol: symbol.toUpperCase() },
-  });
+  let data;
+  try {
+    ({ data } = await http.get('https://api.binance.com/api/v3/ticker/24hr', {
+      params: { symbol: symbol.toUpperCase() },
+    }));
+  } catch (err) {
+    throw wrapProviderError(err, 'public-apis');
+  }
 
   const result = {
     provider: 'binance',
