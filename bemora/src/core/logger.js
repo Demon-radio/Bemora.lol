@@ -29,9 +29,42 @@ function _isJson() {
 let _currentLevel = _readEnvLevel();
 let _transport    = null; // custom transport function
 
+// ── URL redaction ─────────────────────────────────────────────────────────────
+
+const _KEY_PATTERN = /([?&](?:api[_-]?key|apikey|appid|access_token|token|secret|auth|password|Authorization)=)[^&\s"'#]+/gi;
+const _BEARER_PATTERN = /(Bearer\s+)[A-Za-z0-9._\-]{10,}/g;
+const _SK_PATTERN = /\b(sk|pk|rk|tok|key)[-_][a-zA-Z0-9_\-]{16,}\b/g;
+
+/**
+ * Scrub known API key patterns from a string (URLs, auth headers, query params).
+ * @param {string} str
+ * @returns {string}
+ */
+function redactSensitive(str) {
+  if (typeof str !== 'string') return str;
+  return str
+    .replace(_KEY_PATTERN, '$1[REDACTED]')
+    .replace(_BEARER_PATTERN, '$1[REDACTED]')
+    .replace(_SK_PATTERN, '[APIKEY]');
+}
+
 // ── internal emit ────────────────────────────────────────────────────────────
 
+function _redactMeta(meta) {
+  if (!meta || typeof meta !== 'object') return meta;
+  const out = {};
+  for (const [k, v] of Object.entries(meta)) {
+    if (typeof v === 'string') out[k] = redactSensitive(v);
+    else if (v && typeof v === 'object' && !Array.isArray(v)) out[k] = _redactMeta(v);
+    else out[k] = v;
+  }
+  return out;
+}
+
 function _emit(level, msg, meta = {}) {
+  // Redact any API keys that leaked into the message or metadata
+  msg = redactSensitive(String(msg));
+  meta = _redactMeta(meta);
   if (_currentLevel < LEVELS[level]) return;
 
   const entry = {
