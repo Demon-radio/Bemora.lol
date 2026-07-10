@@ -6,6 +6,8 @@ const http = httpClient();
 // ── SSRF guard ────────────────────────────────────────────────────────────────
 // Block requests to private / link-local / loopback address spaces so a
 // multi-tenant caller cannot exfiltrate cloud metadata or internal services.
+// Redirects are also disabled (maxRedirects: 0) so an attacker cannot use an
+// open-redirect on a safe host to bounce into an internal target.
 const BLOCKED_HOST_RE = /^(localhost|127\.|0\.0\.0\.0|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|169\.254\.|::1|fd[0-9a-f]{2}:)/i;
 
 function assertNoSSRF(rawUrl) {
@@ -29,6 +31,9 @@ function assertNoSSRF(rawUrl) {
   }
 }
 
+/** Shared axios options that disable redirect following to prevent SSRF-via-redirect. */
+const NO_REDIRECT = { maxRedirects: 0 };
+
 const KNOWN_HEADERS = {
   server: 'server',
   'x-powered-by': 'poweredBy',
@@ -48,7 +53,7 @@ export async function status({ url }) {
   try {
     const res = await http.get(target, {
       timeout: 10000,
-      maxRedirects: 5,
+      ...NO_REDIRECT,
       validateStatus: () => true,
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; bemora-bot/1.0)' },
     });
@@ -77,6 +82,7 @@ export async function detectTechStack({ url }) {
   try {
     const { data: html, headers } = await http.get(target, {
       timeout: 10000,
+      ...NO_REDIRECT,
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; bemora-bot/1.0)' },
     });
 
@@ -129,6 +135,7 @@ export async function getMeta({ url }) {
   try {
     const { data: html } = await http.get(target, {
       timeout: 10000,
+      ...NO_REDIRECT,
       headers: { 'User-Agent': 'Mozilla/5.0 (compatible; bemora-bot/1.0)' },
     });
 
@@ -151,5 +158,13 @@ export async function getMeta({ url }) {
 
 function normalizeUrl(url) {
   if (!url) throw new ValidationError('url is required', { provider: 'websites' });
+  // Reject URLs that carry an explicit non-http(s) scheme (file://, ftp://, etc.)
+  // before the https:// prefix is added, so assertNoSSRF sees the right protocol.
+  if (/^[a-z][a-z0-9+\-.]*:\/\//i.test(url) && !/^https?:\/\//i.test(url)) {
+    throw new ValidationError(
+      `[websites] Blocked scheme — only http: and https: URLs are accepted.`,
+      { provider: 'websites' }
+    );
+  }
   return /^https?:\/\//i.test(url) ? url : `https://${url}`;
 }

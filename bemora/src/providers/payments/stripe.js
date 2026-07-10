@@ -72,6 +72,7 @@ export async function createCharge({ amount, currency, source, customerId, descr
  * Retrieve a charge by ID.
  */
 export async function getCharge({ id, signal } = {}, apiKey) {
+  requireKey(apiKey);
   try {
     const { data } = await client(apiKey).get(`${BASE}/charges/${id}`, { signal });
     return data;
@@ -84,6 +85,7 @@ export async function getCharge({ id, signal } = {}, apiKey) {
  * List charges.
  */
 export async function listCharges({ limit = 10, customerId, signal } = {}, apiKey) {
+  requireKey(apiKey);
   try {
     const params = { limit, ...(customerId && { customer: customerId }) };
     const { data } = await client(apiKey).get(`${BASE}/charges`, { params, signal });
