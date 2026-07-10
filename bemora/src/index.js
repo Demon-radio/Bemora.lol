@@ -45,7 +45,6 @@ import * as pub from './providers/public-apis.js';
 import * as realtime from './providers/realtime.js';
 import * as prayer from './providers/prayer.js';
 import * as anime from './providers/anime.js';
-import * as fun from './providers/fun.js';
 import * as flights from './providers/flights.js';
 import * as art from './providers/art.js';
 import * as dev from './providers/dev.js';
@@ -58,9 +57,7 @@ import * as steam from './providers/steam.js';
 import * as animals from './providers/animals.js';
 import * as books from './providers/books.js';
 import * as lyrics from './providers/lyrics.js';
-import * as memes from './providers/memes.js';
 import * as math from './providers/math.js';
-import * as zodiac from './providers/zodiac.js';
 import * as jobs from './providers/jobs.js';
 import * as science from './providers/science.js';
 import * as basketball from './providers/basketball.js';
@@ -79,10 +76,6 @@ import * as politics from './providers/politics.js';
 import * as language from './providers/language.js';
 import * as law from './providers/law.js';
 import * as military from './providers/military.js';
-import * as advice from './providers/advice.js';
-import * as dadjokes from './providers/dadjokes.js';
-import * as kanye from './providers/kanye.js';
-import * as randomuser from './providers/randomuser.js';
 import * as thesaurus from './providers/thesaurus.js';
 import * as currencyhistory from './providers/currencyhistory.js';
 import * as markdown from './providers/markdown.js';
@@ -93,10 +86,6 @@ import * as religion from './providers/religion.js';
 import * as islamic from './providers/islamic.js';
 import * as gaming from './providers/gaming.js';
 import * as spaceExtended from './providers/space-extended.js';
-import * as pokemon from './providers/pokemon.js';
-import * as rickmorty from './providers/rickmorty.js';
-import * as starwars from './providers/starwars.js';
-import * as harrypotter from './providers/harrypotter.js';
 import * as covid from './providers/covid.js';
 import * as earthquake from './providers/earthquake.js';
 import * as airquality from './providers/airquality.js';
@@ -104,13 +93,63 @@ import * as astronomy from './providers/astronomy.js';
 import * as postal from './providers/postal.js';
 import * as predict from './providers/predict.js';
 import * as brewery from './providers/brewery.js';
-import * as chucknorris from './providers/chucknorris.js';
-import * as bored from './providers/bored.js';
 import * as sportsdb from './providers/sportsdb.js';
 import * as domain from './providers/domain.js';
 import * as placeholder from './providers/placeholder.js';
 import * as weatheralerts from './providers/weatheralerts.js';
 import * as coinwizard from './providers/coinwizard.js';
+// ── Enterprise providers ──────────────────────────────────────────────────────
+import * as stripeProvider from './providers/payments/stripe.js';
+import * as paypalProvider from './providers/payments/paypal.js';
+import * as sendgridProvider from './providers/email/sendgrid.js';
+import * as sesProvider from './providers/email/ses.js';
+import * as resendProvider from './providers/email/resend.js';
+import * as twilioProvider from './providers/sms/twilio.js';
+import * as jwtProvider from './providers/auth/jwt.js';
+import * as clerkProvider from './providers/auth/clerk.js';
+import * as auth0Provider from './providers/auth/auth0.js';
+import * as s3Provider from './providers/storage/s3.js';
+import * as r2Provider from './providers/storage/r2.js';
+import * as gcsProvider from './providers/storage/gcs.js';
+import * as pineconeProvider from './providers/vectordb/pinecone.js';
+import * as qdrantProvider from './providers/vectordb/qdrant.js';
+import * as weaviateProvider from './providers/vectordb/weaviate.js';
+import * as pgvectorProvider from './providers/vectordb/pgvector.js';
+import * as sentryProvider from './providers/observability/sentry.js';
+import { wireOtel, withSpan as otelSpan } from './providers/observability/otel.js';
+import * as onesignalProvider from './providers/notifications/onesignal.js';
+import * as pusherProvider from './providers/notifications/pusher.js';
+import * as fcmProvider from './providers/notifications/fcm.js';
+import * as googleMapsProvider from './providers/maps/google.js';
+import * as mapboxProvider from './providers/maps/mapbox.js';
+import * as algoliaProvider from './providers/search/algolia.js';
+import * as meilisearchProvider from './providers/search/meilisearch.js';
+import * as googleCalProvider from './providers/calendar/google.js';
+import * as calendlyProvider from './providers/calendar/calendly.js';
+import * as recaptchaProvider from './providers/captcha/recaptcha.js';
+import * as hcaptchaProvider from './providers/captcha/hcaptcha.js';
+import * as turnstileProvider from './providers/captcha/turnstile.js';
+import * as hibpProvider from './providers/security/hibp.js';
+import * as virustotalProvider from './providers/security/virustotal.js';
+import * as safebrowsingProvider from './providers/security/safebrowsing.js';
+import * as urlscanProvider from './providers/security/urlscan.js';
+import * as cfDnsProvider from './providers/cloudflare/dns.js';
+import * as cfR2Provider from './providers/cloudflare/r2.js';
+import * as cfCacheProvider from './providers/cloudflare/cache.js';
+import * as cfWorkersProvider from './providers/cloudflare/workers.js';
+import * as anthropicProvider from './providers/ai/anthropic.js';
+import * as geminiProvider from './providers/ai/gemini.js';
+import * as cohereProvider from './providers/ai/cohere.js';
+import * as mistralProvider from './providers/ai/mistral.js';
+import * as togetherProvider from './providers/ai/together.js';
+import * as perplexityProvider from './providers/ai/perplexity.js';
+import { verify as verifyWebhookSig } from './providers/webhooks/verify.js';
+import { WebhookRouter } from './core/webhooks.js';
+import { recordCost, snapshot as costSnapshot, snapshotForTenant as costSnapshotForTenant } from './core/costs.js';
+import { paginate, paginateStream } from './core/paginate.js';
+import { gql, gqlTag } from './core/gql.js';
+import { upload as uploadUtil } from './core/upload.js';
+
 import { logger } from './core/logger.js';
 import * as cache from './core/cache.js';
 import { batch } from './core/batch.js';
@@ -144,6 +183,18 @@ export { MiddlewareChain } from './core/middleware.js';
 export { validateResponse, schemas as validationSchemas } from './core/validate.js';
 export { generateOpenAPISpec } from './core/openapi.js';
 
+// ── Enterprise utility exports ────────────────────────────────────────────────
+export { WebhookRouter } from './core/webhooks.js';
+export { verify as verifyWebhook } from './providers/webhooks/verify.js';
+export { recordCost, snapshot as costSnapshot, snapshotForTenant as costSnapshotForTenant, reset as resetCosts } from './core/costs.js';
+export { paginate, paginateStream } from './core/paginate.js';
+export { gql, gqlTag, introspect as gqlIntrospect } from './core/gql.js';
+export { upload as uploadFile, uploadPresignedPost, uploadFromUrl } from './core/upload.js';
+export { redact, redactObject, redactMessages, containsPII } from './core/pii.js';
+export { createRedisAdapter, createRedisAdapterFromUrl } from './core/cache-redis.js';
+export { signAwsRequest, presignUrl as presignAwsUrl } from './core/signing/awsSigV4.js';
+export { signRequest as hmacSign, verifyRequest as hmacVerify } from './core/signing/hmac.js';
+
 export class Bemora {
   constructor(keys = {}, options = {}) {
     this._keys = {
@@ -166,7 +217,46 @@ export class Bemora {
       edamamAppKey:keys.edamamAppKey    || process.env.BEMORA_EDAMAM_APP_KEY,
       spotifyClientId: keys.spotifyClientId || process.env.BEMORA_SPOTIFY_CLIENT_ID,
       spotifyClientSecret: keys.spotifyClientSecret || process.env.BEMORA_SPOTIFY_CLIENT_SECRET,
-      steam:       keys.steamKey        || process.env.BEMORA_STEAM_KEY,
+      steam:          keys.steamKey           || process.env.BEMORA_STEAM_KEY,
+      // ── Enterprise keys ──────────────────────────────────────────────────
+      stripe:         keys.stripeKey          || process.env.BEMORA_STRIPE_KEY,
+      stripeWebhook:  keys.stripeWebhookSecret|| process.env.BEMORA_STRIPE_WEBHOOK_SECRET,
+      paypal:         { clientId: keys.paypalClientId || process.env.BEMORA_PAYPAL_CLIENT_ID, clientSecret: keys.paypalClientSecret || process.env.BEMORA_PAYPAL_CLIENT_SECRET, sandbox: keys.paypalSandbox ?? (process.env.BEMORA_PAYPAL_SANDBOX === 'true') },
+      sendgrid:       keys.sendgridKey        || process.env.BEMORA_SENDGRID_KEY,
+      ses:            { accessKeyId: keys.sesAccessKeyId || process.env.BEMORA_SES_ACCESS_KEY_ID, secretAccessKey: keys.sesSecretAccessKey || process.env.BEMORA_SES_SECRET_ACCESS_KEY, region: keys.sesRegion || process.env.BEMORA_SES_REGION || 'us-east-1' },
+      resend:         keys.resendKey          || process.env.BEMORA_RESEND_KEY,
+      twilio:         { accountSid: keys.twilioAccountSid || process.env.BEMORA_TWILIO_ACCOUNT_SID, authToken: keys.twilioAuthToken || process.env.BEMORA_TWILIO_AUTH_TOKEN },
+      clerk:          keys.clerkSecretKey     || process.env.BEMORA_CLERK_SECRET_KEY,
+      auth0:          { domain: keys.auth0Domain || process.env.BEMORA_AUTH0_DOMAIN, clientId: keys.auth0ClientId || process.env.BEMORA_AUTH0_CLIENT_ID, clientSecret: keys.auth0ClientSecret || process.env.BEMORA_AUTH0_CLIENT_SECRET },
+      jwtSecret:      keys.jwtSecret          || process.env.BEMORA_JWT_SECRET,
+      s3:             { accessKeyId: keys.s3AccessKeyId || process.env.BEMORA_S3_ACCESS_KEY_ID, secretAccessKey: keys.s3SecretAccessKey || process.env.BEMORA_S3_SECRET_ACCESS_KEY, region: keys.s3Region || process.env.BEMORA_S3_REGION || 'us-east-1', bucket: keys.s3Bucket || process.env.BEMORA_S3_BUCKET },
+      r2:             { accessKeyId: keys.r2AccessKeyId || process.env.BEMORA_R2_ACCESS_KEY_ID, secretAccessKey: keys.r2SecretAccessKey || process.env.BEMORA_R2_SECRET_ACCESS_KEY, accountId: keys.r2AccountId || process.env.BEMORA_R2_ACCOUNT_ID, bucket: keys.r2Bucket || process.env.BEMORA_R2_BUCKET },
+      gcs:            { projectId: keys.gcsProjectId || process.env.BEMORA_GCS_PROJECT_ID, clientEmail: keys.gcsClientEmail || process.env.BEMORA_GCS_CLIENT_EMAIL, privateKey: keys.gcsPrivateKey || process.env.BEMORA_GCS_PRIVATE_KEY, bucket: keys.gcsBucket || process.env.BEMORA_GCS_BUCKET },
+      pinecone:       { apiKey: keys.pineconeKey || process.env.BEMORA_PINECONE_KEY, host: keys.pineconeHost || process.env.BEMORA_PINECONE_HOST },
+      qdrant:         { url: keys.qdrantUrl || process.env.BEMORA_QDRANT_URL, apiKey: keys.qdrantKey || process.env.BEMORA_QDRANT_KEY },
+      weaviate:       { url: keys.weaviateUrl || process.env.BEMORA_WEAVIATE_URL, apiKey: keys.weaviateKey || process.env.BEMORA_WEAVIATE_KEY },
+      sentry:         keys.sentryDsn          || process.env.BEMORA_SENTRY_DSN,
+      onesignal:      { appId: keys.onesignalAppId || process.env.BEMORA_ONESIGNAL_APP_ID, apiKey: keys.onesignalKey || process.env.BEMORA_ONESIGNAL_KEY },
+      pusher:         { appId: keys.pusherAppId || process.env.BEMORA_PUSHER_APP_ID, key: keys.pusherKey || process.env.BEMORA_PUSHER_KEY, secret: keys.pusherSecret || process.env.BEMORA_PUSHER_SECRET, cluster: keys.pusherCluster || process.env.BEMORA_PUSHER_CLUSTER || 'mt1' },
+      fcm:            { projectId: keys.fcmProjectId || process.env.BEMORA_FCM_PROJECT_ID },
+      googleMaps:     keys.googleMapsKey      || process.env.BEMORA_GOOGLE_MAPS_KEY,
+      mapbox:         keys.mapboxKey          || process.env.BEMORA_MAPBOX_KEY,
+      algolia:        { appId: keys.algoliaAppId || process.env.BEMORA_ALGOLIA_APP_ID, apiKey: keys.algoliaKey || process.env.BEMORA_ALGOLIA_KEY },
+      meilisearch:    { url: keys.meilisearchUrl || process.env.BEMORA_MEILISEARCH_URL, apiKey: keys.meilisearchKey || process.env.BEMORA_MEILISEARCH_KEY },
+      googleCal:      keys.googleCalToken     || process.env.BEMORA_GOOGLE_CAL_TOKEN,
+      calendly:       keys.calendlyKey        || process.env.BEMORA_CALENDLY_KEY,
+      recaptcha:      keys.recaptchaSecret    || process.env.BEMORA_RECAPTCHA_SECRET,
+      hcaptcha:       keys.hcaptchaSecret     || process.env.BEMORA_HCAPTCHA_SECRET,
+      turnstile:      keys.turnstileSecret    || process.env.BEMORA_TURNSTILE_SECRET,
+      hibp:           keys.hibpKey            || process.env.BEMORA_HIBP_KEY,
+      virustotal:     keys.virustotalKey      || process.env.BEMORA_VIRUSTOTAL_KEY,
+      safebrowsing:   keys.safebrowsingKey    || process.env.BEMORA_SAFEBROWSING_KEY,
+      urlscan:        keys.urlscanKey         || process.env.BEMORA_URLSCAN_KEY,
+      cloudflare:     { token: keys.cloudflareToken || process.env.BEMORA_CLOUDFLARE_TOKEN, apiKey: keys.cloudflareApiKey || process.env.BEMORA_CLOUDFLARE_API_KEY, email: keys.cloudflareEmail || process.env.BEMORA_CLOUDFLARE_EMAIL, accountId: keys.cloudflareAccountId || process.env.BEMORA_CLOUDFLARE_ACCOUNT_ID },
+      cohere:         keys.cohereKey          || process.env.BEMORA_COHERE_KEY,
+      mistral:        keys.mistralKey         || process.env.BEMORA_MISTRAL_KEY,
+      together:       keys.togetherKey        || process.env.BEMORA_TOGETHER_KEY,
+      perplexity:     keys.perplexityKey      || process.env.BEMORA_PERPLEXITY_KEY,
     };
 
     this._options = { retries: 2, validateResponses: false, fallbacks: {}, ...options };
@@ -214,9 +304,7 @@ export class Bemora {
     this.animals   = this._buildAnimals();
     this.books     = this._buildBooks();
     this.lyrics    = this._buildLyrics();
-    this.memes     = this._buildMemes();
     this.math      = this._buildMath();
-    this.zodiac    = this._buildZodiac();
     this.jobs      = this._buildJobs();
     this.science   = this._buildScience();
     this.basketball = this._buildBasketball();
@@ -235,10 +323,6 @@ export class Bemora {
     this.language  = this._buildLanguage();
     this.law       = this._buildLaw();
     this.military  = this._buildMilitary();
-    this.advice    = this._buildAdvice();
-    this.dadjokes  = this._buildDadJokes();
-    this.kanye     = this._buildKanye();
-    this.randomuser = this._buildRandomUser();
     this.thesaurus = this._buildThesaurus();
     this.currencyHistory = this._buildCurrencyHistory();
     this.markdown  = this._buildMarkdown();
@@ -249,10 +333,6 @@ export class Bemora {
     this.islamic   = this._buildIslamic();
     this.gaming    = this._buildGaming();
     this.spaceExtended = this._buildSpaceExtended();
-    this.pokemon   = this._buildPokemon();
-    this.rickmorty = this._buildRickMorty();
-    this.starwars  = this._buildStarWars();
-    this.harrypotter = this._buildHarryPotter();
     this.covid     = this._buildCovid();
     this.earthquake = this._buildEarthquake();
     this.airquality = this._buildAirQuality();
@@ -260,8 +340,6 @@ export class Bemora {
     this.postal    = this._buildPostal();
     this.predict   = this._buildPredict();
     this.brewery   = this._buildBrewery();
-    this.chucknorris = this._buildChuckNorris();
-    this.bored     = this._buildBored();
     this.sportsdb  = this._buildSportsDB();
     this.domain    = this._buildDomain();
     this.placeholder = this._buildPlaceholder();
@@ -276,7 +354,6 @@ export class Bemora {
     this.export    = exportUtils;
     this.prayer    = this._buildPrayer();
     this.anime     = this._buildAnime();
-    this.fun       = this._buildFun();
     this.flights   = this._buildFlights();
     this.art       = this._buildArt();
     this.dev       = this._buildDev();
@@ -286,6 +363,33 @@ export class Bemora {
     this.combined  = this._buildCombined();
     this.cache     = cache;
     this.batch     = (calls) => batch(calls);
+
+    // ── Enterprise namespaces ─────────────────────────────────────────────
+    this.payments    = this._buildPayments();
+    this.email       = this._buildEmail();
+    this.sms         = this._buildSMS();
+    this.auth        = this._buildAuth();
+    this.jwt         = this._buildJWT();
+    this.storage     = this._buildStorage();
+    this.vectordb    = this._buildVectorDB();
+    this.sentry      = this._buildSentry();
+    this.otel        = { wireOtel: (opts) => wireOtel(this, opts), withSpan: otelSpan };
+    this.notifications = this._buildNotifications();
+    this.maps        = this._buildMaps();
+    this.searchEnt   = this._buildSearchEnterprise();
+    this.calendar    = this._buildCalendar();
+    this.captcha     = this._buildCaptcha();
+    this.security    = this._buildSecurity();
+    this.cloudflare  = this._buildCloudflare();
+
+    // ── Additional AI providers ───────────────────────────────────────────
+    Object.assign(this.ai, this._buildAIEnterprise());
+
+    // ── Platform utilities ────────────────────────────────────────────────
+    this.webhooks = this._buildWebhooks();
+    this.costs    = { snapshot: costSnapshot, snapshotForTenant: costSnapshotForTenant, record: recordCost };
+    this.helpers  = { paginate, paginateStream, gql, gqlTag, upload: uploadUtil };
+    this.keys     = { rotate: (name, value) => this.setKey(name, value) };
 
     this.providers = {
       status: () => registry.getAllProviderStatus(),
@@ -341,6 +445,9 @@ export class Bemora {
     logger.debug(`forTenant("${tenantId}") instance created.`);
     return new Bemora(keys, this._options);
   }
+
+  /** Alias for forTenant() */
+  withTenant(tenantId, keys) { return this.forTenant(tenantId, keys); }
 
   /**
    * Get collected metrics for all providers (or a single named one).
@@ -694,9 +801,7 @@ export class Bemora {
   _buildAnimals() { return { randomDog: this._wrap('dogceo', () => animals.getRandomDog()), randomCat: this._wrap('thecatapi', () => animals.getRandomCat()), randomFox: this._wrap('randomfox', () => animals.getRandomFox()), randomDuck: this._wrap('randomduck', () => animals.getRandomDuck()), randomPanda: this._wrap('some-random-api', () => animals.getRandomPanda()), randomBird: this._wrap('some-random-api', () => animals.getRandomBird()) }; }
   _buildBooks() { return { search: this._wrap('googlebooks', (p) => books.searchBooks(p)), getById: this._wrap('googlebooks', (p) => books.getBookById(p)), random: this._wrap('openlibrary', () => books.getRandomBook()) }; }
   _buildLyrics() { return { search: this._wrap('lyricsovh', (p) => lyrics.searchLyrics(p)) }; }
-  _buildMemes() { return { random: this._wrap('memeapi', () => memes.getRandomMeme()), fromSubreddit: this._wrap('memeapi', (p) => memes.getMemesFromSubreddit(p)) }; }
   _buildMath() { return { evaluate: this._wrap('mathjs', (p) => math.evaluateMath(p)), randomFact: this._wrap('numbersapi', (p) => math.getRandomMathFact(p)) }; }
-  _buildZodiac() { return { horoscope: this._wrap('aztro', (p) => zodiac.getHoroscope(p)) }; }
   _buildJobs() { return { search: this._wrap('adzuna', (p) => jobs.searchJobs(p)) }; }
   _buildScience() { return { nasaApod: this._wrap('nasa', (p) => science.getNasaApod(p)), randomFact: this._wrap('uselessfacts', () => science.getRandomScienceFact()) }; }
   _buildBasketball() { return { nbaTeams: this._wrap('balldontlie', () => basketball.getNBATeams()), nbaGames: this._wrap('balldontlie', (p) => basketball.getNBAGames(p)), nbaPlayer: this._wrap('balldontlie', (p) => basketball.getNBAPlayer(p)) }; }
@@ -715,10 +820,6 @@ export class Bemora {
   _buildLanguage() { return { detect: this._wrap('libretranslate', (p) => language.detectLanguage(p)), translate: this._wrap('libretranslate', (p) => language.translateText(p)) }; }
   _buildLaw() { return { search: this._wrap('law', (p) => law.searchLaws(p)) }; }
   _buildMilitary() { return { time: this._wrap('military', (p) => military.getMilitaryTime(p)) }; }
-  _buildAdvice() { return { random: this._wrap('adviceslip', () => advice.getRandomAdvice()), search: this._wrap('adviceslip', (p) => advice.searchAdvice(p)) }; }
-  _buildDadJokes() { return { random: this._wrap('icanhazdadjoke', () => dadjokes.getRandomDadJoke()), search: this._wrap('icanhazdadjoke', (p) => dadjokes.searchDadJokes(p)) }; }
-  _buildKanye() { return { random: this._wrap('kanye-rest', () => kanye.getRandomQuote()) }; }
-  _buildRandomUser() { return { single: this._wrap('randomuser', (p) => randomuser.getRandomUser(p)), many: this._wrap('randomuser', (p) => randomuser.getRandomUsers(p)) }; }
   _buildThesaurus() { return { synonyms: this._wrap('datamuse', (p) => thesaurus.getSynonyms(p)), antonyms: this._wrap('datamuse', (p) => thesaurus.getAntonyms(p)), rhymes: this._wrap('datamuse', (p) => thesaurus.getRhymes(p)), suggest: this._wrap('datamuse', (p) => thesaurus.suggest(p)) }; }
   _buildCurrencyHistory() { return { latest: this._wrap('frankfurter', (p) => currencyhistory.getLatestRates(p)), historical: this._wrap('frankfurter', (p) => currencyhistory.getHistoricalRates(p)), timeSeries: this._wrap('frankfurter', (p) => currencyhistory.getTimeSeries(p)) }; }
   _buildMarkdown() { return { render: this._wrap('github-markdown', (p) => markdown.render(p)), renderGfm: this._wrap('github-markdown', (p) => markdown.renderGfm(p)), analyze: this._wrap('local', (p) => markdown.analyze(p)) }; }
@@ -810,7 +911,6 @@ export class Bemora {
     quote: this._wrap('animechan', (p) => anime.getQuote(p)),
     quotesByCharacter: this._wrap('yurippe', (p) => anime.getQuotesByCharacter(p)),
   }; }
-  _buildFun() { return { joke: this._wrap('jokeapi', (p) => fun.getJoke(p)), jokes: this._wrap('jokeapi', (p) => fun.getJokes(p)), catFact: this._wrap('catfact', () => fun.catFact()), catFacts: this._wrap('catfact', (p) => fun.catFacts(p)), catImage: this._wrap('thecatapi', () => fun.catImage()), dogImage: this._wrap('dogceo', () => fun.dogImage()), dogBreeds: this._wrap('dogceo', () => fun.dogBreeds()), numberFact: this._wrap('numbersapi', (p) => fun.numberFact(p)), uselessFact: this._wrap('uselessfacts', () => fun.uselessFact()), fakeUser: this._wrap('randomuser', (p) => fun.randomUser(p)), affirmation: this._wrap('affirmations', () => fun.affirmation()), advice: this._wrap('adviceslip', () => fun.advice()) }; }
   _buildFlights() { return { live: this._wrap('aviationstack', (p) => flights.getLiveFlights(p, this._require('flights', 'flights'))), airport: this._wrap('aviationstack', (p) => flights.getAirport(p, this._require('flights', 'flights'))), airline: this._wrap('aviationstack', (p) => flights.getAirline(p, this._require('flights', 'flights'))) }; }
   _buildArt() { return { search: this._wrap('artic', (p) => art.searchArtworks(p)), details: this._wrap('artic', (p) => art.getArtwork(p)), searchMet: this._wrap('metmuseum', (p) => art.searchMet(p)), metDetails: this._wrap('metmuseum', (p) => art.getMetArtwork(p)) }; }
   _buildDev() { return { npmPackage: this._wrap('npmjs', (p) => dev.npmPackage(p)), npmDownloads: this._wrap('npmjs', (p) => dev.npmDownloads(p)), githubRepos: this._wrap('github', (p) => dev.githubRepos(p)), githubReleases: this._wrap('github', (p) => dev.githubReleases(p)), validateEmail: this._wrap('dns', (p) => dev.validateEmail(p)), dnsLookup: this._wrap('dns', (p) => dev.dnsLookup(p)), loremIpsum: this._wrap('loripsum', (p) => dev.loremIpsum(p)), httpStatus: dev.httpStatus }; }
@@ -819,10 +919,6 @@ export class Bemora {
   _buildEnriched() { return { weather: this._wrap('openweathermap', (p) => enriched.getEnrichedWeather(p, this._require('weather', 'weather'))), compareCities: this._wrap('openweathermap', (p) => enriched.compareCities(p, this._require('weather', 'weather'))) }; }
   _buildCombined() { return { marketSnapshot: this._wrap('coingecko', (p) => combined.getMarketSnapshot(p, this._keys.gold, this._keys.currency)), newsDigest: this._wrap('newsapi', (p) => combined.getNewsDigest(p, this._require('news', 'news'))) }; }
 
-  _buildPokemon() { return { get: this._wrap('pokeapi', (p) => pokemon.getPokemon(p)), ability: this._wrap('pokeapi', (p) => pokemon.getAbility(p)), species: this._wrap('pokeapi', (p) => pokemon.getSpecies(p)), random: this._wrap('pokeapi', () => pokemon.random()) }; }
-  _buildRickMorty() { return { character: this._wrap('rickandmortyapi', (p) => rickmorty.getCharacter(p)), search: this._wrap('rickandmortyapi', (p) => rickmorty.searchCharacters(p)), location: this._wrap('rickandmortyapi', (p) => rickmorty.getLocation(p)), episode: this._wrap('rickandmortyapi', (p) => rickmorty.getEpisode(p)), random: this._wrap('rickandmortyapi', () => rickmorty.random()) }; }
-  _buildStarWars() { return { person: this._wrap('swapi', (p) => starwars.getPerson(p)), people: this._wrap('swapi', () => starwars.listPeople()), planet: this._wrap('swapi', (p) => starwars.getPlanet(p)), starship: this._wrap('swapi', (p) => starwars.getStarship(p)), film: this._wrap('swapi', (p) => starwars.getFilm(p)) }; }
-  _buildHarryPotter() { return { characters: this._wrap('hp-api', (p) => harrypotter.getCharacters(p)), students: this._wrap('hp-api', () => harrypotter.getStudents()), staff: this._wrap('hp-api', () => harrypotter.getStaff()), random: this._wrap('hp-api', () => harrypotter.randomCharacter()) }; }
   _buildCovid() { return { global: this._wrap('disease.sh', () => covid.getGlobal()), country: this._wrap('disease.sh', (p) => covid.getCountry(p)), historical: this._wrap('disease.sh', (p) => covid.getHistorical(p)), topCountries: this._wrap('disease.sh', (p) => covid.getTopCountries(p)) }; }
   _buildEarthquake() { return { recent: this._wrap('usgs', (p) => earthquake.getRecent(p)), byLocation: this._wrap('usgs', (p) => earthquake.getByLocation(p)), biggestToday: this._wrap('usgs', () => earthquake.getBiggestToday()) }; }
   _buildAirQuality() { return { current: this._wrap('open-meteo-aq', (p) => airquality.getCurrent(p)), forecast: this._wrap('open-meteo-aq', (p) => airquality.getForecast(p)), classify: airquality.classifyAQI }; }
@@ -830,8 +926,6 @@ export class Bemora {
   _buildPostal() { return { lookup: this._wrap('zippopotam', (p) => postal.lookup(p)) }; }
   _buildPredict() { return { nationality: this._wrap('nationalize', (p) => predict.predictNationality(p)), gender: this._wrap('genderize', (p) => predict.predictGender(p)), age: this._wrap('agify', (p) => predict.predictAge(p)), all: this._wrap('predict-combo', (p) => predict.predictAll(p)) }; }
   _buildBrewery() { return { search: this._wrap('openbrewerydb', (p) => brewery.search(p)), random: this._wrap('openbrewerydb', () => brewery.random()), getById: this._wrap('openbrewerydb', (p) => brewery.getById(p)) }; }
-  _buildChuckNorris() { return { random: this._wrap('chucknorris.io', (p) => chucknorris.random(p)), categories: this._wrap('chucknorris.io', () => chucknorris.categories()), search: this._wrap('chucknorris.io', (p) => chucknorris.search(p)) }; }
-  _buildBored() { return { activity: this._wrap('bored-api', (p) => bored.getActivity(p)) }; }
   _buildSportsDB() { return { searchTeam: this._wrap('thesportsdb', (p) => sportsdb.searchTeam(p)), searchPlayer: this._wrap('thesportsdb', (p) => sportsdb.searchPlayer(p)), leagueEvents: this._wrap('thesportsdb', (p) => sportsdb.getLeagueEvents(p)), leagues: this._wrap('thesportsdb', (p) => sportsdb.listLeagues(p)) }; }
   _buildDomain() { return { whois: this._wrap('rdap', (p) => domain.whois(p)), dnsRecords: this._wrap('dns', (p) => domain.dnsRecords(p)), resolveIp: this._wrap('dns', (p) => domain.resolveIp(p)) }; }
   _buildPlaceholder() { return { image: placeholder.placeholderImage, picsum: placeholder.picsumImage, avatar: placeholder.avatarUrl, dicebear: placeholder.dicebearAvatar }; }
@@ -848,6 +942,357 @@ export class Bemora {
       search: this._wrap('coingecko', (p) => coinwizard.searchCoins(p)),
       convert: this._wrap('coingecko', (p) => coinwizard.convertCoin(p)),
       list: this._wrap('coingecko', () => coinwizard.supportedCoinsList()),
+    };
+  }
+  // ── Enterprise _build methods ─────────────────────────────────────────────
+
+  _buildPayments() {
+    return {
+      stripe: {
+        createCharge:        this._wrap('stripe', (p) => stripeProvider.createCharge(p, this._keys.stripe)),
+        createPaymentIntent: this._wrap('stripe', (p) => stripeProvider.createPaymentIntent(p, this._keys.stripe)),
+        createCustomer:      this._wrap('stripe', (p) => stripeProvider.createCustomer(p, this._keys.stripe)),
+        createSubscription:  this._wrap('stripe', (p) => stripeProvider.createSubscription(p, this._keys.stripe)),
+        createRefund:        this._wrap('stripe', (p) => stripeProvider.createRefund(p, this._keys.stripe)),
+        verifyWebhook:       (p) => stripeProvider.verifyWebhook({ ...p, secret: p.secret ?? this._keys.stripeWebhook }),
+      },
+      paypal: {
+        createOrder:   this._wrap('paypal', (p) => paypalProvider.createOrder(p, this._keys.paypal)),
+        captureOrder:  this._wrap('paypal', (p) => paypalProvider.captureOrder(p, this._keys.paypal)),
+        refundCapture: this._wrap('paypal', (p) => paypalProvider.refundCapture(p, this._keys.paypal)),
+      },
+    };
+  }
+
+  _buildEmail() {
+    return {
+      sendgrid: {
+        send:             this._wrap('sendgrid', (p) => sendgridProvider.send(p, this._keys.sendgrid)),
+        batch:            this._wrap('sendgrid', (p) => sendgridProvider.batch(p, this._keys.sendgrid)),
+        stats:            this._wrap('sendgrid', (p) => sendgridProvider.stats(p, this._keys.sendgrid)),
+        getSuppressions:  this._wrap('sendgrid', (p) => sendgridProvider.getSuppressions(p, this._keys.sendgrid)),
+        verifyWebhook:    (p) => sendgridProvider.verifyWebhook({ ...p, publicKey: p.publicKey ?? this._keys.sendgrid }),
+      },
+      ses: {
+        send:         this._wrap('ses', (p) => sesProvider.send(p, this._keys.ses)),
+        sendTemplated: this._wrap('ses', (p) => sesProvider.sendTemplated(p, this._keys.ses)),
+        getStats:     this._wrap('ses', (p) => sesProvider.getStats(p, this._keys.ses)),
+      },
+      resend: {
+        send:         this._wrap('resend', (p) => resendProvider.send(p, this._keys.resend)),
+        batch:        this._wrap('resend', (p) => resendProvider.batch(p, this._keys.resend)),
+        getEmail:     this._wrap('resend', (p) => resendProvider.getEmail(p, this._keys.resend)),
+        cancelEmail:  this._wrap('resend', (p) => resendProvider.cancelEmail(p, this._keys.resend)),
+        listDomains:  this._wrap('resend', (p) => resendProvider.listDomains(p, this._keys.resend)),
+        verifyWebhook: (p) => resendProvider.verifyWebhook({ ...p, secret: p.secret ?? this._keys.resend }),
+      },
+    };
+  }
+
+  _buildSMS() {
+    return {
+      twilio: {
+        send:         this._wrap('twilio', (p) => twilioProvider.send(p, this._keys.twilio)),
+        lookup:       this._wrap('twilio', (p) => twilioProvider.lookup(p, this._keys.twilio)),
+        listMessages: this._wrap('twilio', (p) => twilioProvider.listMessages(p, this._keys.twilio)),
+        verifyWebhook: (p) => twilioProvider.verifyWebhook({ ...p, authToken: p.authToken ?? this._keys.twilio?.authToken }),
+      },
+    };
+  }
+
+  _buildAuth() {
+    return {
+      clerk: {
+        getUser:        this._wrap('clerk', (p) => clerkProvider.getUser(p, this._keys.clerk)),
+        listUsers:      this._wrap('clerk', (p) => clerkProvider.listUsers(p, this._keys.clerk)),
+        getUserCount:   this._wrap('clerk', (p) => clerkProvider.getUserCount(p, this._keys.clerk)),
+        verifySession:  this._wrap('clerk', (p) => clerkProvider.verifySession(p, this._keys.clerk)),
+        revokeSession:  this._wrap('clerk', (p) => clerkProvider.revokeSession(p, this._keys.clerk)),
+        createUser:     this._wrap('clerk', (p) => clerkProvider.createUser(p, this._keys.clerk)),
+        deleteUser:     this._wrap('clerk', (p) => clerkProvider.deleteUser(p, this._keys.clerk)),
+      },
+      auth0: {
+        getUser:        this._wrap('auth0', (p) => auth0Provider.getUser(p, this._keys.auth0)),
+        listUsers:      this._wrap('auth0', (p) => auth0Provider.listUsers(p, this._keys.auth0)),
+        getUserInfo:    this._wrap('auth0', (p) => auth0Provider.getUserInfo(p, this._keys.auth0)),
+        verifyToken:    this._wrap('auth0', (p) => auth0Provider.verifyToken(p, this._keys.auth0)),
+        blockUser:      this._wrap('auth0', (p) => auth0Provider.blockUser(p, this._keys.auth0)),
+      },
+    };
+  }
+
+  _buildJWT() {
+    return {
+      sign:           jwtProvider.sign,
+      verify:         jwtProvider.verify,
+      decode:         jwtProvider.decode,
+      refresh:        (p) => jwtProvider.refresh(p, this._keys.jwtSecret),
+      generateSecret: jwtProvider.generateSecret,
+    };
+  }
+
+  _buildStorage() {
+    return {
+      s3: {
+        presignedGetUrl: this._wrap('s3', (p) => s3Provider.presignedGetUrl(p, this._keys.s3)),
+        presignedPutUrl: this._wrap('s3', (p) => s3Provider.presignedPutUrl(p, this._keys.s3)),
+        upload:          this._wrap('s3', (p) => s3Provider.upload(p, this._keys.s3)),
+        download:        this._wrap('s3', (p) => s3Provider.download(p, this._keys.s3)),
+        deleteObject:    this._wrap('s3', (p) => s3Provider.deleteObject(p, this._keys.s3)),
+        list:            this._wrap('s3', (p) => s3Provider.list(p, this._keys.s3)),
+      },
+      r2: {
+        presignedGetUrl: this._wrap('r2', (p) => r2Provider.presignedGetUrl(p, this._keys.r2)),
+        presignedPutUrl: this._wrap('r2', (p) => r2Provider.presignedPutUrl(p, this._keys.r2)),
+        upload:          this._wrap('r2', (p) => r2Provider.upload(p, this._keys.r2)),
+        download:        this._wrap('r2', (p) => r2Provider.download(p, this._keys.r2)),
+        deleteObject:    this._wrap('r2', (p) => r2Provider.deleteObject(p, this._keys.r2)),
+        list:            this._wrap('r2', (p) => r2Provider.list(p, this._keys.r2)),
+      },
+      gcs: {
+        presignedGetUrl: this._wrap('gcs', (p) => gcsProvider.presignedGetUrl(p, this._keys.gcs)),
+        presignedPutUrl: this._wrap('gcs', (p) => gcsProvider.presignedPutUrl(p, this._keys.gcs)),
+        upload:          this._wrap('gcs', (p) => gcsProvider.upload(p, this._keys.gcs)),
+        download:        this._wrap('gcs', (p) => gcsProvider.download(p, this._keys.gcs)),
+        deleteObject:    this._wrap('gcs', (p) => gcsProvider.deleteObject(p, this._keys.gcs)),
+        list:            this._wrap('gcs', (p) => gcsProvider.list(p, this._keys.gcs)),
+      },
+    };
+  }
+
+  _buildVectorDB() {
+    return {
+      pinecone: {
+        upsert:       this._wrap('pinecone', (p) => pineconeProvider.upsert(p, this._keys.pinecone)),
+        query:        this._wrap('pinecone', (p) => pineconeProvider.query(p, this._keys.pinecone)),
+        delete:       this._wrap('pinecone', (p) => pineconeProvider.deleteVectors(p, this._keys.pinecone)),
+        fetch:        this._wrap('pinecone', (p) => pineconeProvider.fetch(p, this._keys.pinecone)),
+        listIndexes:  this._wrap('pinecone', (p) => pineconeProvider.listIndexes(p, this._keys.pinecone)),
+        describeIndex: this._wrap('pinecone', (p) => pineconeProvider.describeIndex(p, this._keys.pinecone)),
+      },
+      qdrant: {
+        upsert:           this._wrap('qdrant', (p) => qdrantProvider.upsert(p, this._keys.qdrant)),
+        query:            this._wrap('qdrant', (p) => qdrantProvider.query(p, this._keys.qdrant)),
+        delete:           this._wrap('qdrant', (p) => qdrantProvider.deletePoints(p, this._keys.qdrant)),
+        getPoints:        this._wrap('qdrant', (p) => qdrantProvider.getPoints(p, this._keys.qdrant)),
+        createCollection: this._wrap('qdrant', (p) => qdrantProvider.createCollection(p, this._keys.qdrant)),
+        listCollections:  this._wrap('qdrant', (p) => qdrantProvider.listCollections(p, this._keys.qdrant)),
+        getCollection:    this._wrap('qdrant', (p) => qdrantProvider.getCollection(p, this._keys.qdrant)),
+      },
+      weaviate: {
+        upsert:       this._wrap('weaviate', (p) => weaviateProvider.upsert(p, this._keys.weaviate)),
+        query:        this._wrap('weaviate', (p) => weaviateProvider.query(p, this._keys.weaviate)),
+        delete:       this._wrap('weaviate', (p) => weaviateProvider.deleteObjects(p, this._keys.weaviate)),
+        getSchema:    this._wrap('weaviate', (p) => weaviateProvider.getSchema(p, this._keys.weaviate)),
+        createClass:  this._wrap('weaviate', (p) => weaviateProvider.createClass(p, this._keys.weaviate)),
+      },
+      pgvector: {
+        createTable:  pgvectorProvider.createTable,
+        upsert:       pgvectorProvider.upsert,
+        query:        pgvectorProvider.query,
+        delete:       pgvectorProvider.deleteVectors,
+        getById:      pgvectorProvider.getById,
+        count:        pgvectorProvider.count,
+      },
+    };
+  }
+
+  _buildSentry() {
+    return {
+      captureException: (p) => sentryProvider.captureException(p, this._keys.sentry),
+      captureMessage:   (p) => sentryProvider.captureMessage(p, this._keys.sentry),
+      captureEvent:     (p) => sentryProvider.captureEvent(p, this._keys.sentry),
+    };
+  }
+
+  _buildNotifications() {
+    return {
+      onesignal: {
+        send:            this._wrap('onesignal', (p) => onesignalProvider.send(p, this._keys.onesignal.apiKey)),
+        cancel:          this._wrap('onesignal', (p) => onesignalProvider.cancel(p, this._keys.onesignal.apiKey)),
+        getNotification: this._wrap('onesignal', (p) => onesignalProvider.getNotification(p, this._keys.onesignal.apiKey)),
+        addDevice:       this._wrap('onesignal', (p) => onesignalProvider.addDevice(p, this._keys.onesignal.apiKey)),
+      },
+      pusher: {
+        trigger:              (p) => pusherProvider.trigger({ ...p, ...this._keys.pusher }),
+        authenticateChannel:  (p) => pusherProvider.authenticateChannel({ ...p, ...this._keys.pusher }),
+        getChannel:           (p) => pusherProvider.getChannel({ ...p, ...this._keys.pusher }),
+      },
+      fcm: {
+        send:          (p) => fcmProvider.send({ ...p, projectId: this._keys.fcm.projectId }, p.accessToken),
+        sendMulticast: (p) => fcmProvider.sendMulticast({ ...p, projectId: this._keys.fcm.projectId }, p.accessToken),
+      },
+    };
+  }
+
+  _buildMaps() {
+    return {
+      google: {
+        geocode:       this._wrap('google-maps', (p) => googleMapsProvider.geocode(p, this._keys.googleMaps)),
+        reverseGeocode: this._wrap('google-maps', (p) => googleMapsProvider.reverseGeocode(p, this._keys.googleMaps)),
+        directions:    this._wrap('google-maps', (p) => googleMapsProvider.directions(p, this._keys.googleMaps)),
+        distanceMatrix: this._wrap('google-maps', (p) => googleMapsProvider.distanceMatrix(p, this._keys.googleMaps)),
+        staticMap:     (p) => googleMapsProvider.staticMap(p, this._keys.googleMaps),
+        searchPlaces:  this._wrap('google-maps', (p) => googleMapsProvider.searchPlaces(p, this._keys.googleMaps)),
+      },
+      mapbox: {
+        geocode:       this._wrap('mapbox', (p) => mapboxProvider.geocode(p, this._keys.mapbox)),
+        reverseGeocode: this._wrap('mapbox', (p) => mapboxProvider.reverseGeocode(p, this._keys.mapbox)),
+        directions:    this._wrap('mapbox', (p) => mapboxProvider.directions(p, this._keys.mapbox)),
+        staticMap:     (p) => mapboxProvider.staticMap(p, this._keys.mapbox),
+        isochrone:     this._wrap('mapbox', (p) => mapboxProvider.isochrone(p, this._keys.mapbox)),
+      },
+    };
+  }
+
+  _buildSearchEnterprise() {
+    return {
+      algolia: {
+        search:      this._wrap('algolia', (p) => algoliaProvider.search(p, this._keys.algolia)),
+        addObjects:  this._wrap('algolia', (p) => algoliaProvider.addObjects(p, this._keys.algolia)),
+        updateObject: this._wrap('algolia', (p) => algoliaProvider.updateObject(p, this._keys.algolia)),
+        deleteObject: this._wrap('algolia', (p) => algoliaProvider.deleteObject(p, this._keys.algolia)),
+        saveObjects:  this._wrap('algolia', (p) => algoliaProvider.saveObjects(p, this._keys.algolia)),
+        listIndexes:  this._wrap('algolia', (p) => algoliaProvider.listIndexes(p, this._keys.algolia)),
+      },
+      meilisearch: {
+        search:        this._wrap('meilisearch', (p) => meilisearchProvider.search(p, this._keys.meilisearch)),
+        addDocuments:  this._wrap('meilisearch', (p) => meilisearchProvider.addDocuments(p, this._keys.meilisearch)),
+        updateDocuments: this._wrap('meilisearch', (p) => meilisearchProvider.updateDocuments(p, this._keys.meilisearch)),
+        deleteDocuments: this._wrap('meilisearch', (p) => meilisearchProvider.deleteDocuments(p, this._keys.meilisearch)),
+        createIndex:   this._wrap('meilisearch', (p) => meilisearchProvider.createIndex(p, this._keys.meilisearch)),
+        getIndexStats: this._wrap('meilisearch', (p) => meilisearchProvider.getIndexStats(p, this._keys.meilisearch)),
+      },
+    };
+  }
+
+  _buildCalendar() {
+    return {
+      google: {
+        listCalendars:  this._wrap('google-cal', (p) => googleCalProvider.listCalendars(p, this._keys.googleCal)),
+        listEvents:     this._wrap('google-cal', (p) => googleCalProvider.listEvents(p, this._keys.googleCal)),
+        createEvent:    this._wrap('google-cal', (p) => googleCalProvider.createEvent(p, this._keys.googleCal)),
+        updateEvent:    this._wrap('google-cal', (p) => googleCalProvider.updateEvent(p, this._keys.googleCal)),
+        deleteEvent:    this._wrap('google-cal', (p) => googleCalProvider.deleteEvent(p, this._keys.googleCal)),
+        getEvent:       this._wrap('google-cal', (p) => googleCalProvider.getEvent(p, this._keys.googleCal)),
+        freeBusy:       this._wrap('google-cal', (p) => googleCalProvider.freeBusy(p, this._keys.googleCal)),
+      },
+      calendly: {
+        getUser:        this._wrap('calendly', (p) => calendlyProvider.getUser(p, this._keys.calendly)),
+        listEventTypes: this._wrap('calendly', (p) => calendlyProvider.listEventTypes(p, this._keys.calendly)),
+        listEvents:     this._wrap('calendly', (p) => calendlyProvider.listEvents(p, this._keys.calendly)),
+        getEvent:       this._wrap('calendly', (p) => calendlyProvider.getEvent(p, this._keys.calendly)),
+        cancelEvent:    this._wrap('calendly', (p) => calendlyProvider.cancelEvent(p, this._keys.calendly)),
+        listInvitees:   this._wrap('calendly', (p) => calendlyProvider.listInvitees(p, this._keys.calendly)),
+      },
+    };
+  }
+
+  _buildCaptcha() {
+    return {
+      recaptcha:  { verify: (p) => recaptchaProvider.verify(p, this._keys.recaptcha) },
+      hcaptcha:   { verify: (p) => hcaptchaProvider.verify(p, this._keys.hcaptcha) },
+      turnstile:  { verify: (p) => turnstileProvider.verify(p, this._keys.turnstile) },
+    };
+  }
+
+  _buildSecurity() {
+    return {
+      hibp: {
+        checkPassword:  (p) => hibpProvider.checkPassword(p),
+        checkEmail:     (p) => hibpProvider.checkEmail(p, this._keys.hibp),
+        getAllBreaches:  (p) => hibpProvider.getAllBreaches(p),
+        getBreach:      (p) => hibpProvider.getBreach(p),
+      },
+      virustotal: {
+        scanUrl:      this._wrap('virustotal', (p) => virustotalProvider.scanUrl(p, this._keys.virustotal)),
+        getUrlReport: this._wrap('virustotal', (p) => virustotalProvider.getUrlReport(p, this._keys.virustotal)),
+        getAnalysis:  this._wrap('virustotal', (p) => virustotalProvider.getAnalysis(p, this._keys.virustotal)),
+        getFileReport: this._wrap('virustotal', (p) => virustotalProvider.getFileReport(p, this._keys.virustotal)),
+        getIpReport:  this._wrap('virustotal', (p) => virustotalProvider.getIpReport(p, this._keys.virustotal)),
+      },
+      safebrowsing: {
+        checkUrls: this._wrap('safebrowsing', (p) => safebrowsingProvider.checkUrls(p, this._keys.safebrowsing)),
+        checkUrl:  this._wrap('safebrowsing', (p) => safebrowsingProvider.checkUrl(p, this._keys.safebrowsing)),
+      },
+      urlscan: {
+        scan:      this._wrap('urlscan', (p) => urlscanProvider.scan(p, this._keys.urlscan)),
+        getResult: this._wrap('urlscan', (p) => urlscanProvider.getResult(p, this._keys.urlscan)),
+        search:    this._wrap('urlscan', (p) => urlscanProvider.search(p, this._keys.urlscan)),
+      },
+    };
+  }
+
+  _buildCloudflare() {
+    return {
+      dns: {
+        listZones:    this._wrap('cf-dns', (p) => cfDnsProvider.listZones(p, this._keys.cloudflare)),
+        listRecords:  this._wrap('cf-dns', (p) => cfDnsProvider.listRecords(p, this._keys.cloudflare)),
+        createRecord: this._wrap('cf-dns', (p) => cfDnsProvider.createRecord(p, this._keys.cloudflare)),
+        updateRecord: this._wrap('cf-dns', (p) => cfDnsProvider.updateRecord(p, this._keys.cloudflare)),
+        deleteRecord: this._wrap('cf-dns', (p) => cfDnsProvider.deleteRecord(p, this._keys.cloudflare)),
+        purgeCache:   this._wrap('cf-dns', (p) => cfDnsProvider.purgeCache(p, this._keys.cloudflare)),
+      },
+      r2: {
+        listBuckets:    this._wrap('cf-r2', (p) => cfR2Provider.listBuckets({ ...p, accountId: this._keys.cloudflare.accountId }, this._keys.cloudflare)),
+        createBucket:   this._wrap('cf-r2', (p) => cfR2Provider.createBucket({ ...p, accountId: this._keys.cloudflare.accountId }, this._keys.cloudflare)),
+        getBucket:      this._wrap('cf-r2', (p) => cfR2Provider.getBucket({ ...p, accountId: this._keys.cloudflare.accountId }, this._keys.cloudflare)),
+        deleteBucket:   this._wrap('cf-r2', (p) => cfR2Provider.deleteBucket({ ...p, accountId: this._keys.cloudflare.accountId }, this._keys.cloudflare)),
+        getBucketCors:  this._wrap('cf-r2', (p) => cfR2Provider.getBucketCors({ ...p, accountId: this._keys.cloudflare.accountId }, this._keys.cloudflare)),
+        setBucketCors:  this._wrap('cf-r2', (p) => cfR2Provider.setBucketCors({ ...p, accountId: this._keys.cloudflare.accountId }, this._keys.cloudflare)),
+      },
+      cache: {
+        purgeFiles:    this._wrap('cf-cache', (p) => cfCacheProvider.purgeFiles(p, this._keys.cloudflare)),
+        purgeTags:     this._wrap('cf-cache', (p) => cfCacheProvider.purgeTags(p, this._keys.cloudflare)),
+        purgePrefixes: this._wrap('cf-cache', (p) => cfCacheProvider.purgePrefixes(p, this._keys.cloudflare)),
+        purgeAll:      this._wrap('cf-cache', (p) => cfCacheProvider.purgeAll(p, this._keys.cloudflare)),
+        getSettings:   this._wrap('cf-cache', (p) => cfCacheProvider.getSettings(p, this._keys.cloudflare)),
+        setCacheLevel: this._wrap('cf-cache', (p) => cfCacheProvider.setCacheLevel(p, this._keys.cloudflare)),
+      },
+      workers: {
+        listScripts:     this._wrap('cf-workers', (p) => cfWorkersProvider.listScripts({ ...p, accountId: this._keys.cloudflare.accountId }, this._keys.cloudflare)),
+        getScript:       this._wrap('cf-workers', (p) => cfWorkersProvider.getScript({ ...p, accountId: this._keys.cloudflare.accountId }, this._keys.cloudflare)),
+        putScript:       this._wrap('cf-workers', (p) => cfWorkersProvider.putScript({ ...p, accountId: this._keys.cloudflare.accountId }, this._keys.cloudflare)),
+        deleteScript:    this._wrap('cf-workers', (p) => cfWorkersProvider.deleteScript({ ...p, accountId: this._keys.cloudflare.accountId }, this._keys.cloudflare)),
+        listKVNamespaces: this._wrap('cf-workers', (p) => cfWorkersProvider.listKVNamespaces({ ...p, accountId: this._keys.cloudflare.accountId }, this._keys.cloudflare)),
+        kvGet:           this._wrap('cf-workers', (p) => cfWorkersProvider.kvGet({ ...p, accountId: this._keys.cloudflare.accountId }, this._keys.cloudflare)),
+        kvPut:           this._wrap('cf-workers', (p) => cfWorkersProvider.kvPut({ ...p, accountId: this._keys.cloudflare.accountId }, this._keys.cloudflare)),
+        kvDelete:        this._wrap('cf-workers', (p) => cfWorkersProvider.kvDelete({ ...p, accountId: this._keys.cloudflare.accountId }, this._keys.cloudflare)),
+      },
+    };
+  }
+
+  _buildWebhooks() {
+    const router = new WebhookRouter();
+    return {
+      router,
+      on:     (provider, eventType, handler) => { router.on(provider, eventType, handler); return this; },
+      route:  (provider, opts) => router.route(provider, opts),
+      verify: (provider, params) => verifyWebhookSig(provider, params),
+      list:   () => router.list(),
+    };
+  }
+
+  /** Extend this.ai with dedicated provider files (streaming, etc.) */
+  _buildAIEnterprise() {
+    return {
+      anthropic:        this._wrap('anthropic', (p) => anthropicProvider.messages(p, this._keys.anthropic)),
+      anthropicStream:  (p) => anthropicProvider.stream(p, this._keys.anthropic),
+      gemini:           this._wrap('google', (p) => geminiProvider.generateContent(p, this._keys.gemini)),
+      geminiStream:     (p) => geminiProvider.stream(p, this._keys.gemini),
+      geminiEmbed:      this._wrap('google', (p) => geminiProvider.embed(p, this._keys.gemini)),
+      cohere:           this._wrap('cohere', (p) => cohereProvider.chat(p, this._keys.cohere)),
+      cohereStream:     (p) => cohereProvider.stream(p, this._keys.cohere),
+      cohereEmbed:      this._wrap('cohere', (p) => cohereProvider.embed(p, this._keys.cohere)),
+      cohereRerank:     this._wrap('cohere', (p) => cohereProvider.rerank(p, this._keys.cohere)),
+      mistral:          this._wrap('mistral', (p) => mistralProvider.chat(p, this._keys.mistral)),
+      mistralStream:    (p) => mistralProvider.stream(p, this._keys.mistral),
+      mistralEmbed:     this._wrap('mistral', (p) => mistralProvider.embed(p, this._keys.mistral)),
+      together:         this._wrap('together', (p) => togetherProvider.chat(p, this._keys.together)),
+      togetherStream:   (p) => togetherProvider.stream(p, this._keys.together),
+      togetherEmbed:    this._wrap('together', (p) => togetherProvider.embed(p, this._keys.together)),
+      perplexity:       this._wrap('perplexity', (p) => perplexityProvider.chat(p, this._keys.perplexity)),
+      perplexityStream: (p) => perplexityProvider.stream(p, this._keys.perplexity),
     };
   }
 }

@@ -1,0 +1,31 @@
+# CODEOWNERS — reviewers are automatically requested for PRs touching these paths.
+# Format: <pattern> <owner(s)>
+# Owners can be GitHub users (@user), teams (@org/team), or email addresses.
+
+# Global: all files require review
+*                          @your-org/platform-team
+
+# Core infrastructure — stricter review
+/src/core/                 @your-org/platform-leads
+/src/index.js              @your-org/platform-leads
+
+# Enterprise payment/auth providers — sensitive, require security review
+/src/providers/payments/   @your-org/security-team @your-org/platform-leads
+/src/providers/auth/       @your-org/security-team @your-org/platform-leads
+/src/providers/storage/    @your-org/security-team @your-org/platform-leads
+/src/core/signing/         @your-org/security-team
+/src/core/pii.js           @your-org/security-team
+
+# Webhook verification — security-critical
+/src/providers/webhooks/   @your-org/security-team
+
+# CI/CD — requires ops review
+/.github/                  @your-org/devops
+
+# Tests — platform-team + any contributor
+/tests/                    @your-org/platform-team
+
+# Docs
+/README.md                 @your-org/platform-leads
+/CHANGELOG.md              @your-org/platform-leads
+/SECURITY.md               @your-org/security-team

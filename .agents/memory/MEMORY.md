@@ -1,4 +1,5 @@
 - [Bemora provider wiring](bemora-provider-wiring.md) — new providers need imports + `_build()` constructor call + method block in index.js; MCP server needs separate manual wiring.
+- [bemora-enterprise upgrade](bemora-enterprise-upgrade.md) — fork decisions: namespace layout, secret wiring pattern, SendGrid ECDSA verify, pruned providers list, top-level exports added.
 - [Bemora dead/broken APIs](bemora-dead-apis.md) — known dead endpoints and missing files found in this library; check before assuming a provider works.
 - [Fandom Wiki MediaWiki API pattern](bemora-fandom-wiki-api.md) — how bemora's gaming provider sources data for games with no official API (CrossFire etc.) via the generic Fandom MediaWiki API; also covers host-injection and Wikipedia User-Agent quirks.
 - [Bemora production audit fixes](bemora-production-audit.md) — what was fixed vs. intentionally skipped from a third-party production-readiness audit, and why.

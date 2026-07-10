@@ -1,7 +1,7 @@
 {
-  "name": "bemora",
-  "version": "4.0.0",
-  "description": "The ultimate API library for AI agents and developers — 94+ categories, 320+ methods, smart fallback chains, RSS aggregation, real-time WebSockets, zero-key free tier, MCP server, powerful CLI, Coin Wizard crypto toolkit, a full gaming suite (CrossFire, Fortnite, League of Legends, Minecraft, Chess.com), Pokemon, Star Wars, Harry Potter, COVID, earthquakes, air quality, and much more!",
+  "name": "bemora-enterprise",
+  "version": "1.0.0-alpha.1",
+  "description": "Enterprise-grade unified API library — payments (Stripe, PayPal), email (SendGrid, SES, Resend), SMS (Twilio), auth (JWT, Clerk, Auth0), storage (S3, R2, GCS), vector DBs (Pinecone, Qdrant, Weaviate, pgvector), AI (OpenAI, Anthropic, Gemini, Groq, Cohere, Mistral, Together, Perplexity), observability (Sentry, OTel), notifications (OneSignal, Pusher, FCM), maps, search, calendar, CAPTCHA, security, and Cloudflare — all with circuit breakers, retries, PII redaction, cost tracking, and multi-tenant support.",
   "main": "src/index.js",
   "types": "src/types/index.d.ts",
   "type": "module",
