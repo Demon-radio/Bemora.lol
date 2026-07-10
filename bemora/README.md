@@ -1,10 +1,10 @@
 <div align="center">
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=0:6366f1,100:8b5cf6&height=200&section=header&text=bemora-enterprise&fontSize=64&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=Production-grade%20unified%20API%20library%20for%20enterprise%20teams&descAlignY=60&descSize=18" width="100%" />
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:6366f1,100:8b5cf6&height=200&section=header&text=bemora&fontSize=64&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=100+%20tools%20for%20AI%20agents%20and%20apps&descAlignY=60&descSize=18" width="100%" />
 
 <br />
 
-[![version](https://img.shields.io/badge/version-1.0.0--alpha.1-6366f1?style=for-the-badge)](package.json)
+[![version](https://img.shields.io/badge/version-1.0.0--alpha.2-6366f1?style=for-the-badge)](package.json)
 [![license](https://img.shields.io/badge/license-MIT-06b6d4?style=for-the-badge)](LICENSE)
 [![node](https://img.shields.io/badge/node-%3E%3D18-10b981?style=for-the-badge)](package.json)
 [![CI](https://img.shields.io/badge/CI-passing-22c55e?style=for-the-badge)](.github/workflows/ci.yml)
@@ -12,16 +12,28 @@
 
 <br />
 
-**100+ tools & 30+ API categories. One library. Zero frustration.**
+# 🚀 100+ tools for your AI agent in one install
+
+Add bemora to **Cursor**, **Claude Desktop**, or **Windsurf** and your AI gets access to **100+ APIs** with zero config! Perfect for building AI agents, chatbots, internal tools, and more.
+
+[Quick Start](#-quick-start) · [MCP Setup (10 sec)](#-mcp-server-for-cursor--claude) · [All 30+ APIs](#-all-apis) · [AI Agent Docs](#-ai-agent-power)
+
+---
+
+# 🏆 Why bemora?
+
+**For AI agents:** Replace 30+ SDKs with one npm install — structured errors, auto‑retry, PII redaction, cost tracking, circuit breakers, and an MCP server built‑in.
+
+**For apps:** Same great unified API you love, now with production‑grade features for teams.
+
+---
+
+## 100+ APIs, zero boilerplate
 
 Weather · Currency · News · Images · Football · Crypto · Gold · Research  
 Location · IP · Countries · Translation · Movies · Food · Space · Stocks  
 Music · Social · GitHub · Hacker News · AI (Groq + OpenAI) · Utils  
-Islamic (Quran, Azkar, Prayer) · Memes · Animals · Gaming (PUBG, Free Fire)
-
-<br/>
-
-[Quick Start](#-quick-start) · [All 30+ APIs](#-all-apis) · [Advanced Features](#-advanced-features) · [AI Agent Power](#-ai-agent-power) · [MCP Server](#-mcp-server) · [CLI](#-cli)
+Islamic (Quran, Azkar, Prayer) · Memes · Animals · Gaming
 
 </div>
 
@@ -38,14 +50,14 @@ npm install axios openweathermap newsapi unsplash-js coingecko-api \
 
 Each with different interfaces, different error shapes, different caching.
 
-**bemora-enterprise replaces all of them:**
+**bemora replaces all of them:**
 
 ```bash
-npm install bemora-enterprise
+npm install bemora
 ```
 
 ```js
-import Bemora from 'bemora-enterprise';
+import Bemora from 'bemora';
 const api = new Bemora();
 
 // 100+ APIs. Same interface. Every time.
@@ -71,7 +83,7 @@ await api.webhooks.verify('stripe', { payload, signature, secret });
 ## 🚀 Quick Start
 
 ```bash
-npm install bemora-enterprise
+npm install bemora
 ```
 
 Copy `.env.example` → `.env` and fill in your keys (most are free):
@@ -84,7 +96,7 @@ BEMORA_GROQ_KEY=...       # Free at console.groq.com
 ```
 
 ```js
-import Bemora from 'bemora-enterprise';
+import Bemora from 'bemora';
 const api = new Bemora(); // auto-reads from .env
 
 const weather = await api.weather.current({ city: 'Cairo' });
@@ -895,7 +907,7 @@ bemora/
 
 ## 🔄 Migrating from upstream bemora
 
-`bemora-enterprise` is a production-hardened internal fork of
+`bemora` is a production-hardened internal fork of
 [bemora 3.6.0](https://github.com/Demon-radio/Bemora.lol). The public API is
 fully backward-compatible — every `api.<namespace>.<method>()` call works
 exactly as before. The only changes callers need to make are:
@@ -904,12 +916,12 @@ exactly as before. The only changes callers need to make are:
 
 ```diff
 -npm install bemora
-+npm install bemora-enterprise
++npm install bemora
 ```
 
 ```diff
 -import Bemora from 'bemora';
-+import Bemora from 'bemora-enterprise';
++import Bemora from 'bemora';
 ```
 
 ### 2 — Update error imports (if you catch structured errors)
@@ -919,8 +931,8 @@ also exported for code that prefers the long-form names:
 
 ```js
 // Both of these now work:
-import { ProviderError }       from 'bemora-enterprise';
-import { BemoraProviderError } from 'bemora-enterprise';   // alias
+import { ProviderError }       from 'bemora';
+import { BemoraProviderError } from 'bemora';   // alias
 ```
 
 ### 3 — Removed "fun" providers
