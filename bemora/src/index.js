@@ -98,6 +98,13 @@ import * as domain from './providers/domain.js';
 import * as placeholder from './providers/placeholder.js';
 import * as weatheralerts from './providers/weatheralerts.js';
 import * as coinwizard from './providers/coinwizard.js';
+import * as university from './providers/university.js';
+import * as nutrition from './providers/nutrition.js';
+import * as disasters from './providers/disasters.js';
+import * as blockchain from './providers/blockchain.js';
+import * as webtools from './providers/webtools.js';
+import * as worldbank from './providers/worldbank.js';
+import * as smart from './providers/smart.js';
 // ── Enterprise providers ──────────────────────────────────────────────────────
 import * as stripeProvider from './providers/payments/stripe.js';
 import * as paypalProvider from './providers/payments/paypal.js';
@@ -358,6 +365,13 @@ export class Bemora {
     this.placeholder = this._buildPlaceholder();
     this.weatheralerts = this._buildWeatherAlerts();
     this.coinWizard = this._buildCoinWizard();
+    this.university = this._buildUniversity();
+    this.nutrition = this._buildNutrition();
+    this.disasters = this._buildDisasters();
+    this.blockchain = this._buildBlockchain();
+    this.webtools  = this._buildWebtools();
+    this.worldbank = this._buildWorldBank();
+    this.smart     = this._buildSmart();
 
     this.free      = this._buildFree();
     this.rss       = this._buildRSS();
@@ -965,6 +979,52 @@ export class Bemora {
       search: this._wrap('coingecko', (p) => coinwizard.searchCoins(p)),
       convert: this._wrap('coingecko', (p) => coinwizard.convertCoin(p)),
       list: this._wrap('coingecko', () => coinwizard.supportedCoinsList()),
+    };
+  }
+  _buildUniversity() {
+    return {
+      search: this._wrap('hipolabs', (p) => university.search(p)),
+      byCountry: this._wrap('hipolabs', (p) => university.byCountry(p)),
+    };
+  }
+  _buildNutrition() {
+    return {
+      byBarcode: this._wrap('openfoodfacts', (p) => nutrition.byBarcode(p)),
+      search: this._wrap('openfoodfacts', (p) => nutrition.search(p)),
+    };
+  }
+  _buildDisasters() {
+    return {
+      activeEvents: this._wrap('nasa-eonet', (p) => disasters.activeEvents(p)),
+      categories: this._wrap('nasa-eonet', () => disasters.categories()),
+    };
+  }
+  _buildBlockchain() {
+    return {
+      bitcoinStats: this._wrap('blockchain.info', () => blockchain.bitcoinStats()),
+      bitcoinAddress: this._wrap('blockcypher', (p) => blockchain.bitcoinAddress(p)),
+      ethGasPrice: this._wrap('etherscan', () => blockchain.ethGasPrice()),
+    };
+  }
+  _buildWebtools() {
+    return {
+      favicon: (p) => webtools.favicon(p),
+      screenshot: (p) => webtools.screenshot(p),
+      metadata: this._wrap('microlink', (p) => webtools.metadata(p)),
+    };
+  }
+  _buildWorldBank() {
+    return {
+      indicator: this._wrap('worldbank', (p) => worldbank.indicator(p)),
+      population: this._wrap('worldbank', (p) => worldbank.population(p)),
+      gdp: this._wrap('worldbank', (p) => worldbank.gdp(p)),
+    };
+  }
+  _buildSmart() {
+    return {
+      weather: this._wrap('smart-weather', (p) => smart.weatherAnyProvider(p, this._keys.weather)),
+      currency: this._wrap('smart-currency', (p) => smart.currencyAnyProvider(p, this._keys.currency)),
+      cryptoPrice: this._wrap('smart-crypto', (p) => smart.cryptoPriceAnyProvider(p)),
     };
   }
   // ── Enterprise _build methods ─────────────────────────────────────────────

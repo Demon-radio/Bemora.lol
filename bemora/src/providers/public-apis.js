@@ -101,7 +101,9 @@ export async function wttrWeather({ city, format = 'short' }) {
 }
 
 /**
- * exchangerate.host — free currency API, no key
+ * frankfurter.app (ECB-backed) — free currency API, no key.
+ * Note: exchangerate.host now requires a paid access_key, so this uses
+ * frankfurter.app instead (same free, no-key contract as before).
  * @param {{ base?: string, symbols?: string[] }} params
  */
 export async function freeExchangeRates({ base = 'USD', symbols = [] } = {}) {
@@ -109,22 +111,17 @@ export async function freeExchangeRates({ base = 'USD', symbols = [] } = {}) {
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const params = { base };
-  if (symbols.length) params.symbols = symbols.join(',');
+  const params = { from: base };
+  if (symbols.length) params.to = symbols.join(',');
 
   let data;
   try {
-    ({ data } = await http.get('https://api.exchangerate.host/latest', { params }));
+    ({ data } = await http.get('https://api.frankfurter.app/latest', { params }));
   } catch (err) {
     throw wrapProviderError(err, 'public-apis');
   }
 
-  let rates = data.rates || {};
-  if (symbols.length) {
-    rates = Object.fromEntries(Object.entries(rates).filter(([k]) => symbols.includes(k)));
-  }
-
-  const result = { provider: 'exchangerate.host', base, date: data.date, rates, _cached: false };
+  const result = { provider: 'frankfurter.app', base: data.base, date: data.date, rates: data.rates || {}, _cached: false };
   cache.set(cacheKey, result, 3600);
   return result;
 }

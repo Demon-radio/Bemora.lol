@@ -5,6 +5,26 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [Unreleased]
+
+### Added
+- Six new no-key provider namespaces: `api.university` (Hipolabs), `api.nutrition`
+  (Open Food Facts), `api.disasters` (NASA EONET), `api.blockchain`
+  (blockchain.info / BlockCypher / Owlracle), `api.webtools` (favicon/screenshot/
+  link-preview metadata), and `api.worldbank` (World Bank economic indicators).
+- `api.smart` — bemora's own cross-provider auto-failover layer. Each call
+  (`smart.weather`, `smart.currency`, `smart.cryptoPrice`) races/chains multiple
+  independent free providers for the same category and falls back to a stale
+  cached value if every provider is down, so a single upstream outage never
+  becomes a caller-visible outage. Built on the existing `core/fallback.js`
+  chain, which previously had only one real consumer.
+
+### Fixed
+- `public-apis.freeExchangeRates` now uses frankfurter.app instead of the
+  now-paid `api.exchangerate.host` endpoint.
+
+---
+
 ## [1.0.0-alpha.3] — 2026-07-10
 
 ### Fixed

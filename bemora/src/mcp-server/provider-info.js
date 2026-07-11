@@ -963,6 +963,66 @@ const PROVIDER_INFO = {
       "marketSnapshot": "Call combined.marketSnapshot method",
       "newsDigest": "Call combined.newsDigest method"
     }
+  },
+  "university": {
+    "description": "University lookup (Hipolabs) — no key",
+    "requiresKey": false,
+    "methods": {
+      "search": "Call university.search method",
+      "byCountry": "Call university.byCountry method"
+    }
+  },
+  "nutrition": {
+    "description": "Food & nutrition data (Open Food Facts) — no key",
+    "requiresKey": false,
+    "methods": {
+      "byBarcode": "Call nutrition.byBarcode method",
+      "search": "Call nutrition.search method"
+    }
+  },
+  "disasters": {
+    "description": "Natural disaster & Earth event tracking (NASA EONET) — no key",
+    "requiresKey": false,
+    "methods": {
+      "activeEvents": "Call disasters.activeEvents method",
+      "categories": "Call disasters.categories method"
+    }
+  },
+  "blockchain": {
+    "description": "Blockchain stats (Bitcoin, Ethereum gas) — no key",
+    "requiresKey": false,
+    "methods": {
+      "bitcoinStats": "Call blockchain.bitcoinStats method",
+      "bitcoinAddress": "Call blockchain.bitcoinAddress method",
+      "ethGasPrice": "Call blockchain.ethGasPrice method"
+    }
+  },
+  "webtools": {
+    "description": "Favicon, screenshot, and link-preview metadata tools — no key",
+    "requiresKey": false,
+    "methods": {
+      "favicon": "Call webtools.favicon method",
+      "screenshot": "Call webtools.screenshot method",
+      "metadata": "Call webtools.metadata method"
+    }
+  },
+  "worldbank": {
+    "description": "World Bank economic indicators (GDP, population, etc.) — no key",
+    "requiresKey": false,
+    "methods": {
+      "indicator": "Call worldbank.indicator method",
+      "population": "Call worldbank.population method",
+      "gdp": "Call worldbank.gdp method"
+    }
+  },
+  "smart": {
+    "description": "Bemora's signature cross-provider auto-failover layer — never goes down because every category races multiple independent free providers with automatic fallback to stale cache",
+    "requiresKey": false,
+    "methods": {
+      "weather": "Call smart.weather method (auto-failover across weather providers)",
+      "currency": "Call smart.currency method (auto-failover across currency providers)",
+      "cryptoPrice": "Call smart.cryptoPrice method (auto-failover across crypto price providers)"
+    }
   }
 };
 
