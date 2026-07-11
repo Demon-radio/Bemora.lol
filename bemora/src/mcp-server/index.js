@@ -77,11 +77,32 @@ const getParameterSchema = (providerName, methodName) => {
       wttr:    { type: 'object', properties: { city: { type: 'string' }, format: { type: 'string' } }, required: [] },
     },
     smart: {
-      weather: { type: 'object', properties: { city: { type: 'string' }, units: { type: 'string' } }, required: ['city'] },
-      news:    { type: 'object', properties: { topic: { type: 'string' }, limit: { type: 'number' } }, required: [] },
+      weather:          { type: 'object', properties: { city: { type: 'string' }, units: { type: 'string' } }, required: ['city'] },
+      news:             { type: 'object', properties: { topic: { type: 'string' }, limit: { type: 'number' } }, required: [] },
+      currency:         { type: 'object', properties: { base: { type: 'string' }, symbols: { type: 'array', items: { type: 'string' } } }, required: [] },
+      cryptoPrice:      { type: 'object', properties: { id: { type: 'string' }, symbol: { type: 'string' }, currency: { type: 'string' } }, required: ['id'] },
+      ip:               { type: 'object', properties: { ip: { type: 'string' } }, required: [] },
+      translate:        { type: 'object', properties: { text: { type: 'string' }, from: { type: 'string' }, to: { type: 'string' } }, required: ['text', 'to'] },
+      holidays:         { type: 'object', properties: { country: { type: 'string' }, year: { type: 'number' } }, required: ['country'] },
+      weatherAggregate: { type: 'object', properties: { city: { type: 'string' } }, required: ['city'] },
     },
     ip: {
       lookup: { type: 'object', properties: { ip: { type: 'string' } }, required: [] },
+    },
+    govspending: {
+      searchAwards:   { type: 'object', properties: { keyword: { type: 'string' }, startDate: { type: 'string' }, endDate: { type: 'string' }, limit: { type: 'number' } }, required: [] },
+      agencySpending: { type: 'object', properties: { fiscalYear: { type: 'number' } }, required: [] },
+    },
+    wikidata: {
+      search:    { type: 'object', properties: { query: { type: 'string' }, language: { type: 'string' }, limit: { type: 'number' } }, required: ['query'] },
+      getEntity: { type: 'object', properties: { id: { type: 'string' }, language: { type: 'string' } }, required: ['id'] },
+    },
+    arxiv: {
+      search: { type: 'object', properties: { query: { type: 'string' }, maxResults: { type: 'number' } }, required: ['query'] },
+    },
+    biodiversity: {
+      searchSpecies: { type: 'object', properties: { query: { type: 'string' }, limit: { type: 'number' } }, required: ['query'] },
+      occurrences:   { type: 'object', properties: { species: { type: 'string' }, country: { type: 'string' }, limit: { type: 'number' } }, required: ['species'] },
     },
     research: {
       wikipedia: { type: 'object', properties: { query: { type: 'string' }, language: { type: 'string' }, limit: { type: 'number' } }, required: ['query'] },
@@ -131,6 +152,20 @@ const OBSERVABILITY_TOOLS = [
     name: 'bemora_rate_limits',
     description: 'Check rate limit usage for all tracked providers. Shows used/limit counts and whether any provider is near its limit.',
     inputSchema: { type: 'object', properties: {}, required: [] },
+  },
+  {
+    name: 'bemora_list_categories',
+    description: 'List every provider category (e.g. weather, finance, research, government, science) with a count of providers in each. Call this first when you are not sure which provider covers what you need — with 100+ providers, browsing by category beats scanning the full tool list.',
+    inputSchema: { type: 'object', properties: {}, required: [] },
+  },
+  {
+    name: 'bemora_providers_in_category',
+    description: 'List every provider (with description and available methods) belonging to a given category. Use bemora_list_categories first to see valid category names.',
+    inputSchema: {
+      type: 'object',
+      properties: { category: { type: 'string', description: 'Category name, e.g. "weather", "finance", "research", "government".' } },
+      required: ['category'],
+    },
   },
 ];
 

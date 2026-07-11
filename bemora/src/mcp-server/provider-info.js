@@ -4,6 +4,7 @@ const PROVIDER_INFO = {
     "requiresKey": true,
     "keyName": "BEMORA_WEATHER_KEY",
     "keyUrl": "https://openweathermap.org/api",
+    "category": "weather",
     "methods": {
       "current": "Call weather.current method",
       "forecast": "Call weather.forecast method"
@@ -14,6 +15,7 @@ const PROVIDER_INFO = {
     "requiresKey": true,
     "keyName": "BEMORA_CURRENCY_KEY",
     "keyUrl": "https://www.exchangerate-api.com",
+    "category": "finance",
     "methods": {
       "rates": "Call currency.rates method",
       "convert": "Call currency.convert method"
@@ -24,6 +26,7 @@ const PROVIDER_INFO = {
     "requiresKey": true,
     "keyName": "BEMORA_NEWS_KEY",
     "keyUrl": "https://newsapi.org/register",
+    "category": "news",
     "methods": {
       "headlines": "Call news.headlines method",
       "search": "Call news.search method"
@@ -34,6 +37,7 @@ const PROVIDER_INFO = {
     "requiresKey": true,
     "keyName": "BEMORA_UNSPLASH_KEY or BEMORA_PEXELS_KEY",
     "keyUrl": "https://unsplash.com/developers",
+    "category": "media",
     "methods": {
       "search": "Call images.search method",
       "random": "Call images.random method",
@@ -45,6 +49,7 @@ const PROVIDER_INFO = {
     "requiresKey": true,
     "keyName": "BEMORA_FOOTBALL_KEY",
     "keyUrl": "https://dashboard.api-football.com/register",
+    "category": "sports",
     "methods": {
       "fixtures": "Call football.fixtures method",
       "standings": "Call football.standings method",
@@ -54,6 +59,7 @@ const PROVIDER_INFO = {
   "crypto": {
     "description": "Crypto API provider",
     "requiresKey": false,
+    "category": "finance",
     "methods": {
       "price": "Call crypto.price method",
       "trending": "Call crypto.trending method",
@@ -65,6 +71,7 @@ const PROVIDER_INFO = {
     "requiresKey": true,
     "keyName": "BEMORA_GOLD_KEY",
     "keyUrl": "https://goldapi.io",
+    "category": "finance",
     "methods": {
       "price": "Call gold.price method",
       "silver": "Call gold.silver method"
@@ -73,6 +80,7 @@ const PROVIDER_INFO = {
   "research": {
     "description": "Research API provider",
     "requiresKey": false,
+    "category": "research",
     "methods": {
       "wikipedia": "Call research.wikipedia method",
       "article": "Call research.article method",
@@ -82,6 +90,7 @@ const PROVIDER_INFO = {
   "location": {
     "description": "Location API provider",
     "requiresKey": false,
+    "category": "geo",
     "methods": {
       "geocode": "Call location.geocode method",
       "reverse": "Call location.reverse method",
@@ -91,6 +100,7 @@ const PROVIDER_INFO = {
   "ip": {
     "description": "Ip API provider",
     "requiresKey": false,
+    "category": "geo",
     "methods": {
       "lookup": "Call ip.lookup method",
       "batchLookup": "Call ip.batchLookup method"
@@ -99,6 +109,7 @@ const PROVIDER_INFO = {
   "countries": {
     "description": "Countries API provider",
     "requiresKey": false,
+    "category": "geo",
     "methods": {
       "byName": "Call countries.byName method",
       "byCode": "Call countries.byCode method",
@@ -109,6 +120,7 @@ const PROVIDER_INFO = {
   "translate": {
     "description": "Translate API provider",
     "requiresKey": false,
+    "category": "language",
     "methods": {
       "text": "Call translate.text method",
       "many": "Call translate.many method",
@@ -120,6 +132,7 @@ const PROVIDER_INFO = {
     "requiresKey": true,
     "keyName": "BEMORA_MOVIES_KEY",
     "keyUrl": "https://www.themoviedb.org/settings/api",
+    "category": "entertainment",
     "methods": {
       "search": "Call movies.search method",
       "details": "Call movies.details method",
@@ -130,6 +143,7 @@ const PROVIDER_INFO = {
   "food": {
     "description": "Food API provider",
     "requiresKey": false,
+    "category": "food",
     "methods": {
       "searchMeals": "Call food.searchMeals method",
       "getRandomMeal": "Call food.getRandomMeal method",
@@ -148,6 +162,7 @@ const PROVIDER_INFO = {
     "requiresKey": true,
     "keyName": "BEMORA_NASA_KEY",
     "keyUrl": "https://api.nasa.gov",
+    "category": "science",
     "methods": {
       "apod": "Call space.apod method",
       "mars": "Call space.mars method",
@@ -158,6 +173,7 @@ const PROVIDER_INFO = {
   "search": {
     "description": "Search API provider",
     "requiresKey": false,
+    "category": "search",
     "methods": {
       "instant": "Call search.instant method",
       "web": "Call search.web method"
@@ -168,6 +184,7 @@ const PROVIDER_INFO = {
     "requiresKey": true,
     "keyName": "BEMORA_STOCKS_KEY",
     "keyUrl": "https://www.alphavantage.co/support/#api-key",
+    "category": "finance",
     "methods": {
       "quote": "Call stocks.quote method",
       "search": "Call stocks.search method",
@@ -177,6 +194,7 @@ const PROVIDER_INFO = {
   "music": {
     "description": "Music API provider",
     "requiresKey": false,
+    "category": "entertainment",
     "methods": {
       "artist": "Call music.artist method",
       "album": "Call music.album method",
@@ -186,6 +204,7 @@ const PROVIDER_INFO = {
   "social": {
     "description": "Social API provider",
     "requiresKey": false,
+    "category": "social",
     "methods": {
       "githubUser": "Call social.githubUser method",
       "githubRepo": "Call social.githubRepo method",
@@ -199,6 +218,7 @@ const PROVIDER_INFO = {
     "requiresKey": true,
     "keyName": "BEMORA_GROQ_KEY or BEMORA_OPENAI_KEY",
     "keyUrl": "https://console.groq.com",
+    "category": "ai",
     "methods": {
       "openaiChat": "Call ai.openaiChat method",
       "openai": "Call ai.openai method",
@@ -216,6 +236,7 @@ const PROVIDER_INFO = {
   "utils": {
     "description": "Utils API provider",
     "requiresKey": false,
+    "category": "utility",
     "methods": {
       "qr": "Call utils.qr method",
       "uuid": "Call utils.uuid method",
@@ -248,6 +269,7 @@ const PROVIDER_INFO = {
   "fandom": {
     "description": "Fandom API provider",
     "requiresKey": false,
+    "category": "entertainment",
     "methods": {
       "search": "Call fandom.search method",
       "getPage": "Call fandom.getPage method",
@@ -259,6 +281,7 @@ const PROVIDER_INFO = {
     "requiresKey": true,
     "keyName": "BEMORA_SPOTIFY_CLIENT_ID and BEMORA_SPOTIFY_CLIENT_SECRET",
     "keyUrl": "https://developer.spotify.com/",
+    "category": "entertainment",
     "methods": {
       "searchTracks": "Call spotify.searchTracks method",
       "getArtist": "Call spotify.getArtist method",
@@ -268,6 +291,7 @@ const PROVIDER_INFO = {
   "stackexchange": {
     "description": "Stackexchange API provider",
     "requiresKey": false,
+    "category": "developer",
     "methods": {
       "searchQuestions": "Call stackexchange.searchQuestions method",
       "getQuestion": "Call stackexchange.getQuestion method",
@@ -279,6 +303,7 @@ const PROVIDER_INFO = {
     "requiresKey": true,
     "keyName": "BEMORA_STEAM_KEY",
     "keyUrl": "https://steamcommunity.com/dev/apikey",
+    "category": "entertainment",
     "methods": {
       "getPlayerSummaries": "Call steam.getPlayerSummaries method",
       "getOwnedGames": "Call steam.getOwnedGames method",
@@ -288,6 +313,7 @@ const PROVIDER_INFO = {
   "animals": {
     "description": "Animals API provider",
     "requiresKey": false,
+    "category": "nature",
     "methods": {
       "randomDog": "Call animals.randomDog method",
       "randomCat": "Call animals.randomCat method",
@@ -300,6 +326,7 @@ const PROVIDER_INFO = {
   "books": {
     "description": "Books API provider",
     "requiresKey": false,
+    "category": "research",
     "methods": {
       "search": "Call books.search method",
       "getById": "Call books.getById method",
@@ -309,6 +336,7 @@ const PROVIDER_INFO = {
   "lyrics": {
     "description": "Lyrics API provider",
     "requiresKey": false,
+    "category": "entertainment",
     "methods": {
       "search": "Call lyrics.search method"
     }
@@ -316,6 +344,7 @@ const PROVIDER_INFO = {
   "memes": {
     "description": "Memes API provider",
     "requiresKey": false,
+    "category": "entertainment",
     "methods": {
       "random": "Call memes.random method",
       "fromSubreddit": "Call memes.fromSubreddit method"
@@ -324,6 +353,7 @@ const PROVIDER_INFO = {
   "math": {
     "description": "Math API provider",
     "requiresKey": false,
+    "category": "utility",
     "methods": {
       "evaluate": "Call math.evaluate method",
       "randomFact": "Call math.randomFact method"
@@ -332,6 +362,7 @@ const PROVIDER_INFO = {
   "zodiac": {
     "description": "Zodiac API provider",
     "requiresKey": false,
+    "category": "entertainment",
     "methods": {
       "horoscope": "Call zodiac.horoscope method"
     }
@@ -339,6 +370,7 @@ const PROVIDER_INFO = {
   "jobs": {
     "description": "Jobs API provider",
     "requiresKey": false,
+    "category": "business",
     "methods": {
       "search": "Call jobs.search method"
     }
@@ -346,6 +378,7 @@ const PROVIDER_INFO = {
   "science": {
     "description": "Science API provider",
     "requiresKey": false,
+    "category": "science",
     "methods": {
       "nasaApod": "Call science.nasaApod method",
       "randomFact": "Call science.randomFact method"
@@ -354,6 +387,7 @@ const PROVIDER_INFO = {
   "basketball": {
     "description": "Basketball API provider",
     "requiresKey": false,
+    "category": "sports",
     "methods": {
       "nbaTeams": "Call basketball.nbaTeams method",
       "nbaGames": "Call basketball.nbaGames method",
@@ -363,6 +397,7 @@ const PROVIDER_INFO = {
   "vehicles": {
     "description": "Vehicles API provider",
     "requiresKey": false,
+    "category": "utility",
     "methods": {
       "randomCar": "Call vehicles.randomCar method"
     }
@@ -370,6 +405,7 @@ const PROVIDER_INFO = {
   "pets": {
     "description": "Pets API provider",
     "requiresKey": false,
+    "category": "nature",
     "methods": {
       "random": "Call pets.random method"
     }
@@ -377,6 +413,7 @@ const PROVIDER_INFO = {
   "drinks": {
     "description": "Drinks API provider",
     "requiresKey": false,
+    "category": "food",
     "methods": {
       "randomCocktail": "Call drinks.randomCocktail method",
       "searchCocktail": "Call drinks.searchCocktail method",
@@ -386,6 +423,7 @@ const PROVIDER_INFO = {
   "geography": {
     "description": "Geography API provider",
     "requiresKey": false,
+    "category": "geo",
     "methods": {
       "countryInfo": "Call geography.countryInfo method",
       "allCountries": "Call geography.allCountries method",
@@ -395,6 +433,7 @@ const PROVIDER_INFO = {
   "comics": {
     "description": "Comics API provider",
     "requiresKey": false,
+    "category": "entertainment",
     "methods": {
       "randomXKCD": "Call comics.randomXKCD method",
       "getXKCD": "Call comics.getXKCD method"
@@ -405,6 +444,7 @@ const PROVIDER_INFO = {
     "requiresKey": true,
     "keyName": "BEMORA_MOVIES_KEY",
     "keyUrl": "https://www.themoviedb.org/settings/api",
+    "category": "entertainment",
     "methods": {
       "search": "Call tv.search method",
       "details": "Call tv.details method",
@@ -414,6 +454,7 @@ const PROVIDER_INFO = {
   "baseball": {
     "description": "Baseball API provider",
     "requiresKey": false,
+    "category": "sports",
     "methods": {
       "mlbTeams": "Call baseball.mlbTeams method",
       "mlbSchedule": "Call baseball.mlbSchedule method"
@@ -422,6 +463,7 @@ const PROVIDER_INFO = {
   "hockey": {
     "description": "Hockey API provider",
     "requiresKey": false,
+    "category": "sports",
     "methods": {
       "nhlTeams": "Call hockey.nhlTeams method",
       "nhlPlayer": "Call hockey.nhlPlayer method"
@@ -430,6 +472,7 @@ const PROVIDER_INFO = {
   "finance": {
     "description": "Finance API provider",
     "requiresKey": false,
+    "category": "finance",
     "methods": {
       "stockQuote": "Call finance.stockQuote method",
       "cryptoPrice": "Call finance.cryptoPrice method"
@@ -438,6 +481,7 @@ const PROVIDER_INFO = {
   "literature": {
     "description": "Literature API provider",
     "requiresKey": false,
+    "category": "research",
     "methods": {
       "randomQuote": "Call literature.randomQuote method",
       "searchQuotes": "Call literature.searchQuotes method"
@@ -446,6 +490,7 @@ const PROVIDER_INFO = {
   "wildlife": {
     "description": "Wildlife API provider",
     "requiresKey": false,
+    "category": "nature",
     "methods": {
       "randomFact": "Call wildlife.randomFact method"
     }
@@ -453,6 +498,7 @@ const PROVIDER_INFO = {
   "politics": {
     "description": "Politics API provider",
     "requiresKey": false,
+    "category": "news",
     "methods": {
       "presidents": "Call politics.presidents method"
     }
@@ -460,6 +506,7 @@ const PROVIDER_INFO = {
   "language": {
     "description": "Language API provider",
     "requiresKey": false,
+    "category": "language",
     "methods": {
       "detect": "Call language.detect method",
       "translate": "Call language.translate method"
@@ -468,6 +515,7 @@ const PROVIDER_INFO = {
   "law": {
     "description": "Law API provider",
     "requiresKey": false,
+    "category": "research",
     "methods": {
       "search": "Call law.search method"
     }
@@ -475,6 +523,7 @@ const PROVIDER_INFO = {
   "military": {
     "description": "Military API provider",
     "requiresKey": false,
+    "category": "geo",
     "methods": {
       "time": "Call military.time method"
     }
@@ -482,6 +531,7 @@ const PROVIDER_INFO = {
   "advice": {
     "description": "Advice API provider",
     "requiresKey": false,
+    "category": "entertainment",
     "methods": {
       "random": "Call advice.random method",
       "search": "Call advice.search method"
@@ -490,6 +540,7 @@ const PROVIDER_INFO = {
   "dadjokes": {
     "description": "Dadjokes API provider",
     "requiresKey": false,
+    "category": "entertainment",
     "methods": {
       "random": "Call dadjokes.random method",
       "search": "Call dadjokes.search method"
@@ -498,6 +549,7 @@ const PROVIDER_INFO = {
   "kanye": {
     "description": "Kanye API provider",
     "requiresKey": false,
+    "category": "entertainment",
     "methods": {
       "random": "Call kanye.random method"
     }
@@ -505,6 +557,7 @@ const PROVIDER_INFO = {
   "randomuser": {
     "description": "Randomuser API provider",
     "requiresKey": false,
+    "category": "developer",
     "methods": {
       "single": "Call randomuser.single method",
       "many": "Call randomuser.many method"
@@ -513,6 +566,7 @@ const PROVIDER_INFO = {
   "thesaurus": {
     "description": "Thesaurus API provider",
     "requiresKey": false,
+    "category": "language",
     "methods": {
       "synonyms": "Call thesaurus.synonyms method",
       "antonyms": "Call thesaurus.antonyms method",
@@ -523,6 +577,7 @@ const PROVIDER_INFO = {
   "currencyHistory": {
     "description": "CurrencyHistory API provider",
     "requiresKey": false,
+    "category": "finance",
     "methods": {
       "latest": "Call currencyHistory.latest method",
       "historical": "Call currencyHistory.historical method",
@@ -532,6 +587,7 @@ const PROVIDER_INFO = {
   "markdown": {
     "description": "Markdown API provider",
     "requiresKey": false,
+    "category": "developer",
     "methods": {
       "render": "Call markdown.render method",
       "renderGfm": "Call markdown.renderGfm method",
@@ -541,6 +597,7 @@ const PROVIDER_INFO = {
   "techdb": {
     "description": "Techdb API provider",
     "requiresKey": false,
+    "category": "developer",
     "methods": {
       "listDevices": "Call techdb.listDevices method",
       "getDevice": "Call techdb.getDevice method",
@@ -551,6 +608,7 @@ const PROVIDER_INFO = {
   "websites": {
     "description": "Websites API provider",
     "requiresKey": false,
+    "category": "developer",
     "methods": {
       "status": "Call websites.status method",
       "detectTechStack": "Call websites.detectTechStack method",
@@ -560,6 +618,7 @@ const PROVIDER_INFO = {
   "fakedb": {
     "description": "Fakedb API provider",
     "requiresKey": false,
+    "category": "developer",
     "methods": {
       "getPosts": "Call fakedb.getPosts method",
       "getComments": "Call fakedb.getComments method",
@@ -574,6 +633,7 @@ const PROVIDER_INFO = {
   "religion": {
     "description": "Religion API provider",
     "requiresKey": false,
+    "category": "religion",
     "methods": {
       "randomVerse": "Call religion.randomVerse method",
       "getVerse": "Call religion.getVerse method"
@@ -582,6 +642,7 @@ const PROVIDER_INFO = {
   "islamic": {
     "description": "Islamic API provider",
     "requiresKey": false,
+    "category": "religion",
     "methods": {
       "quranChapters": "Call islamic.quranChapters method",
       "quranChapter": "Call islamic.quranChapter method",
@@ -593,6 +654,7 @@ const PROVIDER_INFO = {
   "gaming": {
     "description": "Gaming API provider",
     "requiresKey": false,
+    "category": "entertainment",
     "methods": {
       "freeFirePlayer": "Call gaming.freeFirePlayer method",
       "pubgPlayer": "Call gaming.pubgPlayer method",
@@ -620,6 +682,7 @@ const PROVIDER_INFO = {
   "spaceExtended": {
     "description": "SpaceExtended API provider",
     "requiresKey": false,
+    "category": "science",
     "methods": {
       "apod": "Call spaceExtended.apod method",
       "marsPhotos": "Call spaceExtended.marsPhotos method",
@@ -630,6 +693,7 @@ const PROVIDER_INFO = {
   "pokemon": {
     "description": "Pokemon API provider",
     "requiresKey": false,
+    "category": "entertainment",
     "methods": {
       "get": "Call pokemon.get method",
       "ability": "Call pokemon.ability method",
@@ -640,6 +704,7 @@ const PROVIDER_INFO = {
   "rickmorty": {
     "description": "Rickmorty API provider",
     "requiresKey": false,
+    "category": "entertainment",
     "methods": {
       "character": "Call rickmorty.character method",
       "search": "Call rickmorty.search method",
@@ -651,6 +716,7 @@ const PROVIDER_INFO = {
   "starwars": {
     "description": "Starwars API provider",
     "requiresKey": false,
+    "category": "entertainment",
     "methods": {
       "person": "Call starwars.person method",
       "people": "Call starwars.people method",
@@ -662,6 +728,7 @@ const PROVIDER_INFO = {
   "harrypotter": {
     "description": "Harrypotter API provider",
     "requiresKey": false,
+    "category": "entertainment",
     "methods": {
       "characters": "Call harrypotter.characters method",
       "students": "Call harrypotter.students method",
@@ -672,6 +739,7 @@ const PROVIDER_INFO = {
   "covid": {
     "description": "Covid API provider",
     "requiresKey": false,
+    "category": "health",
     "methods": {
       "global": "Call covid.global method",
       "country": "Call covid.country method",
@@ -682,6 +750,7 @@ const PROVIDER_INFO = {
   "earthquake": {
     "description": "Earthquake API provider",
     "requiresKey": false,
+    "category": "science",
     "methods": {
       "recent": "Call earthquake.recent method",
       "byLocation": "Call earthquake.byLocation method",
@@ -691,6 +760,7 @@ const PROVIDER_INFO = {
   "airquality": {
     "description": "Airquality API provider",
     "requiresKey": false,
+    "category": "science",
     "methods": {
       "current": "Call airquality.current method",
       "forecast": "Call airquality.forecast method",
@@ -700,6 +770,7 @@ const PROVIDER_INFO = {
   "astronomy": {
     "description": "Astronomy API provider",
     "requiresKey": false,
+    "category": "science",
     "methods": {
       "sunriseSunset": "Call astronomy.sunriseSunset method",
       "moonPhase": "Call astronomy.moonPhase method"
@@ -708,6 +779,7 @@ const PROVIDER_INFO = {
   "postal": {
     "description": "Postal API provider",
     "requiresKey": false,
+    "category": "geo",
     "methods": {
       "lookup": "Call postal.lookup method"
     }
@@ -715,6 +787,7 @@ const PROVIDER_INFO = {
   "predict": {
     "description": "Predict API provider",
     "requiresKey": false,
+    "category": "ai",
     "methods": {
       "nationality": "Call predict.nationality method",
       "gender": "Call predict.gender method",
@@ -725,6 +798,7 @@ const PROVIDER_INFO = {
   "brewery": {
     "description": "Brewery API provider",
     "requiresKey": false,
+    "category": "food",
     "methods": {
       "search": "Call brewery.search method",
       "random": "Call brewery.random method",
@@ -734,6 +808,7 @@ const PROVIDER_INFO = {
   "chucknorris": {
     "description": "Chucknorris API provider",
     "requiresKey": false,
+    "category": "entertainment",
     "methods": {
       "random": "Call chucknorris.random method",
       "categories": "Call chucknorris.categories method",
@@ -743,6 +818,7 @@ const PROVIDER_INFO = {
   "bored": {
     "description": "Bored API provider",
     "requiresKey": false,
+    "category": "entertainment",
     "methods": {
       "activity": "Call bored.activity method"
     }
@@ -750,6 +826,7 @@ const PROVIDER_INFO = {
   "sportsdb": {
     "description": "Sportsdb API provider",
     "requiresKey": false,
+    "category": "sports",
     "methods": {
       "searchTeam": "Call sportsdb.searchTeam method",
       "searchPlayer": "Call sportsdb.searchPlayer method",
@@ -760,6 +837,7 @@ const PROVIDER_INFO = {
   "domain": {
     "description": "Domain API provider",
     "requiresKey": false,
+    "category": "developer",
     "methods": {
       "whois": "Call domain.whois method",
       "dnsRecords": "Call domain.dnsRecords method",
@@ -769,6 +847,7 @@ const PROVIDER_INFO = {
   "placeholder": {
     "description": "Placeholder API provider",
     "requiresKey": false,
+    "category": "utility",
     "methods": {
       "image": "Call placeholder.image method",
       "picsum": "Call placeholder.picsum method",
@@ -779,6 +858,7 @@ const PROVIDER_INFO = {
   "weatheralerts": {
     "description": "Weatheralerts API provider",
     "requiresKey": false,
+    "category": "weather",
     "methods": {
       "usAlerts": "Call weatheralerts.usAlerts method",
       "pointForecast": "Call weatheralerts.pointForecast method"
@@ -787,6 +867,7 @@ const PROVIDER_INFO = {
   "coinWizard": {
     "description": "CoinWizard API provider",
     "requiresKey": false,
+    "category": "finance",
     "methods": {
       "info": "Call coinWizard.info method",
       "chart": "Call coinWizard.chart method",
@@ -803,6 +884,7 @@ const PROVIDER_INFO = {
   "free": {
     "description": "Free API provider",
     "requiresKey": false,
+    "category": "meta",
     "methods": {
       "weather": "Call free.weather method",
       "wttr": "Call free.wttr method",
@@ -815,6 +897,7 @@ const PROVIDER_INFO = {
   "rss": {
     "description": "Rss API provider",
     "requiresKey": false,
+    "category": "news",
     "methods": {
       "fetch": "Call rss.fetch method",
       "custom": "Call rss.custom method",
@@ -825,26 +908,17 @@ const PROVIDER_INFO = {
   "realtime": {
     "description": "Realtime API provider",
     "requiresKey": false,
+    "category": "finance",
     "methods": {
       "binance": "Call realtime.binance method",
       "kraken": "Call realtime.kraken method",
       "getPrice": "Call realtime.getPrice method"
     }
   },
-  "smart": {
-    "description": "Smart API provider",
-    "requiresKey": false,
-    "methods": {
-      "weather": "Call smart.weather method",
-      "news": "Call smart.news method",
-      "crypto": "Call smart.crypto method",
-      "currency": "Call smart.currency method",
-      "weatherAggregate": "Call smart.weatherAggregate method"
-    }
-  },
   "prayer": {
     "description": "Prayer API provider",
     "requiresKey": false,
+    "category": "religion",
     "methods": {
       "today": "Call prayer.today method",
       "byCoords": "Call prayer.byCoords method",
@@ -855,6 +929,7 @@ const PROVIDER_INFO = {
   "anime": {
     "description": "Anime API provider",
     "requiresKey": false,
+    "category": "entertainment",
     "methods": {
       "search": "Call anime.search method",
       "details": "Call anime.details method",
@@ -878,6 +953,7 @@ const PROVIDER_INFO = {
   "fun": {
     "description": "Fun API provider",
     "requiresKey": false,
+    "category": "entertainment",
     "methods": {
       "joke": "Call fun.joke method",
       "jokes": "Call fun.jokes method",
@@ -898,6 +974,7 @@ const PROVIDER_INFO = {
     "requiresKey": true,
     "keyName": "BEMORA_FLIGHTS_KEY",
     "keyUrl": "https://aviationstack.com/signup",
+    "category": "travel",
     "methods": {
       "live": "Call flights.live method",
       "airport": "Call flights.airport method",
@@ -907,6 +984,7 @@ const PROVIDER_INFO = {
   "art": {
     "description": "Art API provider",
     "requiresKey": false,
+    "category": "entertainment",
     "methods": {
       "search": "Call art.search method",
       "details": "Call art.details method",
@@ -917,6 +995,7 @@ const PROVIDER_INFO = {
   "dev": {
     "description": "Dev API provider",
     "requiresKey": false,
+    "category": "developer",
     "methods": {
       "npmPackage": "Call dev.npmPackage method",
       "npmDownloads": "Call dev.npmDownloads method",
@@ -931,6 +1010,7 @@ const PROVIDER_INFO = {
   "podcasts": {
     "description": "Podcasts API provider",
     "requiresKey": false,
+    "category": "entertainment",
     "methods": {
       "search": "Call podcasts.search method",
       "episodes": "Call podcasts.episodes method",
@@ -940,6 +1020,7 @@ const PROVIDER_INFO = {
   "medical": {
     "description": "Medical API provider",
     "requiresKey": false,
+    "category": "health",
     "methods": {
       "drug": "Call medical.drug method",
       "disease": "Call medical.disease method",
@@ -951,6 +1032,7 @@ const PROVIDER_INFO = {
   "enriched": {
     "description": "Enriched API provider",
     "requiresKey": false,
+    "category": "weather",
     "methods": {
       "weather": "Call enriched.weather method",
       "compareCities": "Call enriched.compareCities method"
@@ -959,6 +1041,7 @@ const PROVIDER_INFO = {
   "combined": {
     "description": "Combined API provider",
     "requiresKey": false,
+    "category": "finance",
     "methods": {
       "marketSnapshot": "Call combined.marketSnapshot method",
       "newsDigest": "Call combined.newsDigest method"
@@ -967,6 +1050,7 @@ const PROVIDER_INFO = {
   "university": {
     "description": "University lookup (Hipolabs) — no key",
     "requiresKey": false,
+    "category": "research",
     "methods": {
       "search": "Call university.search method",
       "byCountry": "Call university.byCountry method"
@@ -975,6 +1059,7 @@ const PROVIDER_INFO = {
   "nutrition": {
     "description": "Food & nutrition data (Open Food Facts) — no key",
     "requiresKey": false,
+    "category": "health",
     "methods": {
       "byBarcode": "Call nutrition.byBarcode method",
       "search": "Call nutrition.search method"
@@ -983,6 +1068,7 @@ const PROVIDER_INFO = {
   "disasters": {
     "description": "Natural disaster & Earth event tracking (NASA EONET) — no key",
     "requiresKey": false,
+    "category": "science",
     "methods": {
       "activeEvents": "Call disasters.activeEvents method",
       "categories": "Call disasters.categories method"
@@ -991,6 +1077,7 @@ const PROVIDER_INFO = {
   "blockchain": {
     "description": "Blockchain stats (Bitcoin, Ethereum gas) — no key",
     "requiresKey": false,
+    "category": "finance",
     "methods": {
       "bitcoinStats": "Call blockchain.bitcoinStats method",
       "bitcoinAddress": "Call blockchain.bitcoinAddress method",
@@ -1000,6 +1087,7 @@ const PROVIDER_INFO = {
   "webtools": {
     "description": "Favicon, screenshot, and link-preview metadata tools — no key",
     "requiresKey": false,
+    "category": "developer",
     "methods": {
       "favicon": "Call webtools.favicon method",
       "screenshot": "Call webtools.screenshot method",
@@ -1009,6 +1097,7 @@ const PROVIDER_INFO = {
   "worldbank": {
     "description": "World Bank economic indicators (GDP, population, etc.) — no key",
     "requiresKey": false,
+    "category": "finance",
     "methods": {
       "indicator": "Call worldbank.indicator method",
       "population": "Call worldbank.population method",
@@ -1018,10 +1107,56 @@ const PROVIDER_INFO = {
   "smart": {
     "description": "Bemora's signature cross-provider auto-failover layer — never goes down because every category races multiple independent free providers with automatic fallback to stale cache",
     "requiresKey": false,
+    "category": "meta",
+    "category": "meta",
     "methods": {
-      "weather": "Call smart.weather method (auto-failover across weather providers)",
-      "currency": "Call smart.currency method (auto-failover across currency providers)",
-      "cryptoPrice": "Call smart.cryptoPrice method (auto-failover across crypto price providers)"
+      "weather": "Call smart.weather({ city, units? }) — auto-failover: OpenWeatherMap (if keyed) -> wttr.in -> Open-Meteo -> stale cache",
+      "news": "Call smart.news({ topic?, limit? }) — auto-failover: NewsAPI (if keyed) -> BBC/Al Jazeera/Google News RSS -> stale cache",
+      "currency": "Call smart.currency({ base?, symbols? }) — auto-failover: frankfurter.app -> ExchangeRate-API (if keyed) -> stale cache",
+      "cryptoPrice": "Call smart.cryptoPrice({ id, symbol?, currency? }) — auto-failover: CoinGecko -> Binance ticker -> stale cache",
+      "ip": "Call smart.ip({ ip? }) — IP geolocation lookup with stale-cache safety net",
+      "translate": "Call smart.translate({ text, from?, to }) — text translation with stale-cache safety net",
+      "holidays": "Call smart.holidays({ country, year? }) — public holidays with stale-cache safety net",
+      "weatherAggregate": "Call smart.weatherAggregate({ city }) — cross-checks temperature across every reachable provider and returns the average"
+    }
+  },
+  "govspending": {
+    "description": "US federal government spending data (USAspending.gov) — no key",
+    "requiresKey": false,
+    "category": "government",
+    "category": "government",
+    "methods": {
+      "searchAwards": "Call govspending.searchAwards({ keyword?, startDate?, endDate?, limit? }) — search federal contract/grant awards",
+      "agencySpending": "Call govspending.agencySpending({ fiscalYear? }) — top-level agency spending totals"
+    }
+  },
+  "wikidata": {
+    "description": "Wikidata structured knowledge graph — no key",
+    "requiresKey": false,
+    "category": "research",
+    "category": "research",
+    "methods": {
+      "search": "Call wikidata.search({ query, language?, limit? }) — search entities by label",
+      "getEntity": "Call wikidata.getEntity({ id, language? }) — fetch an entity's core facts by Q-id"
+    }
+  },
+  "arxiv": {
+    "description": "Academic paper search (arXiv) — no key",
+    "requiresKey": false,
+    "category": "research",
+    "category": "research",
+    "methods": {
+      "search": "Call arxiv.search({ query, maxResults? }) — search papers, returns title/authors/summary/pdf link"
+    }
+  },
+  "biodiversity": {
+    "description": "Species and occurrence data (GBIF) — no key",
+    "requiresKey": false,
+    "category": "science",
+    "category": "science",
+    "methods": {
+      "searchSpecies": "Call biodiversity.searchSpecies({ query, limit? }) — search the GBIF taxonomic backbone",
+      "occurrences": "Call biodiversity.occurrences({ species, country?, limit? }) — recent sighting records"
     }
   }
 };
