@@ -104,6 +104,10 @@ import * as disasters from './providers/disasters.js';
 import * as blockchain from './providers/blockchain.js';
 import * as webtools from './providers/webtools.js';
 import * as worldbank from './providers/worldbank.js';
+import * as govspending from './providers/govspending.js';
+import * as wikidata from './providers/wikidata.js';
+import * as arxiv from './providers/arxiv.js';
+import * as biodiversity from './providers/biodiversity.js';
 import * as smart from './providers/smart.js';
 // ── Enterprise providers ──────────────────────────────────────────────────────
 import * as stripeProvider from './providers/payments/stripe.js';
@@ -372,11 +376,14 @@ export class Bemora {
     this.webtools  = this._buildWebtools();
     this.worldbank = this._buildWorldBank();
     this.smart     = this._buildSmart();
+    this.govspending = this._buildGovSpending();
+    this.wikidata  = this._buildWikidata();
+    this.arxiv     = this._buildArxiv();
+    this.biodiversity = this._buildBiodiversity();
 
     this.free      = this._buildFree();
     this.rss       = this._buildRSS();
     this.realtime  = this._buildRealtime();
-    this.smart     = this._buildSmart();
     this.monitor   = this._monitor;
     this.export    = exportUtils;
     this.prayer    = this._buildPrayer();
@@ -893,40 +900,6 @@ export class Bemora {
   _buildFree() { return { weather: this._wrap('open-meteo', (p) => pub.openMeteoWeather(p)), wttr: this._wrap('wttr', (p) => pub.wttrWeather(p)), exchangeRates: this._wrap('exchangerate.host', (p) => pub.freeExchangeRates(p)), binanceTicker: this._wrap('binance', (p) => pub.binanceTicker(p)), binanceTickers: this._wrap('binance', (p) => pub.binanceTickers(p)), football: this._wrap('openligadb', (p) => pub.openLigaFixtures(p)) }; }
   _buildRSS() { return { fetch: this._wrap('rss', (p) => rss.fetchFeed(p)), custom: this._wrap('rss', (p) => rss.fetchCustomFeed(p)), aggregate: this._wrap('rss', (p) => rss.aggregateFeeds(p)), sources: () => rss.AVAILABLE_SOURCES }; }
   _buildRealtime() { return { binance: (symbols) => new realtime.BinanceStream(symbols), kraken: (pairs) => new realtime.KrakenStream(pairs), getPrice: (p) => realtime.getRealtimePrice(p) }; }
-  _buildSmart() {
-    const k = this._keys;
-    return {
-      weather: async ({ city, units = 'metric' }) => {
-        const chain = [];
-        if (k.weather) chain.push({ name: 'openweathermap', fn: () => weather.getCurrentWeather({ city, units }, k.weather) });
-        chain.push({ name: 'wttr.in', fn: () => pub.wttrWeather({ city, format: 'full' }) }, { name: 'open-meteo', fn: async () => { const geo = await location.geocode({ address: city }); const { lat, lon } = geo.results?.[0] || {}; return pub.openMeteoWeather({ lat, lon, units: units === 'imperial' ? 'fahrenheit' : 'celsius' }); } });
-        return fallbackChain(`smart:weather:${city}`, chain, 600);
-      },
-      news: async ({ topic, limit = 10 } = {}) => {
-        const chain = [];
-        if (k.news) chain.push({ name: 'newsapi', fn: () => news.searchNews({ q: topic || 'world', pageSize: limit }, k.news) });
-        chain.push({ name: 'bbc-world-rss', fn: () => rss.fetchFeed({ source: 'bbc-world', limit }) }, { name: 'aljazeera-rss', fn: () => rss.fetchFeed({ source: 'aljazeera', limit }) }, { name: 'google-news-rss', fn: () => rss.fetchFeed({ source: 'google-news', limit }) });
-        return fallbackChain(`smart:news:${topic || 'world'}`, chain, 600);
-      },
-      crypto: async ({ coin = 'bitcoin' } = {}) => {
-        const symbolMap = { bitcoin: 'BTCUSDT', ethereum: 'ETHUSDT', solana: 'SOLUSDT', dogecoin: 'DOGEUSDT' };
-        return fallbackChain(`smart:crypto:${coin}`, [ { name: 'coingecko', fn: () => crypto.getPrice({ coins: coin }) }, { name: 'binance', fn: () => pub.binanceTicker({ symbol: symbolMap[coin] || `${coin.toUpperCase()}USDT` }) } ], 30);
-      },
-      currency: async ({ base = 'USD', symbols = [] } = {}) => {
-        const chain = [];
-        if (k.currency) chain.push({ name: 'exchangerate-api', fn: () => currency.getRates({ base, symbols }, k.currency) });
-        chain.push({ name: 'exchangerate.host', fn: () => pub.freeExchangeRates({ base, symbols }) });
-        return fallbackChain(`smart:currency:${base}`, chain, 3600);
-      },
-      weatherAggregate: async ({ city }) => {
-        const geo = await location.geocode({ address: city }).catch(() => null);
-        const sources = [ { name: 'wttr.in', fn: () => pub.wttrWeather({ city, format: 'full' }).then((d) => ({ temperature: parseFloat(d.temperature_c) })) } ];
-        if (geo?.results?.[0]) { const { lat, lon } = geo.results[0]; sources.push({ name: 'open-meteo', fn: () => pub.openMeteoWeather({ lat, lon }).then((d) => ({ temperature: d.temperature })) }); }
-        if (k.weather) sources.push({ name: 'openweathermap', fn: () => weather.getCurrentWeather({ city }, k.weather).then((d) => ({ temperature: d.temperature })) });
-        return aggregate(sources, { strategy: 'average', field: 'temperature' });
-      },
-    };
-  }
 
   _buildPrayer() { return { today: this._wrap('aladhan', (p) => prayer.timingsByCity(p)), byCoords: this._wrap('aladhan', (p) => prayer.timingsByCoords(p)), monthly: this._wrap('aladhan', (p) => prayer.monthlyTimings(p)), methods: () => prayer.CALCULATION_METHODS }; }
   _buildAnime() { return {
@@ -1023,8 +996,36 @@ export class Bemora {
   _buildSmart() {
     return {
       weather: this._wrap('smart-weather', (p) => smart.weatherAnyProvider(p, this._keys.weather)),
+      news: this._wrap('smart-news', (p) => smart.newsAnyProvider(p, this._keys.news)),
       currency: this._wrap('smart-currency', (p) => smart.currencyAnyProvider(p, this._keys.currency)),
       cryptoPrice: this._wrap('smart-crypto', (p) => smart.cryptoPriceAnyProvider(p)),
+      ip: this._wrap('smart-ip', (p) => smart.ipAnyProvider(p)),
+      translate: this._wrap('smart-translate', (p) => smart.translateAnyProvider(p)),
+      holidays: this._wrap('smart-holidays', (p) => smart.holidaysAnyProvider(p)),
+      weatherAggregate: this._wrap('smart-weather-aggregate', (p) => smart.weatherAggregate(p, this._keys.weather)),
+    };
+  }
+  _buildGovSpending() {
+    return {
+      searchAwards: this._wrap('usaspending', (p) => govspending.searchAwards(p)),
+      agencySpending: this._wrap('usaspending', (p) => govspending.agencySpending(p)),
+    };
+  }
+  _buildWikidata() {
+    return {
+      search: this._wrap('wikidata', (p) => wikidata.searchEntities(p)),
+      getEntity: this._wrap('wikidata', (p) => wikidata.getEntity(p)),
+    };
+  }
+  _buildArxiv() {
+    return {
+      search: this._wrap('arxiv', (p) => arxiv.search(p)),
+    };
+  }
+  _buildBiodiversity() {
+    return {
+      searchSpecies: this._wrap('gbif', (p) => biodiversity.searchSpecies(p)),
+      occurrences: this._wrap('gbif', (p) => biodiversity.occurrences(p)),
     };
   }
   // ── Enterprise _build methods ─────────────────────────────────────────────

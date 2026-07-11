@@ -10,13 +10,17 @@ const http = httpClient();
  *
  * @param {{ text: string, from: string, to: string, email?: string }} params
  * Language codes: 'en', 'ar', 'fr', 'de', 'es', 'it', 'zh', 'ja', 'pt', 'ru' ...
+ * MyMemory has no real auto-detect source language — passing 'auto' (or
+ * omitting `from`) is normalized to 'en' since the upstream API rejects the
+ * literal string 'auto' with a 200-status error payload.
  */
 export async function translate({ text, from = 'auto', to, email }) {
-  const cacheKey = `translate:${from}:${to}:${text.slice(0, 50)}`;
+  const source = from === 'auto' ? 'en' : from;
+  const cacheKey = `translate:${source}:${to}:${text.slice(0, 50)}`;
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
 
-  const params = { q: text, langpair: `${from}|${to}` };
+  const params = { q: text, langpair: `${source}|${to}` };
   if (email) params.de = email;
 
   try {
@@ -27,7 +31,7 @@ export async function translate({ text, from = 'auto', to, email }) {
     const result = {
       original: text,
       translated: data.responseData.translatedText,
-      from,
+      from: source,
       to,
       quality: data.responseData.match,
       _cached: false,
