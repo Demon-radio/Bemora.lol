@@ -4,3 +4,5 @@
 - [Fandom Wiki MediaWiki API pattern](bemora-fandom-wiki-api.md) — how bemora's gaming provider sources data for games with no official API (CrossFire etc.) via the generic Fandom MediaWiki API; also covers host-injection and Wikipedia User-Agent quirks.
 - [Bemora production audit fixes](bemora-production-audit.md) — what was fixed vs. intentionally skipped from a third-party production-readiness audit, and why.
 - [Bemora test patterns and key naming](bemora-test-patterns.md) — vi.hoisted+vi.mock pattern for ESM, constructor uses long-form keys (stripeKey) but short-form (stripe) added as aliases; pinecone stored as plain string; cache-redis needs operationTimeoutMs for hang resilience.
+- [Bemora workspace install quirk](bemora-workspace-install.md) — `bemora/` is deliberately excluded from the root pnpm-workspace.yaml; its own deps need `pnpm install --ignore-workspace` run inside `bemora/`.
+- [Bemora "no free API" traps](bemora-no-key-traps.md) — several once-free provider endpoints (Etherscan gasoracle v1, exchangerate.host) now require a paid key; verified no-key replacements found so far, check before reusing.

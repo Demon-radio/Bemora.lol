@@ -11,6 +11,7 @@ const SKIP = process.env.BEMORA_SKIP_INTEGRATION === 'true';
 const maybeDescribe = SKIP ? describe.skip : describe;
 
 let ip, countries, crypto, space, translate, food, social, location, utils, comics;
+let university, nutrition, disasters, blockchain, webtools, worldbank, smart;
 
 beforeAll(async () => {
   if (SKIP) return;
@@ -24,6 +25,13 @@ beforeAll(async () => {
   location  = await import('../../src/providers/location.js');
   utils     = await import('../../src/providers/utils.js');
   comics    = await import('../../src/providers/comics.js');
+  university = await import('../../src/providers/university.js');
+  nutrition   = await import('../../src/providers/nutrition.js');
+  disasters   = await import('../../src/providers/disasters.js');
+  blockchain  = await import('../../src/providers/blockchain.js');
+  webtools    = await import('../../src/providers/webtools.js');
+  worldbank   = await import('../../src/providers/worldbank.js');
+  smart       = await import('../../src/providers/smart.js');
 });
 
 // ---------------------------------------------------------------------------
@@ -190,5 +198,98 @@ maybeDescribe('XKCD (xkcd.com — no key)', { timeout: 15000 }, () => {
     expect(result.comic).toHaveProperty('img');
     expect(result.comic).toHaveProperty('num');
     expect(typeof result.comic.num).toBe('number');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Hipolabs Universities API — no key
+// ---------------------------------------------------------------------------
+maybeDescribe('Universities (Hipolabs — no key)', { timeout: 15000 }, () => {
+  it('finds universities in a country', async () => {
+    const result = await university.byCountry({ country: 'United States' });
+    expect(result).toHaveProperty('universities');
+    expect(Array.isArray(result.universities)).toBe(true);
+    expect(result.universities.length).toBeGreaterThan(0);
+    expect(result.universities[0]).toHaveProperty('name');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Open Food Facts — no key
+// ---------------------------------------------------------------------------
+maybeDescribe('Nutrition (Open Food Facts — no key)', { timeout: 15000 }, () => {
+  it('looks up a known barcode', async () => {
+    const result = await nutrition.byBarcode({ barcode: '3017620422003' });
+    expect(result).toHaveProperty('found', true);
+    expect(typeof result.name).toBe('string');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// NASA EONET — no key
+// ---------------------------------------------------------------------------
+maybeDescribe('Natural disasters (NASA EONET — no key)', { timeout: 15000 }, () => {
+  it('returns a list of active events', async () => {
+    const result = await disasters.activeEvents({ limit: 5 });
+    expect(result).toHaveProperty('events');
+    expect(Array.isArray(result.events)).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// blockchain.info / owlracle — no key
+// ---------------------------------------------------------------------------
+maybeDescribe('Blockchain (blockchain.info / owlracle — no key)', { timeout: 15000 }, () => {
+  it('returns bitcoin network stats', async () => {
+    const result = await blockchain.bitcoinStats();
+    expect(result).toHaveProperty('market_price_usd');
+    expect(typeof result.market_price_usd).toBe('number');
+  });
+
+  it('returns ethereum gas price tiers', async () => {
+    const result = await blockchain.ethGasPrice();
+    expect(result).toHaveProperty('provider', 'owlracle');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// microlink.io — no key
+// ---------------------------------------------------------------------------
+maybeDescribe('Webtools (microlink.io — no key)', { timeout: 15000 }, () => {
+  it('fetches page metadata for a public URL', async () => {
+    const result = await webtools.metadata({ url: 'https://example.com' });
+    expect(typeof result.title).toBe('string');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// World Bank Open Data — no key
+// ---------------------------------------------------------------------------
+maybeDescribe('World Bank (data.worldbank.org — no key)', { timeout: 15000 }, () => {
+  it('returns a population time series for a country', async () => {
+    const result = await worldbank.population({ country: 'US', limit: 3 });
+    expect(result).toHaveProperty('values');
+    expect(Array.isArray(result.values)).toBe(true);
+    expect(result.values.length).toBeGreaterThan(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Smart layer — bemora's cross-provider auto-failover (signature feature)
+// ---------------------------------------------------------------------------
+maybeDescribe('Smart auto-failover layer (bemora-only feature)', { timeout: 15000 }, () => {
+  it('returns weather via automatic provider fallback', async () => {
+    const result = await smart.weatherAnyProvider({ city: 'Cairo' });
+    expect(result).toHaveProperty('_provider');
+  });
+
+  it('returns currency rates via automatic provider fallback', async () => {
+    const result = await smart.currencyAnyProvider({ base: 'USD', symbols: ['EUR'] });
+    expect(result).toHaveProperty('_provider');
+  });
+
+  it('returns crypto price via automatic provider fallback', async () => {
+    const result = await smart.cryptoPriceAnyProvider({ id: 'bitcoin', symbol: 'BTC' });
+    expect(result).toHaveProperty('_provider');
   });
 });

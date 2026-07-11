@@ -42,7 +42,9 @@ Add bemora to **Cursor**, **Claude Desktop**, or **Windsurf** and your AI gets a
 Weather · Currency · News · Images · Football · Crypto · Gold · Research  
 Location · IP · Countries · Translation · Movies · Food · Space · Stocks  
 Music · Social · GitHub · Hacker News · AI (Groq + OpenAI) · Utils  
-Islamic (Quran, Azkar, Prayer) · Memes · Animals · Gaming
+Islamic (Quran, Azkar, Prayer) · Memes · Animals · Gaming  
+Universities · Nutrition (barcode lookup) · Natural Disasters · Blockchain (BTC/ETH) · Web Tools · World Bank Indicators  
+**Smart Layer ⭐ — automatic cross-provider failover, unique to bemora**
 
 </div>
 
@@ -142,6 +144,13 @@ console.log(`${weather.city}: ${weather.temperature}°C`);
 | `api.utils.color` | The Color API | Color info from HEX |
 | `api.research.wikipedia` | Wikipedia | Search + full article summaries |
 | `api.research.books` | Open Library | Book search |
+| `api.university` | Hipolabs | University search by name/country |
+| `api.nutrition` | Open Food Facts | Barcode lookup, nutrition grades, product search |
+| `api.disasters` | NASA EONET | Active wildfires, storms, floods, and other Earth events |
+| `api.blockchain` | blockchain.info / BlockCypher / Owlracle | BTC network stats, address balances, ETH gas price |
+| `api.webtools` | Google Favicons / thum.io / Microlink | Favicons, screenshots, link-preview metadata |
+| `api.worldbank` | World Bank Open Data | GDP, population, and other country indicators |
+| `api.smart` ⭐ | bemora (cross-provider) | Auto-failover across independent free providers — see below |
 
 ### 🔑 Providers with a free API key (sign up once, 2 minutes)
 
@@ -492,6 +501,32 @@ await api.search.web({ query: 'Cairo history', language: 'ar', limit: 5 });
 ---
 
 ## ⚡ Advanced Features
+
+### 🧠 Smart Layer — the feature a raw API list can't give you
+
+Copying entries out of a public API directory gets you one upstream per
+category, with one point of failure. `api.smart.*` is bemora's own
+cross-provider auto-failover layer: each call races/chains multiple
+**independent** free providers for the same category and falls back all the
+way to the last known-good cached value if every provider is down —
+completely transparent to the caller.
+
+```js
+// Tries OpenWeatherMap (if you configured a key) → wttr.in → cached reading.
+// You always get a result object back; you never have to write retry logic.
+const weather = await api.smart.weather({ city: 'Cairo' });
+console.log(weather._provider); // which provider actually answered
+
+// Tries frankfurter.app (ECB) → ExchangeRate-API (if keyed) → cached reading.
+const fx = await api.smart.currency({ base: 'USD', symbols: ['EUR'] });
+
+// Tries CoinGecko → Binance public ticker → cached reading.
+const btc = await api.smart.cryptoPrice({ id: 'bitcoin', symbol: 'BTC' });
+```
+
+Every `smart.*` response includes `_provider` (who actually answered) and, on
+a full outage, `_stale: true` (served from cache) instead of throwing — so a
+single upstream going down never becomes a caller-visible outage.
 
 ### Batch — run 10 calls in parallel, get 1 result object
 
