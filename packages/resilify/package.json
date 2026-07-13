@@ -1,0 +1,41 @@
+{
+  "name": "resilify",
+  "version": "0.1.0",
+  "description": "Wrap any async call (HTTP, DB, third-party SDK) with retries, a circuit breaker, and automatic multi-provider failover — in one function, zero config required.",
+  "main": "src/index.js",
+  "type": "module",
+  "types": "src/index.d.ts",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [
+    "resilience",
+    "circuit-breaker",
+    "retry",
+    "backoff",
+    "failover",
+    "fallback",
+    "fault-tolerance",
+    "http",
+    "api",
+    "reliability",
+    "rate-limit",
+    "microservices",
+    "typescript"
+  ],
+  "author": "",
+  "license": "MIT",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "devDependencies": {
+    "vitest": "^4.1.10"
+  }
+}

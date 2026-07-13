@@ -7,3 +7,4 @@
 - [Bemora workspace install quirk](bemora-workspace-install.md) — `bemora/` is deliberately excluded from the root pnpm-workspace.yaml; its own deps need `pnpm install --ignore-workspace` run inside `bemora/`.
 - [Bemora "no free API" traps](bemora-no-key-traps.md) — several once-free provider endpoints (Etherscan gasoracle v1, exchangerate.host) now require a paid key; verified no-key replacements found so far, check before reusing.
 - [Duplicate method/key shadowing in bemora](bemora-duplicate-method-shadowing.md) — a JS class/object literal with two same-named keys silently keeps only the last one; grep for dupes after bulk edits to index.js or provider-info.js.
+- [Bemora positioning decision](bemora-positioning-decision.md) — chose to extract a narrow `resilify` package (retry/circuit/failover for any API) over adding more breadth to the 100+-provider aggregator, for organic enterprise adoption.
