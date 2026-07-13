@@ -1108,7 +1108,6 @@ const PROVIDER_INFO = {
     "description": "Bemora's signature cross-provider auto-failover layer — never goes down because every category races multiple independent free providers with automatic fallback to stale cache",
     "requiresKey": false,
     "category": "meta",
-    "category": "meta",
     "methods": {
       "weather": "Call smart.weather({ city, units? }) — auto-failover: OpenWeatherMap (if keyed) -> wttr.in -> Open-Meteo -> stale cache",
       "news": "Call smart.news({ topic?, limit? }) — auto-failover: NewsAPI (if keyed) -> BBC/Al Jazeera/Google News RSS -> stale cache",

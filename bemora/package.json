@@ -170,7 +170,6 @@
       "optional": true
     }
   },
-  "optionalDependencies": {},
   "engines": {
     "node": ">=18.0.0"
   },
@@ -180,6 +179,7 @@
   },
   "homepage": "https://github.com/Demon-radio/Bemora.lol",
   "devDependencies": {
+    "@vitest/coverage-v8": "^4.1.10",
     "vitest": "^4.1.9"
   }
 }

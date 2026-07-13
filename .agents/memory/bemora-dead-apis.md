@@ -8,6 +8,8 @@ Found and fixed during a coverage-expansion pass (as of July 2026):
 - `src/providers/baseball.js` was referenced in `index.js` but the file didn't exist at all — silently broke the whole module (any import of index.js failed). Rebuilt using the free `statsapi.mlb.com/api/v1` endpoints (teams, schedule).
 - `hp-api.onrender.com` (Harry Potter API) returns `wand` as a nested `{wood, core, length}` object, not a flat string — many records also have legitimately empty/null wand or actor fields (non-canonical characters), which is real data, not a bug.
 - `animechan.xyz` / `animechan.io` are both dead (404). `api.le-systeme-solaire.net` now returns 401 without a key. `api.exchangerate.host` now requires a paid `access_key`; use `frankfurter.app` (ECB-backed, free, no key) for currency history instead.
+- `worldtimeapi.org` resets the TLS connection (unreliable/dead) — don't build new providers on it. The old `search.patentsview.org` domain fails DNS; PatentsView's current domain (`api.patentsview.org`) was not fully verified either — avoid until confirmed live.
+- MyMemory (`api.mymemory.translated.net`) rejects the literal string `'auto'` as a source language with a 200-status error payload (not an HTTP error) — its real auto-detect keyword is `'autodetect'`.
 
 **Why:** this library aggregates ~90 free third-party public APIs with no automated tests; provider breakage is silent until manually exercised.
 

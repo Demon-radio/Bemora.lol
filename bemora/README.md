@@ -16,6 +16,7 @@
 <li>This is an <strong>alpha release</strong> — not for mission‑critical use yet!</li>
 <li>Currently maintained by a single person (see "Contributing" if you want to help!)</li>
 <li>We're working on a third‑party security audit — stay tuned!</li>
+<li>327 unit tests + a live integration suite hit real free endpoints; core reliability modules (circuit breaker, retry, rate limiting, registry) are at ~90–100% line coverage. Provider wrapper modules (the 100+ thin API clients) are covered mainly by integration tests, not unit tests — see <a href="CHANGELOG.md">CHANGELOG.md</a> for the honest breakdown.</li>
 </ul>
 </div>
 
