@@ -16,6 +16,26 @@ const PROVIDERS = {
   goldapi: { url: 'https://www.goldapi.io/api/XAU/USD', authHeader: (key) => ({ 'x-access-token': key }), keyName: 'gold' },
   wikipedia: { url: 'https://en.wikipedia.org/api/rest_v1/page/summary/Test', headers: { 'User-Agent': 'bemora-npm-library (+https://github.com/Demon-radio/Bemora.lol)' } },
   openlibrary: { url: 'https://openlibrary.org/search.json', params: { q: 'test', limit: 1 } },
+
+  // No-key providers — unauthenticated public endpoints, checked for reachability only.
+  university: { url: 'http://universities.hipolabs.com/search', params: { name: 'oxford' } },
+  nutrition: { url: 'https://world.openfoodfacts.org/api/v2/product/737628064502.json' },
+  disasters: { url: 'https://eonet.gsfc.nasa.gov/api/v3/categories' },
+  blockchain: { url: 'https://api.blockchain.info/stats' },
+  worldbank: { url: 'https://api.worldbank.org/v2/country/us/indicator/NY.GDP.MKTP.CD', params: { format: 'json', per_page: 1 } },
+  webtools: { url: 'https://api.microlink.io', params: { url: 'https://example.com' } },
+  wttr: { url: 'https://wttr.in/London', params: { format: '3' } },
+  frankfurter: { url: 'https://api.frankfurter.app/latest' },
+  ip: { url: 'http://ip-api.com/json/8.8.8.8' },
+  nominatim: { url: 'https://nominatim.openstreetmap.org/search', params: { q: 'London', format: 'json', limit: 1 }, headers: { 'User-Agent': 'bemora-npm-library (+https://github.com/Demon-radio/Bemora.lol)' } },
+  mymemory: { url: 'https://api.mymemory.translated.net/get', params: { q: 'hello', langpair: 'en|fr' } },
+  'nager.date': { url: 'https://date.nager.at/api/v3/AvailableCountries' },
+  hackernews: { url: 'https://hacker-news.firebaseio.com/v0/topstories.json' },
+  xkcd: { url: 'https://xkcd.com/info.0.json' },
+  govspending: { url: 'https://api.usaspending.gov/api/v2/references/toptier_agencies/' },
+  wikidata: { url: 'https://www.wikidata.org/w/api.php', params: { action: 'wbsearchentities', search: 'test', language: 'en', format: 'json' } },
+  arxiv: { url: 'http://export.arxiv.org/api/query', params: { search_query: 'all:test', max_results: 1 } },
+  biodiversity: { url: 'https://api.gbif.org/v1/species/search', params: { q: 'Puma' } },
 };
 
 /**

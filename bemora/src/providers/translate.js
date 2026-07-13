@@ -10,12 +10,12 @@ const http = httpClient();
  *
  * @param {{ text: string, from: string, to: string, email?: string }} params
  * Language codes: 'en', 'ar', 'fr', 'de', 'es', 'it', 'zh', 'ja', 'pt', 'ru' ...
- * MyMemory has no real auto-detect source language — passing 'auto' (or
- * omitting `from`) is normalized to 'en' since the upstream API rejects the
- * literal string 'auto' with a 200-status error payload.
+ * MyMemory rejects the literal string 'auto' as a source language (returns a
+ * 200-status error payload, not an HTTP error) — its real auto-detect keyword
+ * is 'autodetect', so 'auto' (or omitting `from`) is normalized to that.
  */
 export async function translate({ text, from = 'auto', to, email }) {
-  const source = from === 'auto' ? 'en' : from;
+  const source = from === 'auto' ? 'autodetect' : from;
   const cacheKey = `translate:${source}:${to}:${text.slice(0, 50)}`;
   const cached = cache.get(cacheKey);
   if (cached) return { ...cached, _cached: true };
@@ -31,7 +31,7 @@ export async function translate({ text, from = 'auto', to, email }) {
     const result = {
       original: text,
       translated: data.responseData.translatedText,
-      from: source,
+      from: source === 'autodetect' ? (data.responseData.detectedLanguage || 'unknown') : source,
       to,
       quality: data.responseData.match,
       _cached: false,
@@ -63,14 +63,16 @@ export async function translateMany({ text, from = 'auto', targets }) {
 }
 
 /**
- * Detect language of text (using langdetect via MyMemory hint)
+ * Detect the language of a piece of text via MyMemory's 'autodetect' source
+ * language keyword (the literal string 'auto' is rejected by the upstream API).
  * @param {{ text: string }} params
  */
 export async function detectLanguage({ text }) {
   try {
     const { data } = await http.get('https://api.mymemory.translated.net/get', {
-      params: { q: text, langpair: 'auto|en' },
+      params: { q: text, langpair: 'autodetect|en' },
     });
+    if (data.responseStatus !== 200) throw new ValidationError(data.responseDetails, { provider: 'translate' });
     return {
       text,
       detected: data.responseData?.detectedLanguage || 'unknown',

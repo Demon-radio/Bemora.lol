@@ -274,6 +274,35 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     };
   }
 
+  if (name === 'bemora_list_categories') {
+    const counts = {};
+    Object.values(PROVIDER_INFO).forEach((info) => {
+      const cat = info.category || 'uncategorized';
+      counts[cat] = (counts[cat] || 0) + 1;
+    });
+    const categories = Object.keys(counts).sort().map((category) => ({ category, providerCount: counts[category] }));
+    return { content: [{ type: 'text', text: JSON.stringify({ categories, totalCategories: categories.length }, null, 2) }] };
+  }
+
+  if (name === 'bemora_providers_in_category') {
+    const category = args?.category;
+    if (!category) {
+      return { content: [{ type: 'text', text: 'Missing required argument: category' }], isError: true };
+    }
+    const providers = Object.entries(PROVIDER_INFO)
+      .filter(([, info]) => info.category === category)
+      .map(([name, info]) => ({
+        provider: name,
+        description: info.description,
+        requiresKey: !!info.requiresKey,
+        methods: Object.keys(info.methods),
+      }));
+    if (providers.length === 0) {
+      return { content: [{ type: 'text', text: `No providers found in category "${category}". Call bemora_list_categories to see valid categories.` }] };
+    }
+    return { content: [{ type: 'text', text: JSON.stringify({ category, providers }, null, 2) }] };
+  }
+
   // ── Provider tools ──────────────────────────────────────────────────────────
   try {
     const parts = name.split('_');

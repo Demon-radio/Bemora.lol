@@ -12,6 +12,7 @@ const maybeDescribe = SKIP ? describe.skip : describe;
 
 let ip, countries, crypto, space, translate, food, social, location, utils, comics;
 let university, nutrition, disasters, blockchain, webtools, worldbank, smart;
+let govspending, wikidata, arxiv, biodiversity;
 
 beforeAll(async () => {
   if (SKIP) return;
@@ -32,6 +33,10 @@ beforeAll(async () => {
   webtools    = await import('../../src/providers/webtools.js');
   worldbank   = await import('../../src/providers/worldbank.js');
   smart       = await import('../../src/providers/smart.js');
+  govspending  = await import('../../src/providers/govspending.js');
+  wikidata     = await import('../../src/providers/wikidata.js');
+  arxiv        = await import('../../src/providers/arxiv.js');
+  biodiversity = await import('../../src/providers/biodiversity.js');
 });
 
 // ---------------------------------------------------------------------------
@@ -291,5 +296,73 @@ maybeDescribe('Smart auto-failover layer (bemora-only feature)', { timeout: 1500
   it('returns crypto price via automatic provider fallback', async () => {
     const result = await smart.cryptoPriceAnyProvider({ id: 'bitcoin', symbol: 'BTC' });
     expect(result).toHaveProperty('_provider');
+  });
+
+  it('returns IP lookup via automatic provider fallback', async () => {
+    const result = await smart.ipAnyProvider({ ip: '8.8.8.8' });
+    expect(result).toHaveProperty('_provider');
+  });
+
+  it('returns a translation via automatic provider fallback', async () => {
+    const result = await smart.translateAnyProvider({ text: 'hello', to: 'fr' });
+    expect(result).toHaveProperty('_provider');
+  });
+
+  it('returns holidays via automatic provider fallback', async () => {
+    const result = await smart.holidaysAnyProvider({ country: 'US' });
+    expect(result).toHaveProperty('_provider');
+  });
+
+  it('aggregates weather across multiple providers', async () => {
+    const result = await smart.weatherAggregate({ city: 'Cairo' });
+    expect(result).toHaveProperty('temperature');
+    expect(Array.isArray(result._individual_values)).toBe(true);
+    expect(result._individual_values.length).toBeGreaterThan(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// US Government spending (USAspending.gov — no key)
+// ---------------------------------------------------------------------------
+maybeDescribe('Government spending (USAspending.gov — no key)', { timeout: 15000 }, () => {
+  it('searches award records by keyword', async () => {
+    const result = await govspending.searchAwards({ keyword: 'education', limit: 3 });
+    expect(Array.isArray(result.awards)).toBe(true);
+  });
+
+  it('returns top-tier agency spending totals', async () => {
+    const result = await govspending.agencySpending({ fiscalYear: 2023 });
+    expect(Array.isArray(result.agencies)).toBe(true);
+    expect(result.agencies.length).toBeGreaterThan(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Wikidata (no key)
+// ---------------------------------------------------------------------------
+maybeDescribe('Wikidata (wikidata.org — no key)', { timeout: 15000 }, () => {
+  it('searches entities by label', async () => {
+    const result = await wikidata.searchEntities({ query: 'Albert Einstein' });
+    expect(result.entities.length).toBeGreaterThan(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// arXiv (no key)
+// ---------------------------------------------------------------------------
+maybeDescribe('arXiv (export.arxiv.org — no key)', { timeout: 15000 }, () => {
+  it('searches papers by query', async () => {
+    const result = await arxiv.search({ query: 'quantum computing', maxResults: 3 });
+    expect(result.papers.length).toBeGreaterThan(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Biodiversity / GBIF (no key)
+// ---------------------------------------------------------------------------
+maybeDescribe('Biodiversity (GBIF — no key)', { timeout: 15000 }, () => {
+  it('searches species by name', async () => {
+    const result = await biodiversity.searchSpecies({ query: 'Puma concolor' });
+    expect(result.species.length).toBeGreaterThan(0);
   });
 });

@@ -18,10 +18,49 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   cached value if every provider is down, so a single upstream outage never
   becomes a caller-visible outage. Built on the existing `core/fallback.js`
   chain, which previously had only one real consumer.
+- `smart.ip`, `smart.translate`, `smart.holidays`, and `smart.weatherAggregate`
+  extend the auto-failover layer to IP geolocation, translation, and holidays,
+  plus a cross-provider consensus check that averages temperature across every
+  reachable weather provider.
+- Four more no-key provider namespaces: `api.govspending` (USAspending.gov federal
+  award/agency spending), `api.wikidata` (Wikidata entity search), `api.arxiv`
+  (arXiv paper search), and `api.biodiversity` (GBIF species/occurrence data).
+- `bemora_list_categories` and `bemora_providers_in_category` MCP tools — browse
+  the 100+ providers by category (weather, finance, research, government, ...)
+  instead of scanning the full flat tool list.
+- Every entry in the MCP provider catalog now carries a `category` field.
+- `core/health.js` now covers 18 additional no-key providers (university,
+  nutrition, disasters, blockchain, worldbank, webtools, wttr, frankfurter, ip,
+  nominatim, mymemory, nager.date, hackernews, xkcd, govspending, wikidata,
+  arxiv, biodiversity), so `api.health()` gives a real signal for the free tier,
+  not just keyed providers.
+- Integration tests for the four new provider modules and the four new smart
+  layer methods.
 
 ### Fixed
 - `public-apis.freeExchangeRates` now uses frankfurter.app instead of the
   now-paid `api.exchangerate.host` endpoint.
+- Removed a duplicate `_buildSmart()` method definition in `src/index.js` (and a
+  matching duplicate `"smart"` entry in `provider-info.js`) that silently
+  shadowed an earlier, richer implementation — only the last-defined method in
+  a JS class body survives, so half the smart layer's methods were dead code.
+- `translate()` and `detectLanguage()` no longer send the literal string
+  `'auto'` as MyMemory's source language (the API rejects it with a 200-status
+  error payload, not an HTTP error) — both now use MyMemory's real
+  auto-detect keyword `'autodetect'`, and `translate()`'s result reports the
+  actually-detected source language instead of echoing back `'auto'`.
+- `govspending.agencySpending()` was sending an invalid `sort` parameter to
+  USAspending's toptier-agencies endpoint (400 error) and mapping the wrong
+  response field names; both are now correct and verified against the live API.
+
+### Known limitations
+- Unit-test coverage thresholds (80% lines/functions/statements, 70% branches)
+  only apply to `src/core/**`. Several core modules — `audit.js`, `export.js`,
+  `openapi.js`, `pii.js`, `webhooks.js`, `monitor.js`, and the `core/signing/**`
+  helpers — currently have 0–20% unit coverage; they are exercised indirectly
+  through integration tests but do not yet have dedicated unit tests. This is
+  a known gap, not a regression — flagged here for transparency rather than
+  silently claimed as covered.
 
 ---
 
