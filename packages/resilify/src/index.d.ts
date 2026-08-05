@@ -109,3 +109,31 @@ export function resetRateLimit(opts?: { includeConfig?: boolean }): void;
 
 export class TimeoutError extends Error {}
 export function withTimeout<T>(fn: () => Promise<T>, ms?: number): Promise<T>;
+
+// ── Bulkhead ──────────────────────────────────────────────────────────────
+
+export class BulkheadError extends Error {}
+
+export interface BulkheadOptions {
+  /** Max simultaneous in-flight calls. Default: 10. */
+  concurrency?: number;
+  /** Max calls allowed to wait in queue; excess are rejected immediately. Default: Infinity. */
+  queue?: number;
+}
+
+export interface BulkheadStats {
+  active: number;
+  queued: number;
+  concurrency: number;
+  queueLimit: number;
+}
+
+export class Bulkhead {
+  constructor(opts?: BulkheadOptions);
+  /** Number of calls currently in flight. */
+  readonly active: number;
+  /** Number of calls waiting for a slot. */
+  readonly queued: number;
+  getStats(): BulkheadStats;
+  run<T>(fn: () => Promise<T>): Promise<T>;
+}

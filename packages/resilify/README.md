@@ -1,10 +1,17 @@
 # resilify
 
-**Wrap any async call — HTTP, a third-party SDK, a database query — with retries, a circuit breaker, and automatic multi-provider failover. One function. Zero config required.**
+**Production-grade resilience for any async call — retries, circuit breaker, bulkhead, rate limiting, and multi-provider failover. One function. Zero config required.**
 
 ```bash
 npm install resilify
 ```
+
+[![npm version](https://img.shields.io/npm/v/resilify?style=flat-square&color=6366f1)](https://www.npmjs.com/package/resilify)
+[![npm downloads](https://img.shields.io/npm/dm/resilify?style=flat-square&color=8b5cf6)](https://www.npmjs.com/package/resilify)
+[![license](https://img.shields.io/npm/l/resilify?style=flat-square&color=06b6d4)](LICENSE)
+[![node](https://img.shields.io/node/v/resilify?style=flat-square&color=10b981)](package.json)
+
+---
 
 ## The problem
 
@@ -24,7 +31,7 @@ while (attempts < 3) {
 }
 ```
 
-It doesn't back off correctly, doesn't stop hammering a service that's already down, doesn't know a `404` should never be retried, and doesn't have a plan B when the whole provider is unreachable.
+It doesn't back off correctly, doesn't stop hammering a service that's already down, doesn't know a `404` should never be retried, and doesn't have a plan B when the whole provider is unreachable. And it definitely doesn't protect your app from a slow dependency consuming all your threads.
 
 ## The fix
 
@@ -39,27 +46,52 @@ const rates = await resilient(() => axios.get('https://api.example.com/rates'), 
 ```
 
 That one call now:
-- Retries with exponential backoff — but only on errors worth retrying (timeouts, `429`, `5xx`); a `404` or `401` fails immediately, because retrying those just burns time.
-- Times out and aborts calls that hang.
-- Trips a circuit breaker after repeated failures, so a dead dependency fails fast instead of piling up timeouts under load — and automatically probes for recovery.
+- **Retries** with exponential backoff + jitter — but only on errors worth retrying (`429`, `5xx`, network timeouts); a `404` or `401` fails immediately.
+- **Times out** and aborts calls that hang.
+- **Trips a circuit breaker** after repeated failures, so a dead dependency fails fast instead of piling up timeouts under load — and automatically probes for recovery.
 
-## Failover across providers
+---
 
-When one provider isn't enough:
+## Features
+
+| Pattern | What it does |
+|---|---|
+| **Retry + backoff** | Exponential backoff with jitter, configurable status codes, AbortSignal support |
+| **Circuit breaker** | CLOSED → OPEN → HALF_OPEN state machine, per-key, auto-recovery probes |
+| **Bulkhead** | Caps concurrent calls to a dependency; queues or rejects excess immediately |
+| **Rate limiter** | Client-side outbound quota guard; throws `RateLimitError` before burning quota |
+| **Failover** | Sequential fallback across providers; stale-cache last resort |
+| **Aggregate** | Concurrent multi-source with `first` / `all` / `average` / `majority` / `median` |
+| **Timeout** | Per-call deadline with `TimeoutError` |
+
+---
+
+## Quick start
 
 ```js
-import { resilientFailover } from 'resilify';
+import { resilient, resilientFailover, Bulkhead } from 'resilify';
 
+// ── Single call ───────────────────────────────────────────────────────────
+const data = await resilient(() => fetch('https://api.example.com/data').then(r => r.json()), {
+  key: 'my-api',
+  timeout: 5000,
+  retries: 3,
+});
+
+// ── Failover across providers ─────────────────────────────────────────────
 const price = await resilientFailover([
   { name: 'coingecko', fn: () => coingecko.getPrice('bitcoin') },
-  { name: 'binance', fn: () => binance.getPrice('BTCUSDT') },
-  { name: 'kraken', fn: () => kraken.getPrice('XBTUSD') },
+  { name: 'binance',   fn: () => binance.getPrice('BTCUSDT') },
+  { name: 'kraken',    fn: () => kraken.getPrice('XBTUSD') },
 ]);
+console.log(price._source); // whichever provider actually answered
 
-console.log(price._source); // whichever one actually answered
+// ── Bulkhead: cap concurrent calls ────────────────────────────────────────
+const db = new Bulkhead({ concurrency: 5, queue: 20 });
+const result = await db.run(() => pool.query('SELECT ...'));
 ```
 
-Each source is retried and circuit-broken independently; the chain only moves to the next source once a candidate is truly exhausted. Pass a `cache` adapter (`{ get, set }`) and `cacheKey` to fall back to the last known-good value if every source fails.
+---
 
 ## API
 
@@ -67,39 +99,164 @@ Each source is retried and circuit-broken independently; the chain only moves to
 
 | option | default | description |
 |---|---|---|
-| `key` | `'default'` | identifies this call's circuit breaker / rate-limit bucket |
-| `timeout` | none | ms before the call is aborted |
-| `retries` | `3` | max retry attempts |
-| `baseDelay` / `maxDelay` | `300` / `5000` | exponential backoff bounds (ms) |
-| `retryOn` | `[408,429,500,502,503,504]` | status codes worth retrying |
+| `key` | `'default'` | identifies this call's circuit breaker bucket |
+| `timeout` | — | ms before the call is aborted with `TimeoutError` |
+| `retries` | `3` | max retry attempts (0 = no retries) |
+| `baseDelay` | `300` | base backoff delay in ms |
+| `maxDelay` | `5000` | max backoff delay in ms |
+| `retryOn` | `[408,429,500,502,503,504]` | HTTP status codes worth retrying |
+| `signal` | — | `AbortSignal` — aborts retries immediately when fired |
 | `circuitBreaker` | `true` | set `false` to disable the breaker for this call |
 | `circuitOptions` | — | `{ failureThreshold, successThreshold, openDuration }` |
 
 ### `resilientFailover(chain, opts?)`
 
-Same options as `resilient`, plus `cache` and `cacheKey` for stale-value fallback.
+Same options as `resilient`, plus:
 
-### Lower-level building blocks
+| option | description |
+|---|---|
+| `cache` | `{ get, set }` adapter — used for stale-value fallback when every source fails |
+| `cacheKey` | key passed to the cache adapter |
+| `onProviderError` | `(name, err) => void` — called each time a source fails |
 
-If you want to compose the pieces yourself rather than use `resilient()`:
+### `Bulkhead`
 
 ```js
-import { withRetry } from 'resilify';
-import { withCircuitBreaker, getBreaker, getAllBreakerStates } from 'resilify';
-import { failover, aggregate } from 'resilify';
-import { RateLimiter } from 'resilify';
+import { Bulkhead, BulkheadError } from 'resilify';
+// or: import { Bulkhead } from 'resilify/bulkhead';
+
+const payments = new Bulkhead({ concurrency: 5, queue: 20 });
+
+try {
+  const result = await payments.run(() => paymentsApi.charge(order));
+} catch (err) {
+  if (err instanceof BulkheadError) {
+    // Queue was full — request rejected before ever hitting the API
+  }
+}
+
+console.log(payments.active); // calls currently in flight
+console.log(payments.queued); // calls waiting for a slot
+console.log(payments.getStats()); // { active, queued, concurrency, queueLimit }
 ```
 
-- `withRetry(fn, opts)` — just the backoff logic.
-- `withCircuitBreaker(key, fn, opts)` / `getBreaker(key)` — just the breaker; `getBreaker(key).getState()` gives you a serializable snapshot for a health/status endpoint.
-- `failover(chain, opts)` — first-success-wins across sources, no retry/breaker wrapping.
-- `aggregate(sources, { strategy, field })` — call every source concurrently and combine by `'first' | 'majority' | 'average' | 'all'`.
-- `RateLimiter` — a small client-side budget tracker (protect your own outbound quota against a third party's rate limit).
+| option | default | description |
+|---|---|---|
+| `concurrency` | `10` | max simultaneous in-flight calls |
+| `queue` | `Infinity` | max calls allowed to wait; excess throw `BulkheadError` immediately |
 
-## Why not just use `axios-retry` / `opossum` / `p-retry`?
+### `aggregate(sources, opts?)`
 
-Those each solve one slice of this (retry-only, breaker-only). `resilify` composes retry + timeout + circuit breaker + multi-provider failover behind one call, with zero dependencies, so you're not hand-wiring three libraries together and hoping their defaults agree with each other.
+Concurrent multi-source combinator.
+
+```js
+import { aggregate } from 'resilify';
+
+const result = await aggregate([
+  { name: 'provider-a', fn: () => a.getPrice() },
+  { name: 'provider-b', fn: () => b.getPrice() },
+  { name: 'provider-c', fn: () => c.getPrice() },
+], { strategy: 'median', field: 'price' });
+```
+
+| strategy | description |
+|---|---|
+| `'first'` | first source to resolve wins |
+| `'all'` | returns all results and failures |
+| `'average'` | numeric average of `field` across sources |
+| `'majority'` | most frequently occurring value of `field` (mode) |
+| `'median'` | median value of `field` — robust to outliers |
+
+### Low-level building blocks
+
+All are exported individually and available as subpath imports:
+
+```js
+import { withRetry }             from 'resilify/retry';
+import { CircuitBreaker,
+         withCircuitBreaker,
+         CircuitOpenError }      from 'resilify/circuit';
+import { RateLimiter,
+         RateLimitError }        from 'resilify/ratelimit';
+import { failover, aggregate }   from 'resilify/fallback';
+import { Bulkhead, BulkheadError } from 'resilify/bulkhead';
+```
+
+#### `withRetry(fn, opts?)`
+```js
+import { withRetry } from 'resilify/retry';
+
+const result = await withRetry(() => fetch(url), {
+  retries: 3,
+  baseDelay: 300,
+  maxDelay: 5000,
+  retryOn: [429, 500, 502, 503, 504],
+  signal: abortController.signal, // abort mid-sleep instantly
+});
+```
+
+#### `CircuitBreaker` (low-level)
+```js
+import { getBreaker, CircuitOpenError } from 'resilify/circuit';
+
+const breaker = getBreaker('payments-api', { failureThreshold: 5, openDuration: 60_000 });
+// States: CLOSED → OPEN → HALF_OPEN → CLOSED
+breaker.forceOpen();  // maintenance window
+breaker.forceClose(); // after confirmed fix
+```
+
+#### `RateLimiter`
+```js
+import { RateLimiter, RateLimitError } from 'resilify/ratelimit';
+
+const limiter = new RateLimiter();
+limiter.configure('openai', { limit: 60, window: 'minute' });
+
+try {
+  limiter.record('openai');     // throws RateLimitError if over budget
+  await callOpenAI();
+} catch (err) {
+  if (err instanceof RateLimitError) {
+    console.log(`Hit quota for ${err.key}: ${err.limit}/${err.window}`);
+  }
+}
+```
+
+---
+
+## Error types
+
+| Class | When thrown |
+|---|---|
+| `TimeoutError` | Call exceeded the configured `timeout` |
+| `CircuitOpenError` | Circuit is OPEN — call rejected without hitting the function |
+| `BulkheadError` | Bulkhead queue is full — call rejected immediately |
+| `RateLimitError` | Client-side rate budget exhausted |
+
+All error classes are exported from the main entry point and catchable with `instanceof`.
+
+---
+
+## TypeScript
+
+Full TypeScript support — types ship with the package, no `@types/*` needed.
+
+```ts
+import { resilient, Bulkhead, ResilientOptions, BulkheadOptions } from 'resilify';
+
+const opts: ResilientOptions = { key: 'my-api', timeout: 5000 };
+const bh = new Bulkhead({ concurrency: 3 });
+```
+
+---
+
+## Requirements
+
+- Node.js ≥ 18
+- Zero runtime dependencies
+
+---
 
 ## License
 
-MIT
+MIT © [Demon-radio](https://github.com/Demon-radio)

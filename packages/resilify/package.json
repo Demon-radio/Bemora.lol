@@ -1,7 +1,7 @@
 {
   "name": "resilify",
-  "version": "0.1.0",
-  "description": "Wrap any async call (HTTP, DB, third-party SDK) with retries, a circuit breaker, and automatic multi-provider failover — in one function, zero config required.",
+  "version": "0.2.0",
+  "description": "Production-grade resilience for any async call — retries with exponential backoff, circuit breaker, bulkhead, rate limiting, and multi-provider failover in one zero-config library.",
   "main": "src/index.js",
   "type": "module",
   "types": "src/index.d.ts",
@@ -21,6 +21,9 @@
     },
     "./fallback": {
       "default": "./src/fallback.js"
+    },
+    "./bulkhead": {
+      "default": "./src/bulkhead.js"
     }
   },
   "scripts": {
@@ -31,18 +34,41 @@
     "resilience",
     "circuit-breaker",
     "retry",
+    "exponential-backoff",
     "backoff",
+    "jitter",
     "failover",
     "fallback",
     "fault-tolerance",
+    "bulkhead",
+    "concurrency",
+    "rate-limit",
+    "rate-limiter",
+    "timeout",
+    "abort",
     "http",
     "api",
     "reliability",
-    "rate-limit",
     "microservices",
-    "typescript"
+    "distributed-systems",
+    "typescript",
+    "zero-config",
+    "enterprise",
+    "production",
+    "ai-agent",
+    "llm",
+    "sdk"
   ],
-  "author": "",
+  "author": {
+    "name": "Demon-radio",
+    "url": "https://github.com/Demon-radio"
+  },
+  "contributors": [
+    {
+      "name": "Mostafa",
+      "url": "https://github.com/Demon-radio"
+    }
+  ],
   "license": "MIT",
   "sideEffects": false,
   "engines": {
@@ -53,6 +79,14 @@
     "README.md",
     "LICENSE"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Demon-radio/Bemora.lol"
+  },
+  "bugs": {
+    "url": "https://github.com/Demon-radio/Bemora.lol/issues"
+  },
+  "homepage": "https://github.com/Demon-radio/Bemora.lol#readme",
   "devDependencies": {
     "vitest": "^4.1.10"
   }
