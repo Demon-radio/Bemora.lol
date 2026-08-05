@@ -5,6 +5,24 @@
   "main": "src/index.js",
   "type": "module",
   "types": "src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    },
+    "./circuit": {
+      "default": "./src/circuit.js"
+    },
+    "./retry": {
+      "default": "./src/retry.js"
+    },
+    "./ratelimit": {
+      "default": "./src/ratelimit.js"
+    },
+    "./fallback": {
+      "default": "./src/fallback.js"
+    }
+  },
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest"

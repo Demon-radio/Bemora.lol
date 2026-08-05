@@ -37,7 +37,14 @@ export function failover(chain: FailoverSource[], opts?: FailoverOptions): Promi
 export function resilientFailover(chain: FailoverSource[], opts?: ResilientOptions & FailoverOptions): Promise<any>;
 
 export interface AggregateOptions {
-  strategy?: 'first' | 'majority' | 'average' | 'all';
+  /**
+   * - `'first'`    — return the first successful result.
+   * - `'all'`      — return all results and failures.
+   * - `'average'`  — numeric average of `field` across all sources.
+   * - `'majority'` — most frequently occurring value of `field` (mode).
+   * - `'median'`   — median value of `field` across all sources.
+   */
+  strategy?: 'first' | 'majority' | 'average' | 'all' | 'median';
   field?: string;
 }
 export function aggregate(sources: FailoverSource[], opts?: AggregateOptions): Promise<any>;
@@ -69,19 +76,36 @@ export function resetBreaker(key: string): void;
 export function resetAllBreakers(): void;
 export function getAllBreakerStates(): Record<string, any>[];
 
+export interface RateLimitStatus {
+  key: string;
+  used: number;
+  /** `null` when the key has no configured budget. */
+  limit: number | null;
+  window: string;
+  configured: boolean;
+  warning: boolean;
+}
+
+export class RateLimitError extends Error {
+  key: string;
+  limit: number;
+  window: string;
+}
+
 export class RateLimiter {
   configure(key: string, opts: { limit: number; window?: 'second' | 'minute' | 'hour' | 'day' | 'month' }): void;
   isLimited(key: string): boolean;
   record(key: string): void;
-  getStatus(key: string): { used: number; limit: number; window: string; warning: boolean };
-  reset(): void;
+  getStatus(key: string): RateLimitStatus;
+  /** Clear usage. Pass `{ includeConfig: true }` to also wipe configured budgets. */
+  reset(opts?: { includeConfig?: boolean }): void;
 }
 
 export function configureRateLimit(key: string, opts: { limit: number; window?: string }): void;
 export function isLimited(key: string): boolean;
 export function recordRateLimit(key: string): void;
-export function getRateLimitStatus(key: string): { used: number; limit: number; window: string; warning: boolean };
-export function resetRateLimit(): void;
+export function getRateLimitStatus(key: string): RateLimitStatus;
+export function resetRateLimit(opts?: { includeConfig?: boolean }): void;
 
 export class TimeoutError extends Error {}
 export function withTimeout<T>(fn: () => Promise<T>, ms?: number): Promise<T>;

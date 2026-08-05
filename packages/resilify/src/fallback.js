@@ -93,15 +93,32 @@ export async function aggregate(sources, { strategy = 'first', field } = {}) {
   }
 
   if (strategy === 'majority' && field) {
+    // Majority = the value that appears most often (mode).
+    // For numeric consensus across providers, use strategy 'median' instead.
     const values = successes.map((s) => s.data[field]);
-    const sorted = [...values].sort();
-    const median = sorted[Math.floor(sorted.length / 2)];
+    const freq = new Map();
+    for (const v of values) freq.set(v, (freq.get(v) ?? 0) + 1);
+    const mode = [...freq.entries()].reduce((a, b) => (b[1] >= a[1] ? b : a))[0];
     return {
-      [field]: median,
+      [field]: mode,
       _sources: successes.map((s) => s.name),
       _individualValues: successes.map((s) => ({ source: s.name, value: s.data[field] })),
       failures,
       strategy: 'majority',
+    };
+  }
+
+  if (strategy === 'median' && field) {
+    const values = successes.map((s) => parseFloat(s.data[field])).filter((v) => !isNaN(v));
+    const sorted = [...values].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    const median = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+    return {
+      [field]: parseFloat(median.toFixed(4)),
+      _sources: successes.map((s) => s.name),
+      _individualValues: successes.map((s) => ({ source: s.name, value: s.data[field] })),
+      failures,
+      strategy: 'median',
     };
   }
 

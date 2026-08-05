@@ -41,7 +41,20 @@ export async function withRetry(fn, { retries = 3, baseDelay = 300, maxDelay = 5
       lastError = err;
       if (signal?.aborted || attempt === retries || !isRetryable(err, retryOn)) break;
       const delay = Math.min(baseDelay * 2 ** attempt + Math.random() * 100, maxDelay);
-      await new Promise((r) => setTimeout(r, delay));
+      // If the signal fires mid-sleep, abort immediately instead of waiting out the full delay.
+      await new Promise((resolve, reject) => {
+        const timer = setTimeout(resolve, delay);
+        if (signal) {
+          signal.addEventListener(
+            'abort',
+            () => {
+              clearTimeout(timer);
+              reject(signal.reason instanceof Error ? signal.reason : new Error('Aborted'));
+            },
+            { once: true },
+          );
+        }
+      });
     }
   }
   throw lastError;

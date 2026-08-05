@@ -169,6 +169,14 @@ const breakers = new Map();
 export function getBreaker(key, opts) {
   if (!breakers.has(key)) {
     breakers.set(key, new CircuitBreaker(key, opts ?? {}));
+  } else if (opts && Object.keys(opts).length > 0) {
+    // The breaker for this key already exists; the supplied opts are ignored.
+    // This is a no-op by design — the first caller's configuration wins.
+    // If you need a different config, call resetBreaker(key) first.
+    console.warn(
+      `[resilify] getBreaker("${key}"): a breaker for this key already exists — opts ignored. ` +
+        `Call resetBreaker("${key}") first if you need a different configuration.`,
+    );
   }
   return breakers.get(key);
 }

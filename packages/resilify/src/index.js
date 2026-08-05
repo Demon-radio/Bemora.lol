@@ -1,7 +1,7 @@
 import { withRetry } from './retry.js';
 import { withCircuitBreaker, getBreaker, resetBreaker, resetAllBreakers, getAllBreakerStates, CircuitOpenError, CircuitBreaker } from './circuit.js';
 import { failover, aggregate } from './fallback.js';
-import { RateLimiter, configure as configureRateLimit, isLimited, record as recordRateLimit, getStatus as getRateLimitStatus, reset as resetRateLimit } from './ratelimit.js';
+import { RateLimiter, RateLimitError, configure as configureRateLimit, isLimited, record as recordRateLimit, getStatus as getRateLimitStatus, reset as resetRateLimit } from './ratelimit.js';
 
 export class TimeoutError extends Error {
   constructor(ms) {
@@ -96,6 +96,7 @@ export {
   failover,
   aggregate,
   RateLimiter,
+  RateLimitError,
   configureRateLimit,
   isLimited,
   recordRateLimit,
