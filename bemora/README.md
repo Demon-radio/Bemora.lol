@@ -43,7 +43,7 @@ Add bemora to **Cursor**, **Claude Desktop**, or **Windsurf** and your AI gets a
 Weather · Currency · News · Images · Football · Crypto · Gold · Research  
 Location · IP · Countries · Translation · Movies · Food · Space · Stocks  
 Music · Social · GitHub · Hacker News · AI (Groq + OpenAI) · Utils  
-Islamic (Quran, Azkar, Prayer) · Memes · Animals · Gaming  
+Islamic (Quran, Azkar, Prayer) · Animals · Gaming  
 Universities · Nutrition (barcode lookup) · Natural Disasters · Blockchain (BTC/ETH) · Web Tools · World Bank Indicators  
 **Smart Layer ⭐ — automatic cross-provider failover, unique to bemora**
 
@@ -340,7 +340,7 @@ await api.movies.tv({ query: 'Breaking Bad' });
 <summary><strong>🍕 Food & Recipes</strong></summary>
 
 ```js
-await api.food.search({ name: 'Shawarma' });
+await api.food.search({ name: 'Shawarma' }); // alias for searchMeals (preferred)
 await api.food.random();
 await api.food.byCategory({ category: 'Chicken' });
 await api.food.categories();
@@ -574,7 +574,16 @@ const myPlugin = {
 
 api.use(myPlugin);
 await api.prayerTimes.today({ city: 'Cairo' });
+
+// Shorthand: a bare install function also works (name from fn.pluginName,
+// the function name, or opts.name):
+async function prayerTimes(api) {
+  api.prayerTimes = { async today({ city }) { /* ... */ } };
+}
+api.use(prayerTimes);
 ```
+
+Full contract (`use(plugin, opts?)`, hooks, error rules): `docs/plugins.md`. Complete example: `examples/plugins/prayer-times.js`.
 
 ### Health Check
 
@@ -829,7 +838,7 @@ Add bemora to your AI editor — the AI gets **100+ tools** natively!
 ✅ **Response trimming** to save context
 ✅ **Clear tool descriptions** so AI knows when to use which
 ✅ **Smart fallback tools** (no key needed!)
-✅ **All new providers** (Islamic, gaming, memes, animals, space, etc.)
+✅ **All new providers** (Islamic, gaming, animals, space, etc.)
 
 
 ---
@@ -840,14 +849,14 @@ Add bemora to your AI editor — the AI gets **100+ tools** natively!
 npm install -g bemora
 
 bemora weather Cairo
+bemora forecast Cairo
 bemora convert 500 USD EGP
+bemora rates USD
 bemora crypto bitcoin ethereum
-bemora gold --currency EGP
 bemora news eg --category technology
-bemora images "pyramids egypt"
-bemora football --date 2026-07-10
 bemora wikipedia "النيل" --lang ar
 bemora books "arabic literature"
+bemora utils uuid
 ```
 
 ---
@@ -875,6 +884,8 @@ api.use(prayerPlugin);
 await api.prayerTimes.today({ city: 'Cairo' });
 // → { Fajr: '03:47', Dhuhr: '12:07', Asr: '15:37', Maghrib: '18:58', Isha: '20:28' }
 ```
+
+Both forms work: `{ name, install, ...hooks }` objects and bare `install(api)` functions. See "Plugin System" above and `docs/plugins.md`.
 
 Publish your plugin as `bemora-plugin-<name>` on npm.
 
@@ -998,12 +1009,12 @@ These namespaces are new in the enterprise fork (no upstream equivalent):
 | `api.payments.stripe` / `.paypal` | Charges, subscriptions, refunds, webhook verify |
 | `api.email.sendgrid` / `.ses` / `.resend` | Transactional email + batch + webhook verify |
 | `api.sms.twilio` | Send, lookup, webhook verify |
-| `api.auth.clerk` / `.auth0` / `.jwt` | Session verify, user management, JWT helpers |
+| `api.auth.clerk` / `api.auth.auth0` + `api.jwt` | Session verify, user management, JWT sign/verify helpers |
 | `api.storage.s3` / `.r2` / `.gcs` | Presigned URLs, upload, download, delete |
 | `api.ai.anthropic` / `api.ai.anthropicStream` etc. | Anthropic, Gemini, Cohere, Mistral, Together, Perplexity with streaming — merged into the existing `api.ai` namespace |
 | `api.vectordb.*` | Pinecone, Qdrant, Weaviate, pgvector — upsert, query, delete |
 | `api.webhooks` | Unified verify + inbound router for Stripe, Twilio, GitHub, Clerk, Resend |
-| `api.observability.*` | Sentry, OpenTelemetry auto-span |
+| `api.sentry` + `api.otel` | Sentry error capture, OpenTelemetry auto-span |
 | `api.security.*` | HIBP, VirusTotal, Safe Browsing, URLScan |
 | `api.cloudflare.*` | DNS, R2, Cache, Workers |
 | `api.costs.snapshot()` | Per-provider / per-tenant LLM cost tracking |

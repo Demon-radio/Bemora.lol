@@ -1,0 +1,23 @@
+name: Feature request
+description: Propose an improvement to bemora core
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed API
+      description: Show the call signature you want, e.g. bemora.weather.current({ city })
+      render: javascript
+    validations:
+      required: true
+  - type: textarea
+    id: compat
+    attributes:
+      label: Backward compatibility
+      description: Does this change or rename any existing API? If so, what deprecation path do you propose?

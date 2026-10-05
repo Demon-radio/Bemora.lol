@@ -341,15 +341,6 @@ const PROVIDER_INFO = {
       "search": "Call lyrics.search method"
     }
   },
-  "memes": {
-    "description": "Memes API provider",
-    "requiresKey": false,
-    "category": "entertainment",
-    "methods": {
-      "random": "Call memes.random method",
-      "fromSubreddit": "Call memes.fromSubreddit method"
-    }
-  },
   "math": {
     "description": "Math API provider",
     "requiresKey": false,
@@ -357,14 +348,6 @@ const PROVIDER_INFO = {
     "methods": {
       "evaluate": "Call math.evaluate method",
       "randomFact": "Call math.randomFact method"
-    }
-  },
-  "zodiac": {
-    "description": "Zodiac API provider",
-    "requiresKey": false,
-    "category": "entertainment",
-    "methods": {
-      "horoscope": "Call zodiac.horoscope method"
     }
   },
   "jobs": {
@@ -528,41 +511,6 @@ const PROVIDER_INFO = {
       "time": "Call military.time method"
     }
   },
-  "advice": {
-    "description": "Advice API provider",
-    "requiresKey": false,
-    "category": "entertainment",
-    "methods": {
-      "random": "Call advice.random method",
-      "search": "Call advice.search method"
-    }
-  },
-  "dadjokes": {
-    "description": "Dadjokes API provider",
-    "requiresKey": false,
-    "category": "entertainment",
-    "methods": {
-      "random": "Call dadjokes.random method",
-      "search": "Call dadjokes.search method"
-    }
-  },
-  "kanye": {
-    "description": "Kanye API provider",
-    "requiresKey": false,
-    "category": "entertainment",
-    "methods": {
-      "random": "Call kanye.random method"
-    }
-  },
-  "randomuser": {
-    "description": "Randomuser API provider",
-    "requiresKey": false,
-    "category": "developer",
-    "methods": {
-      "single": "Call randomuser.single method",
-      "many": "Call randomuser.many method"
-    }
-  },
   "thesaurus": {
     "description": "Thesaurus API provider",
     "requiresKey": false,
@@ -690,52 +638,6 @@ const PROVIDER_INFO = {
       "issPosition": "Call spaceExtended.issPosition method"
     }
   },
-  "pokemon": {
-    "description": "Pokemon API provider",
-    "requiresKey": false,
-    "category": "entertainment",
-    "methods": {
-      "get": "Call pokemon.get method",
-      "ability": "Call pokemon.ability method",
-      "species": "Call pokemon.species method",
-      "random": "Call pokemon.random method"
-    }
-  },
-  "rickmorty": {
-    "description": "Rickmorty API provider",
-    "requiresKey": false,
-    "category": "entertainment",
-    "methods": {
-      "character": "Call rickmorty.character method",
-      "search": "Call rickmorty.search method",
-      "location": "Call rickmorty.location method",
-      "episode": "Call rickmorty.episode method",
-      "random": "Call rickmorty.random method"
-    }
-  },
-  "starwars": {
-    "description": "Starwars API provider",
-    "requiresKey": false,
-    "category": "entertainment",
-    "methods": {
-      "person": "Call starwars.person method",
-      "people": "Call starwars.people method",
-      "planet": "Call starwars.planet method",
-      "starship": "Call starwars.starship method",
-      "film": "Call starwars.film method"
-    }
-  },
-  "harrypotter": {
-    "description": "Harrypotter API provider",
-    "requiresKey": false,
-    "category": "entertainment",
-    "methods": {
-      "characters": "Call harrypotter.characters method",
-      "students": "Call harrypotter.students method",
-      "staff": "Call harrypotter.staff method",
-      "random": "Call harrypotter.random method"
-    }
-  },
   "covid": {
     "description": "Covid API provider",
     "requiresKey": false,
@@ -803,24 +705,6 @@ const PROVIDER_INFO = {
       "search": "Call brewery.search method",
       "random": "Call brewery.random method",
       "getById": "Call brewery.getById method"
-    }
-  },
-  "chucknorris": {
-    "description": "Chucknorris API provider",
-    "requiresKey": false,
-    "category": "entertainment",
-    "methods": {
-      "random": "Call chucknorris.random method",
-      "categories": "Call chucknorris.categories method",
-      "search": "Call chucknorris.search method"
-    }
-  },
-  "bored": {
-    "description": "Bored API provider",
-    "requiresKey": false,
-    "category": "entertainment",
-    "methods": {
-      "activity": "Call bored.activity method"
     }
   },
   "sportsdb": {
@@ -948,25 +832,6 @@ const PROVIDER_INFO = {
       "news": "Call anime.news method",
       "quote": "Call anime.quote method",
       "quotesByCharacter": "Call anime.quotesByCharacter method"
-    }
-  },
-  "fun": {
-    "description": "Fun API provider",
-    "requiresKey": false,
-    "category": "entertainment",
-    "methods": {
-      "joke": "Call fun.joke method",
-      "jokes": "Call fun.jokes method",
-      "catFact": "Call fun.catFact method",
-      "catFacts": "Call fun.catFacts method",
-      "catImage": "Call fun.catImage method",
-      "dogImage": "Call fun.dogImage method",
-      "dogBreeds": "Call fun.dogBreeds method",
-      "numberFact": "Call fun.numberFact method",
-      "uselessFact": "Call fun.uselessFact method",
-      "fakeUser": "Call fun.fakeUser method",
-      "affirmation": "Call fun.affirmation method",
-      "advice": "Call fun.advice method"
     }
   },
   "flights": {
@@ -1123,7 +988,6 @@ const PROVIDER_INFO = {
     "description": "US federal government spending data (USAspending.gov) — no key",
     "requiresKey": false,
     "category": "government",
-    "category": "government",
     "methods": {
       "searchAwards": "Call govspending.searchAwards({ keyword?, startDate?, endDate?, limit? }) — search federal contract/grant awards",
       "agencySpending": "Call govspending.agencySpending({ fiscalYear? }) — top-level agency spending totals"
@@ -1132,7 +996,6 @@ const PROVIDER_INFO = {
   "wikidata": {
     "description": "Wikidata structured knowledge graph — no key",
     "requiresKey": false,
-    "category": "research",
     "category": "research",
     "methods": {
       "search": "Call wikidata.search({ query, language?, limit? }) — search entities by label",
@@ -1143,7 +1006,6 @@ const PROVIDER_INFO = {
     "description": "Academic paper search (arXiv) — no key",
     "requiresKey": false,
     "category": "research",
-    "category": "research",
     "methods": {
       "search": "Call arxiv.search({ query, maxResults? }) — search papers, returns title/authors/summary/pdf link"
     }
@@ -1151,7 +1013,6 @@ const PROVIDER_INFO = {
   "biodiversity": {
     "description": "Species and occurrence data (GBIF) — no key",
     "requiresKey": false,
-    "category": "science",
     "category": "science",
     "methods": {
       "searchSpecies": "Call biodiversity.searchSpecies({ query, limit? }) — search the GBIF taxonomic backbone",

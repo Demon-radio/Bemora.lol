@@ -5,9 +5,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
-## [Unreleased]
+## [1.0.0-alpha.4] — 2026-10-05
 
 ### Added
+
+- `docs/` (14 pages: getting-started through api-reference) plus `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `ROADMAP.md`, GitHub issue templates (bug/feature/provider/plugin) and PR template.
+- Working `pnpm run lint` (node --check, 221 files), `pnpm run typecheck` (tsc --noEmit), `pnpm run format` / `format:check` (prettier); CI now runs lint + typecheck + unit + integration + audit on Node 18/20/22 via pnpm, with a root `.github/workflows/ci.yml` (GitHub only reads workflows from the repo root).
+- `examples/plugins/prayer-times.js` (complete working plugin, verified live) and `examples/gaming-crossfire.js` (CrossFire wiki usage, verified live).
+- `package.json`: `files`, `bugs`, `publishConfig.access`, `./package.json` export, `@types/node` + `prettier` + `typescript` devDeps.
+- Backward-compat aliases (preferred names documented): `food.search` → `searchMeals`, `weatheralerts.active` → `usAlerts`, `smart.crypto` → `cryptoPrice` (with `{ coin }` → `{ id }` normalization).
+- Unified plugin contract: `use(plugin, opts?)` and `loadPlugin()` now accept the object form `{ name, install, ...hooks }` and the function form (bare `install(api)`, name from `fn.pluginName` / function name / `opts.name`); `PluginSystem` and `normalizePlugin` exported from the package root with types (`BemoraPluginFn`, `UsePluginOpts`); contract tests in `tests/unit/plugin-contracts.test.js` (15 tests).
+- MCP catalog integrity tests in `tests/unit/mcp-catalog.test.js` (6 tests: no stale names, method resolution, enterprise exclusion locked, tool-name charset, key metadata, no duplicate keys).
 - Six new no-key provider namespaces: `api.university` (Hipolabs), `api.nutrition`
   (Open Food Facts), `api.disasters` (NASA EONET), `api.blockchain`
   (blockchain.info / BlockCypher / Owlracle), `api.webtools` (favicon/screenshot/
@@ -38,6 +46,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   layer methods.
 
 ### Fixed
+
 - `public-apis.freeExchangeRates` now uses frankfurter.app instead of the
   now-paid `api.exchangerate.host` endpoint.
 - Removed a duplicate `_buildSmart()` method definition in `src/index.js` (and a
@@ -52,8 +61,16 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `govspending.agencySpending()` was sending an invalid `sort` parameter to
   USAspending's toptier-agencies endpoint (400 error) and mapping the wrong
   response field names; both are now correct and verified against the live API.
+- CLI `--version` and MCP server version are now read from `package.json` (were hardcoded `1.4.0` / `4.0.0`, drifting from the real `1.0.0-alpha.3`).
+- Removed 13 fictional MCP catalog entries (`pokemon`, `rickmorty`, `starwars`, `harrypotter`, `chucknorris`, `bored`, `kanye`, `dadjokes`, `advice`, `randomuser`, `fun`, `memes`, `zodiac`) for providers pruned in `1.0.0-alpha.1` but still advertised; removed 4 duplicate `"category"` keys. `examples/with-mcp.js` tool names corrected to `<provider>_<method>`.
+- `SECURITY.md` supported-versions table corrected (`4.x` → `1.x`).
+- Root `.gitignore` now ignores `.env` (it previously didn't — a local `.env` with real tokens was untracked but unignored).
+- README accuracy pass (both repo-root and package READMEs): removed all references to pruned providers from tables, examples, feature lists, and the project-structure tree; replaced the fictional CLI commands (`gold`, `images`, `football`) with real ones; corrected `api.observability.*` → `api.sentry` + `api.otel` and `api.auth.jwt` → `api.jwt`; `docs/cli.md` command syntax fixed (`rates USD`, `utils uuid`, `forecast` without `--units`); `docs/providers.md` now lists all 107 namespaces (added `translate`, `food`, `search`, `university`).
+- Fixed the `loadPlugin()` function-vs-object contract mismatch: `use()`/`loadPlugin()` accept both forms (see Added).
+- `examples/zero-key-demo.js` now calls `smart.cryptoPrice({ id })` (preferred name; the old `smart.crypto({ coin })` shape keeps working via alias).
 
 ### Known limitations
+
 - Unit-test coverage thresholds (80% lines/functions/statements, 70% branches)
   only apply to `src/core/**`. Several core modules — `audit.js`, `export.js`,
   `openapi.js`, `pii.js`, `webhooks.js`, `monitor.js`, and the `core/signing/**`
@@ -61,12 +78,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   through integration tests but do not yet have dedicated unit tests. This is
   a known gap, not a regression — flagged here for transparency rather than
   silently claimed as covered.
+- Prettier `format:check` reports pre-existing deviations across legacy files;
+  only changed files were formatted in this pass to keep the diff reviewable.
+  Full-tree formatting is tracked in `ROADMAP.md`.
+- MCP catalog intentionally excludes the 15 enterprise namespaces (`payments`,
+  `email`, `sms`, `auth`, `jwt`, `storage`, `vectordb`, `sentry`,
+  `notifications`, `maps`, `searchEnt`, `calendar`, `captcha`, `security`,
+  `cloudflare`) until authorization guardrails exist; locked by
+  `tests/unit/mcp-catalog.test.js`. Most catalog tools still use the generic
+  input schema — per-tool schemas exist for ~19 providers (see `ROADMAP.md`).
 
 ---
 
 ## [1.0.0-alpha.3] — 2026-07-10
 
 ### Fixed
+
 - Fixed npm dist‑tag chaos (latest now points to 3.6.0 stable; alpha releases tagged `next`)
 - Toned down "enterprise‑grade" claim while in alpha
 - Added transparency note in README about single maintainer, alpha status, and upcoming security audit
@@ -96,34 +123,41 @@ with a major version reset to 1.0.0-alpha.1.
 ### Added — Enterprise Providers
 
 **Payments**
+
 - `api.payments.stripe` — createCharge, createPaymentIntent, createCustomer, createSubscription, createRefund, verifyWebhook
 - `api.payments.paypal` — createOrder, captureOrder, refundCapture (OAuth2 token caching)
 
 **Email**
+
 - `api.email.sendgrid` — send, batch, stats, getSuppressions, verifyWebhook
 - `api.email.ses` — send, sendTemplated, getStats (AWS SigV4 signed)
 - `api.email.resend` — send, batch, getEmail, cancelEmail, listDomains, verifyWebhook
 
 **SMS**
+
 - `api.sms.twilio` — send, lookup, listMessages, verifyWebhook
 
 **Auth**
+
 - `api.auth.clerk` — getUser, listUsers, getUserCount, verifySession, revokeSession, createUser, deleteUser
 - `api.auth.auth0` — getUser, listUsers, getUserInfo, verifyToken (JWKS), blockUser
 - `api.jwt` — sign, verify, decode, refresh, generateSecret (pure Node crypto, zero deps)
 
 **Object Storage**
+
 - `api.storage.s3` — presignedGetUrl, presignedPutUrl, upload, download, deleteObject, list
 - `api.storage.r2` — same API as S3 targeting Cloudflare R2
 - `api.storage.gcs` — HMAC-signed presigned URLs, upload, download, deleteObject, list
 
 **Vector Databases**
+
 - `api.vectordb.pinecone` — upsert, query, deleteVectors, fetch, listIndexes, describeIndex
 - `api.vectordb.qdrant` — upsert, query, deletePoints, getPoints, createCollection, listCollections
 - `api.vectordb.weaviate` — upsert, query, deleteObjects, getSchema, createClass
 - `api.vectordb.pgvector` — createTable, upsert, query, deleteVectors, getById, count
 
 **AI — additional providers**
+
 - `api.ai.anthropic` / `api.ai.anthropicStream` — Claude messages + async iterator streaming
 - `api.ai.gemini` / `api.ai.geminiStream` / `api.ai.geminiEmbed` — Gemini 1.5 Flash/Pro
 - `api.ai.cohere` / `api.ai.cohereStream` / `api.ai.cohereEmbed` / `api.ai.cohereRerank`
@@ -132,38 +166,46 @@ with a major version reset to 1.0.0-alpha.1.
 - `api.ai.perplexity` / `api.ai.perplexityStream` — real-time web-grounded answers
 
 **Observability**
+
 - `api.sentry` — captureException, captureMessage, captureEvent (HTTP envelope API, no SDK dep)
 - `api.otel` — wireOtel(), withSpan() (auto-spans via event bus; no-op if @opentelemetry/api absent)
 
 **Notifications**
+
 - `api.notifications.onesignal` — send, cancel, getNotification, addDevice
 - `api.notifications.pusher` — trigger, authenticateChannel, getChannel (HMAC signed)
 - `api.notifications.fcm` — send, sendMulticast (FCM HTTP v1 API)
 
 **Maps**
+
 - `api.maps.google` — geocode, reverseGeocode, directions, distanceMatrix, staticMap, searchPlaces
 - `api.maps.mapbox` — geocode, reverseGeocode, directions, staticMap, isochrone
 
 **Search**
+
 - `api.searchEnt.algolia` — search, addObjects, updateObject, deleteObject, saveObjects, listIndexes
 - `api.searchEnt.meilisearch` — search, addDocuments, updateDocuments, deleteDocuments, createIndex
 
 **Calendar**
+
 - `api.calendar.google` — listCalendars, listEvents, createEvent, updateEvent, deleteEvent, freeBusy
 - `api.calendar.calendly` — getUser, listEventTypes, listEvents, getEvent, cancelEvent, listInvitees
 
 **CAPTCHA**
+
 - `api.captcha.recaptcha` — server-side verify (v2/v3 with score threshold)
 - `api.captcha.hcaptcha` — server-side verify
 - `api.captcha.turnstile` — Cloudflare Turnstile server-side verify
 
 **Security**
+
 - `api.security.hibp` — checkPassword (k-anonymity, no key), checkEmail, getAllBreaches, getBreach
 - `api.security.virustotal` — scanUrl, getUrlReport, getAnalysis, getFileReport, getIpReport
 - `api.security.safebrowsing` — checkUrls, checkUrl (Google Safe Browsing v4)
 - `api.security.urlscan` — scan, getResult, search
 
 **Cloudflare**
+
 - `api.cloudflare.dns` — listZones, listRecords, createRecord, updateRecord, deleteRecord, purgeCache
 - `api.cloudflare.r2` — listBuckets, createBucket, getBucket, deleteBucket, getBucketCors, setBucketCors
 - `api.cloudflare.cache` — purgeFiles, purgeTags, purgePrefixes, purgeAll, getSettings, setCacheLevel
@@ -176,7 +218,7 @@ with a major version reset to 1.0.0-alpha.1.
 - `api.webhooks` — `WebhookRouter` class with `on()`, `route()`, `verify()` and provider dispatch for Stripe, GitHub, Clerk, Twilio, Resend, SendGrid
 - `api.costs` — `snapshot()`, `snapshotForTenant()`, `record()` backed by `core/costs.js` with pricing tables for 8 AI providers
 - `api.helpers` — `paginate`, `paginateStream`, `gql`, `gqlTag`, `upload` utilities
-- `api.withTenant()` — alias for `forTenant()` 
+- `api.withTenant()` — alias for `forTenant()`
 - `api.keys.rotate(name, value)` — alias for `setKey()`
 - `core/signing/awsSigV4.js` — AWS SigV4 signed headers + presigned URL generation
 - `core/signing/hmac.js` — generic HMAC sign/verify with constant-time comparison

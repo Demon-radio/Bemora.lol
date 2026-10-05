@@ -18,7 +18,9 @@ console.log('══════════════════════�
 // ─────────────────────────────────────────────
 console.log('🌤  Smart Weather (no key needed)...');
 const weather = await api.smart.weather({ city: 'Cairo' });
-console.log(`   ${weather._provider}: ${weather.temperature_c || weather.temperature}°C — ${weather.description || weather.condition}`);
+console.log(
+  `   ${weather._provider}: ${weather.temperature_c || weather.temperature}°C — ${weather.description || weather.condition}`
+);
 
 // ─────────────────────────────────────────────
 // 2. FREE WEATHER — Open-Meteo (100% free, no key)
@@ -81,7 +83,7 @@ console.log(`   Source used: ${smartNews._provider}`);
 // 8. SMART CRYPTO — CoinGecko → Binance fallback
 // ─────────────────────────────────────────────
 console.log('\n🔄  Smart Crypto (CoinGecko → Binance fallback)...');
-const smartBTC = await api.smart.crypto({ coin: 'bitcoin' });
+const smartBTC = await api.smart.cryptoPrice({ id: 'bitcoin' });
 console.log(`   Source: ${smartBTC._provider}`);
 
 // ─────────────────────────────────────────────
@@ -93,7 +95,10 @@ let count = 0;
 await new Promise((resolve) => {
   stream.on('price', (data) => {
     console.log(`   [live] ${data.symbol}: $${data.price.toLocaleString()} (${data.change_24h}%)`);
-    if (++count >= 5) { stream.close(); resolve(); }
+    if (++count >= 5) {
+      stream.close();
+      resolve();
+    }
   });
 });
 
@@ -121,7 +126,10 @@ const exported = await api.export.exportAll({
   name: 'crypto-prices',
   formats: ['json', 'csv', 'html'],
 });
-console.log('   Exported:', exported.exported.map((e) => e.path));
+console.log(
+  '   Exported:',
+  exported.exported.map((e) => e.path)
+);
 
 // ─────────────────────────────────────────────
 // 12. ALWAYS-FREE APIs

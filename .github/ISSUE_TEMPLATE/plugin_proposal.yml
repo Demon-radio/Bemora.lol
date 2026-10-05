@@ -1,0 +1,25 @@
+name: Plugin proposal
+description: Propose or share a bemora-plugin-* package
+labels: [plugin]
+body:
+  - type: input
+    id: name
+    attributes:
+      label: Plugin package name
+      description: Must follow the bemora-plugin-* convention
+      placeholder: bemora-plugin-prayer-times
+    validations:
+      required: true
+  - type: textarea
+    id: api
+    attributes:
+      label: What namespace does it add?
+      description: e.g. api.prayerTimes.today({ city })
+      render: javascript
+    validations:
+      required: true
+  - type: textarea
+    id: lifecycle
+    attributes:
+      label: Lifecycle hooks used?
+      description: beforeRequest / afterResponse / onError — or install() only?

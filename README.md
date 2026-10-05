@@ -16,8 +16,8 @@
 
 Weather · Currency · News · Images · Football · Crypto (+ Coin Wizard) · Gold · Research  
 Location · IP · Countries · Translation · Movies · Food · Space · Stocks  
-Music · Social · GitHub · Hacker News · AI (Groq + OpenAI) · Pokémon · Star Wars  
-Rick and Morty · Harry Potter · COVID-19 · Earthquakes · Air Quality · Astronomy  
+Music · Social · GitHub · Hacker News · AI (Groq + OpenAI + Anthropic + Gemini & more) · Utils  
+Islamic (Quran, Azkar, Prayer) · Animals · COVID-19 · Earthquakes · Air Quality · Astronomy  
 **Gaming: CrossFire (Fandom Wiki) · Fortnite · League of Legends · Minecraft · Chess.com**  
 Postal Codes · Breweries · Sports · Domain Lookup · Utils · and 65+ more
 
@@ -60,7 +60,6 @@ await api.social.githubTrending();
 await api.food.random();
 await api.utils.define({ word: 'serendipity' });
 await api.coinWizard.info({ id: 'bitcoin' });
-await api.pokemon.get({ name: 'pikachu' });
 ```
 
 ---
@@ -119,10 +118,6 @@ console.log(`${weather.city}: ${weather.temperature}°C`);
 | `api.research.wikipedia` | Wikipedia | Search + full article summaries |
 | `api.research.books` | Open Library | Book search |
 | `api.coinWizard` | CoinGecko | Deep crypto: charts, OHLC, global stats, gainers/losers, converter |
-| `api.pokemon` | PokéAPI | Pokémon stats, abilities, types, moves |
-| `api.rickmorty` | Rick and Morty API | Characters, episodes, locations |
-| `api.starwars` | SWAPI | People, planets, starships, films |
-| `api.harrypotter` | HP API | Characters, houses, wands, patronuses |
 | `api.covid` | disease.sh | Global + per-country COVID-19 stats |
 | `api.earthquake` | USGS | Recent earthquakes by magnitude/region |
 | `api.airquality` | Open-Meteo | Real-time air quality (AQI, PM2.5, PM10) |
@@ -130,8 +125,6 @@ console.log(`${weather.city}: ${weather.temperature}°C`);
 | `api.postal` | Zippopotam.us | Postal/zip code → city, state, coordinates |
 | `api.predict` | Agify/Genderize/Nationalize | Predict age, gender, nationality from a name |
 | `api.brewery` | Open Brewery DB | Search breweries by city, state, type |
-| `api.chucknorris` | Chuck Norris API | Random Chuck Norris jokes |
-| `api.bored` | Bored API + fallback | Random activity suggestions |
 | `api.sportsdb` | TheSportsDB | Search teams, players, events |
 | `api.baseball` | MLB Stats API | MLB teams, schedules, scores |
 | `api.hockey` | NHL API | NHL standings, player lookup |
@@ -143,12 +136,10 @@ console.log(`${weather.city}: ${weather.temperature}°C`);
 | `api.gaming` (LoL) | Riot Data Dragon | Champions, lore, stats, abilities |
 | `api.gaming` (Minecraft) | Mojang / Crafatar / mcsrvstat.us | Player skins, server status |
 | `api.gaming` (Chess) | Chess.com + Lichess | Player profile/stats, daily puzzle |
-| `api.advice` | Advice Slip API | Random life advice, advice search |
-| `api.dadjokes` | icanhazdadjoke | Random + searchable dad jokes |
-| `api.kanye` | kanye.rest | Random Kanye West quotes |
-| `api.randomuser` | randomuser.me | Fake user profiles for testing/demos |
 | `api.thesaurus` | Datamuse | Synonyms, antonyms, rhymes, word suggestions |
 | `api.currencyHistory` | Frankfurter (ECB) | Latest/historical/time-series FX rates |
+
+> **Removed in `1.0.0-alpha.1`** (attack-surface reduction): `api.pokemon`, `api.rickmorty`, `api.starwars`, `api.harrypotter`, `api.chucknorris`, `api.bored`, `api.kanye`, `api.dadjokes`, `api.advice`, `api.randomuser`, `api.fun`, `api.memes`, `api.zodiac`. They are also gone from the MCP catalog.
 
 ### 🔑 Providers with a free API key (sign up once, 2 minutes)
 
@@ -534,34 +525,20 @@ await api.search.web({ query: 'Cairo history', language: 'ar', limit: 5 });
 </details>
 
 <details>
-<summary><strong>🎮 Fun & Pop Culture</strong></summary>
+<summary><strong>🎲 Light utilities & language</strong></summary>
 
 ```js
-// Pokémon (no key)
-await api.pokemon.get({ name: 'pikachu' });
+// Thesaurus: synonyms, antonyms, rhymes (no key)
+await api.thesaurus.synonyms({ word: 'happy' });
 
-// Rick and Morty (no key)
-await api.rickmorty.random();
-await api.rickmorty.character({ id: 1 });
-
-// Star Wars (no key)
-await api.starwars.person({ id: 1 });
-await api.starwars.planet({ id: 1 });
-
-// Harry Potter (no key)
-await api.harrypotter.random();
-await api.harrypotter.getCharacters({ house: 'gryffindor' });
-
-// Chuck Norris jokes + Bored activity suggestions (no key)
-await api.chucknorris.random();
-await api.bored.activity();
-
-// Kanye West quotes + dad jokes + life advice (no key)
-await api.kanye.random();
-await api.dadjokes.random();
-await api.advice.random();
+// Trivia, quotes, dictionary (no key)
+await api.utils.trivia({ amount: 5 });
+await api.utils.quote({ tag: 'technology' });
+await api.utils.define({ word: 'ephemeral' });
 ```
 </details>
+
+> Fun/pop-culture providers (`pokemon`, `rickmorty`, `starwars`, `harrypotter`, `chucknorris`, `bored`, `kanye`, `dadjokes`, `advice`, `randomuser`, `fun`, `memes`, `zodiac`) were removed in `1.0.0-alpha.1` to reduce attack surface and bundle size.
 
 <details open>
 <summary><strong>🎮 Gaming Suite</strong></summary>
@@ -622,7 +599,7 @@ await api.astronomy.sunriseSunset({ lat: 36.7, lon: -119.7 });
 // Postal / zip code lookup (no key)
 await api.postal.lookup({ country: 'us', postalCode: '90210' });
 
-// Active US weather alerts (no key)
+// Active US weather alerts (no key; `active` is an alias for `usAlerts`)
 await api.weatheralerts.active({ state: 'CA' });
 
 // Nearby breweries (no key)
@@ -789,14 +766,14 @@ Add bemora to your AI editor — the AI can call all 94+ APIs natively:
 npm install -g bemora
 
 bemora weather Cairo
+bemora forecast Cairo
 bemora convert 500 USD EGP
+bemora rates USD
 bemora crypto bitcoin ethereum
-bemora gold --currency EGP
 bemora news eg --category technology
-bemora images "pyramids egypt"
-bemora football --date 2026-07-10
 bemora wikipedia "النيل" --lang ar
 bemora books "arabic literature"
+bemora utils uuid
 ```
 
 ---
@@ -837,68 +814,46 @@ bemora/
 │   ├── index.js              ← Main class
 │   ├── cli.js                ← CLI tool
 │   ├── core/
-│   │   ├── cache.js          ← Auto caching
-│   │   ├── retry.js          ← Exponential backoff
-│   │   ├── dedup.js          ← Request deduplication
-│   │   ├── events.js         ← Event system
-│   │   ├── health.js         ← Provider health checks
-│   │   ├── ratelimit.js      ← Rate limit tracker
-│   │   ├── batch.js          ← Parallel batch runner
-│   │   ├── stale.js          ← Stale-while-revalidate
-│   │   └── plugins.js        ← Plugin system
-│   ├── providers/
-│   │   ├── weather.js        ← OpenWeatherMap
-│   │   ├── currency.js       ← ExchangeRate-API
-│   │   ├── news.js           ← NewsAPI
-│   │   ├── images.js         ← Unsplash + Pexels
-│   │   ├── football.js       ← API-Football
-│   │   ├── crypto.js         ← CoinGecko
-│   │   ├── gold.js           ← GoldAPI
-│   │   ├── research.js       ← Wikipedia + Open Library
-│   │   ├── location.js       ← OpenStreetMap/Nominatim
-│   │   ├── ip.js             ← ip-api.com
-│   │   ├── countries.js      ← restcountries.com
-│   │   ├── translate.js      ← MyMemory
-│   │   ├── movies.js         ← TMDB
-│   │   ├── food.js           ← TheMealDB
-│   │   ├── space.js          ← NASA + ISS
-│   │   ├── stocks.js         ← Alpha Vantage
-│   │   ├── music.js          ← MusicBrainz + iTunes
-│   │   ├── social.js         ← GitHub + HN + Product Hunt
-│   │   ├── ai.js             ← Groq + OpenAI
-│   │   ├── search.js         ← DuckDuckGo + Wikipedia
-│   │   ├── utils.js          ← QR + timezone + holidays + quotes + dictionary + trivia + colors
-│   │   ├── enriched.js       ← Weather + AQI + UV (merged)
-│   │   ├── combined.js       ← Market snapshot + News digest (merged)
-│   │   ├── coinwizard.js     ← CoinGecko deep crypto toolkit
-│   │   ├── pokemon.js        ← PokéAPI
-│   │   ├── rickmorty.js      ← Rick and Morty API
-│   │   ├── starwars.js       ← SWAPI
-│   │   ├── harrypotter.js    ← HP API
-│   │   ├── covid.js          ← disease.sh
-│   │   ├── earthquake.js     ← USGS
-│   │   ├── airquality.js     ← Open-Meteo
-│   │   ├── astronomy.js      ← Sunrise-Sunset.org
-│   │   ├── postal.js         ← Zippopotam.us
-│   │   ├── predict.js        ← Agify/Genderize/Nationalize
-│   │   ├── brewery.js        ← Open Brewery DB
-│   │   ├── sportsdb.js       ← TheSportsDB
-│   │   ├── baseball.js       ← MLB Stats API
-│   │   ├── hockey.js         ← NHL API
-│   │   ├── gaming.js         ← CrossFire (Fandom Wiki) + Fortnite + LoL + Minecraft + Chess
-│   │   ├── advice.js         ← Advice Slip API
-│   │   ├── dadjokes.js       ← icanhazdadjoke
-│   │   ├── kanye.js          ← kanye.rest
-│   │   ├── randomuser.js     ← randomuser.me
-│   │   ├── thesaurus.js      ← Datamuse
-│   │   ├── currencyhistory.js ← Frankfurter (ECB)
-│   │   └── ... 70+ more providers
+│   │   ├── cache.js / cache-redis.js ← Caching (+ Redis adapter)
+│   │   ├── retry.js / circuit.js / ratelimit.js / fallback.js ← Resilience
+│   │   ├── dedup.js / stale.js / batch.js ← Dedup, SWR, parallel batch
+│   │   ├── errors.js / validate.js / pii.js ← Errors, zod validation, redaction
+│   │   ├── events.js / middleware.js / interceptors.js / plugins.js ← Extensibility
+│   │   ├── health.js / registry.js / metrics.js / monitor.js ← Observability
+│   │   ├── webhooks.js / costs.js / paginate.js / gql.js / upload.js ← Platform
+│   │   ├── openapi.js / export.js / logger.js / http.js / headers.js ← Platform
+│   ├── providers/        ← 100+ provider modules (weather, currency, news,
+│   │   │                   images, football, crypto, gold, research, location,
+│   │   │                   ip, countries, translate, movies, food, space, stocks,
+│   │   │                   music, social, ai (+ anthropic/gemini/cohere/mistral/
+│   │   │                   together/perplexity), search, utils, gaming (CrossFire
+│   │   │                   Fandom Wiki + Fortnite + LoL + Minecraft + Chess),
+│   │   │                   covid, earthquake, airquality, astronomy, postal,
+│   │   │                   predict, brewery, sportsdb, baseball, hockey, domain,
+│   │   │                   placeholder, weatheralerts, coinwizard, university,
+│   │   │                   nutrition, disasters, blockchain, webtools, worldbank,
+│   │   │                   smart (cross-provider failover), enriched, combined,
+│   │   │                   free, rss, realtime, prayer, anime, flights, art, dev,
+│   │   │                   podcasts, medical, fandom, spotify, stackexchange,
+│   │   │                   steam, animals, books, lyrics, math, jobs, science,
+│   │   │                   basketball, vehicles, pets, drinks, geography, comics,
+│   │   │                   tv, finance, literature, wildlife, politics, language,
+│   │   │                   law, military, thesaurus, currencyhistory, markdown,
+│   │   │                   techdb, websites, fakedb, religion, islamic,
+│   │   │                   space-extended, govspending, wikidata, arxiv,
+│   │   │                   biodiversity + payments/email/sms/auth/storage/
+│   │   │                   vectordb/observability/notifications/maps/search/
+│   │   │                   calendar/captcha/security/cloudflare enterprise dirs.
+│   │   │                   Fun providers (pokemon, rickmorty, starwars,
+│   │   │                   harrypotter, chucknorris, bored, kanye, dadjokes,
+│   │   │                   advice, randomuser, fun, memes, zodiac) were removed
+│   │   │                   in 1.0.0-alpha.1 — see CHANGELOG.)
 │   ├── mcp-server/index.js   ← MCP for Cursor/Claude
 │   └── types/index.d.ts      ← TypeScript definitions
 ├── examples/
-│   ├── basic-usage.js
-│   ├── advanced-features.js
-│   └── with-mcp.js
+│   ├── basic-usage.js / advanced-features.js / zero-key-demo.js
+│   ├── agent-power.js / with-mcp.js / gaming-crossfire.js
+│   ├── plugins/prayer-times.js  ← complete example plugin
 ├── .env.example
 └── package.json
 ```

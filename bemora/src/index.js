@@ -197,6 +197,7 @@ export { setAdapter } from './core/cache.js';
 export * as registry from './core/registry.js';
 export { Interceptors } from './core/interceptors.js';
 export { MiddlewareChain } from './core/middleware.js';
+export { PluginSystem, normalizePlugin } from './core/plugins.js';
 export { validateResponse, schemas as validationSchemas } from './core/validate.js';
 export { generateOpenAPISpec } from './core/openapi.js';
 
@@ -448,7 +449,12 @@ export class Bemora {
     };
   }
 
-  use(plugin)  { this._plugins.use(plugin, this); return this; }
+  /**
+   * Register a plugin. Accepts the object form `{ name, install, ...hooks }`
+   * or a bare `install(api)` function (name from `fn.pluginName`, the
+   * function name, or `opts.name`). Chainable.
+   */
+  use(plugin, opts)  { this._plugins.use(plugin, this, opts); return this; }
   plugins()    { return this._plugins.list(); }
   on(ev, fn)   { this._events.on(ev, fn); return this; }
   off(ev, fn)  { this._events.off(ev, fn); return this; }
@@ -511,8 +517,9 @@ export class Bemora {
 
   /**
    * Dynamically load a `bemora-plugin-*` package and register it via use().
-   * Convention: the package must default-export (or named-export `plugin`) a
-   * function of the shape (bemoraInstance) => void | Promise<void>.
+   * Convention: the package must default-export (or named-export `plugin`)
+   * either a plugin object `{ name, install, ...hooks }` or a bare
+   * `install(api)` function (see PluginSystem).
    * @param {string} name - npm package name, e.g. 'bemora-plugin-redis-cache'
    */
   async loadPlugin(name) {
@@ -521,8 +528,8 @@ export class Bemora {
     }
     const mod = await import(name);
     const plugin = mod.plugin || mod.default;
-    if (typeof plugin !== 'function') {
-      throw new ConfigurationError(`[bemora] Plugin "${name}" does not export a default or named "plugin" function.`, { provider: name });
+    if (typeof plugin !== 'function' && !(plugin && typeof plugin === 'object')) {
+      throw new ConfigurationError(`[bemora] Plugin "${name}" must export a plugin object ({ name, install }) or an install(api) function as its default or named "plugin" export.`, { provider: name });
     }
     return this.use(plugin);
   }
@@ -734,7 +741,7 @@ export class Bemora {
   _buildMovies() { return { search: this._wrap('tmdb', (p) => movies.searchMovies(p, this._require('movies', 'movies'))), details: this._wrap('tmdb', (p) => movies.getMovie(p, this._require('movies', 'movies'))), trending: this._wrap('tmdb', (p) => movies.getTrending(p, this._require('movies', 'movies'))), tv: this._wrap('tmdb', (p) => movies.searchTV(p, this._require('movies', 'movies'))) }; }
 
   _buildFood() { 
-    return {
+    const methods = {
       searchMeals: this._wrap('themealdb', (p) => food.searchMeals(p), 'food.search'),
       getRandomMeal: this._wrap('themealdb', () => food.getRandomMeal(), 'food.random'),
       random: this._wrap('themealdb', () => food.getRandomMeal(), 'food.random'),
@@ -745,7 +752,11 @@ export class Bemora {
       getSpoonacularRecipe: this._wrap('spoonacular', (p) => food.getSpoonacularRecipe({ ...p, apiKey: this._require('spoonacular', 'spoonacular') })),
       searchEdamam: this._wrap('edamam', (p) => food.searchEdamam({ ...p, appId: this._require('edamamAppId', 'edamam app ID'), appKey: this._require('edamamAppKey', 'edamam app key') })),
       analyzeEdamam: this._wrap('edamam', (p) => food.analyzeEdamam({ ...p, appId: this._require('edamamAppId', 'edamam app ID'), appKey: this._require('edamamAppKey', 'edamam app key') })),
-    }; 
+    };
+    // Backward-compat alias: docs historically used food.search().
+    // Preferred name is searchMeals.
+    methods.search = methods.searchMeals;
+    return methods;
   }
 
   _buildSpace() { return { apod: this._wrap('nasa', (p) => space.getAPOD(p, this._require('nasa', 'nasa'))), mars: this._wrap('nasa', (p) => space.getMarsPhotos(p, this._require('nasa', 'nasa'))), asteroids: this._wrap('nasa', (p) => space.getNearEarthObjects(p, this._require('nasa', 'nasa'))), issPosition: this._wrap('iss', () => space.getISSPosition(), 'space.iss') }; }
@@ -939,7 +950,16 @@ export class Bemora {
   _buildSportsDB() { return { searchTeam: this._wrap('thesportsdb', (p) => sportsdb.searchTeam(p)), searchPlayer: this._wrap('thesportsdb', (p) => sportsdb.searchPlayer(p)), leagueEvents: this._wrap('thesportsdb', (p) => sportsdb.getLeagueEvents(p)), leagues: this._wrap('thesportsdb', (p) => sportsdb.listLeagues(p)) }; }
   _buildDomain() { return { whois: this._wrap('rdap', (p) => domain.whois(p)), dnsRecords: this._wrap('dns', (p) => domain.dnsRecords(p)), resolveIp: this._wrap('dns', (p) => domain.resolveIp(p)) }; }
   _buildPlaceholder() { return { image: placeholder.placeholderImage, picsum: placeholder.picsumImage, avatar: placeholder.avatarUrl, dicebear: placeholder.dicebearAvatar }; }
-  _buildWeatherAlerts() { return { usAlerts: this._wrap('weather.gov', (p) => weatheralerts.getUSAlerts(p)), pointForecast: this._wrap('weather.gov', (p) => weatheralerts.getPointForecast(p)) }; }
+  _buildWeatherAlerts() {
+    const methods = {
+      usAlerts: this._wrap('weather.gov', (p) => weatheralerts.getUSAlerts(p)),
+      pointForecast: this._wrap('weather.gov', (p) => weatheralerts.getPointForecast(p)),
+    };
+    // Backward-compat alias: docs historically used weatheralerts.active({ state }).
+    // Preferred name is usAlerts.
+    methods.active = methods.usAlerts;
+    return methods;
+  }
   _buildCoinWizard() {
     return {
       info: this._wrap('coingecko', (p) => coinwizard.coinInfo(p)),
@@ -994,7 +1014,7 @@ export class Bemora {
     };
   }
   _buildSmart() {
-    return {
+    const methods = {
       weather: this._wrap('smart-weather', (p) => smart.weatherAnyProvider(p, this._keys.weather)),
       news: this._wrap('smart-news', (p) => smart.newsAnyProvider(p, this._keys.news)),
       currency: this._wrap('smart-currency', (p) => smart.currencyAnyProvider(p, this._keys.currency)),
@@ -1004,6 +1024,11 @@ export class Bemora {
       holidays: this._wrap('smart-holidays', (p) => smart.holidaysAnyProvider(p)),
       weatherAggregate: this._wrap('smart-weather-aggregate', (p) => smart.weatherAggregate(p, this._keys.weather)),
     };
+    // Backward-compat alias: some examples used smart.crypto().
+    // Preferred name is cryptoPrice. Normalizes { coin } → { id }.
+    const cryptoPrice = methods.cryptoPrice;
+    methods.crypto = (p = {}) => cryptoPrice({ id: p.id ?? p.coin, symbol: p.symbol, currency: p.currency });
+    return methods;
   }
   _buildGovSpending() {
     return {

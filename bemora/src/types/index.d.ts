@@ -102,7 +102,11 @@ export interface UploadOptions {
   signal?: AbortSignal;
 }
 
-export declare function upload(url: string, file: Buffer | Uint8Array | string, opts?: UploadOptions): Promise<UploadResult>;
+export declare function upload(
+  url: string,
+  file: Buffer | Uint8Array | string,
+  opts?: UploadOptions
+): Promise<UploadResult>;
 export declare function uploadPresignedPost(params: {
   url: string;
   fields?: Record<string, string>;
@@ -185,7 +189,10 @@ export interface CostSnapshot {
   totalUsd: number;
   byProvider: Record<string, { inputTokens: number; outputTokens: number; requests: number; costUsd: number }>;
   byModel: Record<string, { inputTokens: number; outputTokens: number; requests: number; costUsd: number }>;
-  byTenant: Record<string, Record<string, { inputTokens: number; outputTokens: number; requests: number; costUsd: number }>>;
+  byTenant: Record<
+    string,
+    Record<string, { inputTokens: number; outputTokens: number; requests: number; costUsd: number }>
+  >;
   eventCount: number;
 }
 
@@ -198,23 +205,64 @@ export declare function recordCost(params: {
   requestId?: string;
 }): CostEntry;
 
-export declare function estimateCost(params: { provider: string; model: string; inputTokens?: number; outputTokens?: number }): number | null;
+export declare function estimateCost(params: {
+  provider: string;
+  model: string;
+  inputTokens?: number;
+  outputTokens?: number;
+}): number | null;
 export declare function snapshot(): CostSnapshot;
-export declare function snapshotForTenant(tenantId: string): { tenantId: string; totalUsd: number; byProvider: Record<string, unknown> };
+export declare function snapshotForTenant(tenantId: string): {
+  tenantId: string;
+  totalUsd: number;
+  byProvider: Record<string, unknown>;
+};
 export declare function reset(): void;
 export declare function events(limit?: number): CostEntry[];
 export declare function setBudget(tenantId: string, limitUsd: number): void;
 export declare function clearBudget(tenantId: string): void;
-export declare function onOverBudget(fn: (event: { tenantId: string; limitUsd: number; totalUsd: number; entry: CostEntry }) => void): void;
+export declare function onOverBudget(
+  fn: (event: { tenantId: string; limitUsd: number; totalUsd: number; entry: CostEntry }) => void
+): void;
 
 // ── Plugin system ─────────────────────────────────────────────────────────────
 
-export interface BemoraPlugin {
-  name: string;
-  install(api: Bemora): void;
+export interface BemoraPluginHooks {
   beforeRequest?(context: { provider: string; args: unknown[] }): void | Promise<void>;
   afterResponse?(context: { provider: string; args: unknown[]; result: unknown }): void | Promise<void>;
   onError?(context: { provider: string; args: unknown[]; error: Error }): void | Promise<void>;
+}
+
+export interface BemoraPlugin extends BemoraPluginHooks {
+  name: string;
+  install(api: Bemora): void;
+}
+
+/**
+ * Function form: a bare install(api) function. The name is taken from
+ * `fn.pluginName`, then the function name, then `opts.name`.
+ * Hooks may be attached as function properties.
+ */
+export interface BemoraPluginFn extends BemoraPluginHooks {
+  (api: Bemora): void | Promise<void>;
+  pluginName?: string;
+}
+
+export interface UsePluginOpts {
+  name?: string;
+}
+
+export declare function normalizePlugin(
+  plugin: BemoraPlugin | BemoraPluginFn,
+  opts?: UsePluginOpts
+): BemoraPlugin & { install: (api: Bemora) => void | Promise<void> };
+
+export declare class PluginSystem {
+  use(plugin: BemoraPlugin | BemoraPluginFn, api: Bemora, opts?: UsePluginOpts): void;
+  list(): string[];
+  runBeforeRequest(context: { provider: string; args: unknown[] }): Promise<void>;
+  runAfterResponse(context: { provider: string; args: unknown[]; result: unknown }): Promise<void>;
+  runOnError(context: { provider: string; args: unknown[]; error: Error }): Promise<void>;
 }
 
 // ── Bemora main class ─────────────────────────────────────────────────────────
@@ -236,7 +284,7 @@ export declare class Bemora {
   currentTenantId(): string | null;
 
   // Plugin
-  use(plugin: BemoraPlugin): this;
+  use(plugin: BemoraPlugin | BemoraPluginFn, opts?: UsePluginOpts): this;
 
   // Event bus
   on(event: string, listener: (data: unknown) => void): this;
@@ -248,16 +296,27 @@ export declare class Bemora {
 
   // Provider namespaces (abbreviated — full signatures follow each provider's JSDoc)
   weather: { current(params: unknown): Promise<unknown>; forecast(params: unknown): Promise<unknown> };
-  crypto: { price(params: unknown): Promise<unknown>; trending(): Promise<unknown>; top(params: unknown): Promise<unknown> };
+  crypto: {
+    price(params: unknown): Promise<unknown>;
+    trending(): Promise<unknown>;
+    top(params: unknown): Promise<unknown>;
+  };
   payments: {
     stripe: {
-      createCharge(params: { amount: number; currency: string; source?: string; idempotencyKey?: string } & Record<string, unknown>): Promise<unknown>;
-      createPaymentIntent(params: { amount: number; currency: string; idempotencyKey?: string } & Record<string, unknown>): Promise<unknown>;
+      createCharge(
+        params: { amount: number; currency: string; source?: string; idempotencyKey?: string } & Record<string, unknown>
+      ): Promise<unknown>;
+      createPaymentIntent(
+        params: { amount: number; currency: string; idempotencyKey?: string } & Record<string, unknown>
+      ): Promise<unknown>;
       createCustomer(params: Record<string, unknown>): Promise<unknown>;
       getCustomer(params: { id: string }): Promise<unknown>;
       createSubscription(params: Record<string, unknown>): Promise<unknown>;
       createRefund(params: Record<string, unknown>): Promise<unknown>;
-      verifyWebhook(params: { payload: string | Buffer; signature: string; secret: string }): { valid: boolean; event?: unknown };
+      verifyWebhook(params: { payload: string | Buffer; signature: string; secret: string }): {
+        valid: boolean;
+        event?: unknown;
+      };
     };
     paypal: Record<string, (...args: unknown[]) => Promise<unknown>>;
   };

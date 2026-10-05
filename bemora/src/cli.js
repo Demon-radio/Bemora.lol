@@ -1,8 +1,16 @@
 #!/usr/bin/env node
 import 'dotenv/config';
+import { createRequire } from 'node:module';
 import { Command } from 'commander';
 import chalk from 'chalk';
 import Bemora from './index.js';
+
+const require = createRequire(import.meta.url);
+// Single source of truth: CLI version always matches package.json.
+let PKG_VERSION = '0.0.0-dev';
+try {
+  PKG_VERSION = require('../package.json').version ?? PKG_VERSION;
+} catch { /* keep fallback */ }
 
 const program = new Command();
 const api = new Bemora({}, { logLevel: 'silent' });
@@ -19,7 +27,7 @@ function fail(err) {
 program
   .name('bemora')
   .description('Bemora CLI — access all APIs & utilities from the terminal')
-  .version('1.4.0');
+  .version(PKG_VERSION);
 
 // --- Weather Commands ---
 program

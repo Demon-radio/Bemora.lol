@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import 'dotenv/config';
+import { createRequire } from 'node:module';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import {
@@ -10,7 +11,12 @@ import { Bemora, CircuitBreakerError, TimeoutError } from '../index.js';
 import { logger } from '../core/logger.js';
 import PROVIDER_INFO from './provider-info.js';
 
-const VERSION = '4.0.0';
+const require = createRequire(import.meta.url);
+// Single source of truth: MCP server version always matches package.json.
+let VERSION = '0.0.0-dev';
+try {
+  VERSION = require('../../package.json').version ?? VERSION;
+} catch { /* keep fallback */ }
 
 const api = new Bemora({}, {
   logLevel: 'error',

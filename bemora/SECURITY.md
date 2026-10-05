@@ -4,10 +4,10 @@
 
 Only the latest published major version of `bemora` receives security fixes.
 
-| Version | Supported |
-| ------- | --------- |
-| 4.x     | ✅        |
-| < 4.0   | ❌        |
+| Version               | Supported |
+| --------------------- | --------- |
+| 1.x (including alpha) | ✅        |
+| < 1.0                 | ❌        |
 
 ## Reporting a Vulnerability
 

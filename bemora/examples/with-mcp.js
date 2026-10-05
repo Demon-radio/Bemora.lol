@@ -34,15 +34,22 @@
  * }
  *
  * 3. After connecting, the AI can call tools like:
- *    - getWeather({ city: "Cairo" })
- *    - convertCurrency({ from: "USD", to: "EGP", amount: 100 })
- *    - getNews({ country: "eg", category: "technology" })
- *    - searchImages({ query: "pyramids" })
- *    - getFootballFixtures({ date: "2026-07-02" })
- *    - getCryptoPrice({ coins: "bitcoin" })
- *    - getGoldPrice({ currency: "USD" })
- *    - searchWikipedia({ query: "Nile River", language: "en" })
- *    - searchBooks({ query: "arabic literature" })
+ *    - weather_current({ city: "Cairo" })
+ *    - currency_convert({ from: "USD", to: "EGP", amount: 100 })
+ *    - news_search({ q: "technology" })
+ *    - images_search({ query: "pyramids" })
+ *    - football_fixtures({ date: "2026-07-02" })
+ *    - crypto_price({ coins: "bitcoin" })
+ *    - gold_price({ currency: "USD" })
+ *    - research_wikipedia({ query: "Nile River", language: "en" })
+ *    - research_books({ query: "arabic literature" })
+ *    - gaming_crossfireWeapons({ limit: 20 })
+ *    - smart_weather({ city: "Cairo" })
+ *
+ * Tool names are always "<provider>_<method>" — see
+ * src/mcp-server/provider-info.js for the full list, or call
+ * bemora_list_categories + bemora_providers_in_category from the AI
+ * to browse providers by category.
  */
 
 console.log('See comments above for MCP configuration instructions.');

@@ -1,13 +1,13 @@
 {
   "name": "bemora",
-  "version": "1.0.0-alpha.3",
+  "version": "1.0.0-alpha.4",
   "description": "Unified API library for apps and AI agents — payments (Stripe, PayPal), email (SendGrid, SES, Resend), SMS (Twilio), auth (JWT, Clerk, Auth0), storage (S3, R2, GCS), vector DBs, AI providers (OpenAI, Anthropic, Gemini, Groq, & more), Cloudflare, and 100+ other APIs — all with circuit breakers, retries, PII redaction, and multi-tenant support (beta/alpha)",
   "main": "src/index.js",
   "types": "src/types/index.d.ts",
   "type": "module",
   "bin": {
-    "bemora": "./src/cli.js",
-    "bemora-mcp": "./src/mcp-server/index.js"
+    "bemora": "src/cli.js",
+    "bemora-mcp": "src/mcp-server/index.js"
   },
   "scripts": {
     "demo": "node examples/zero-key-demo.js",
@@ -18,9 +18,26 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:integration": "vitest run --config vitest.config.integration.js",
-    "lint": "echo \"Linting...\""
+    "lint": "node scripts/lint.js",
+    "format": "prettier --write \"src/**/*.js\" \"examples/**/*.js\" \"tests/**/*.js\" \"*.md\" \"docs/**/*.md\"",
+    "format:check": "prettier --check \"src/**/*.js\" \"examples/**/*.js\" \"tests/**/*.js\" \"*.md\" \"docs/**/*.md\"",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "pack:dry": "npm pack --dry-run"
+  },
+  "files": [
+    "src/",
+    "examples/",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "SECURITY.md",
+    ".env.example"
+  ],
+  "publishConfig": {
+    "access": "public"
   },
   "exports": {
+    "./package.json": "./package.json",
     ".": {
       "import": "./src/index.js",
       "default": "./src/index.js"
@@ -100,12 +117,6 @@
     "model-context-protocol",
     "mcp-server",
     "coin-wizard",
-    "pokemon",
-    "pokeapi",
-    "rick-and-morty",
-    "star-wars",
-    "swapi",
-    "harry-potter",
     "covid19",
     "earthquake",
     "usgs",
@@ -116,8 +127,6 @@
     "zip-code",
     "name-predict",
     "brewery",
-    "chuck-norris",
-    "bored-api",
     "sportsdb",
     "domain-lookup",
     "placeholder-images",
@@ -139,10 +148,6 @@
     "game-weapons",
     "game-maps",
     "game-characters",
-    "advice-slip",
-    "dad-jokes",
-    "kanye-rest",
-    "random-user",
     "thesaurus",
     "datamuse",
     "synonyms",
@@ -175,11 +180,22 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Demon-radio/Bemora.lol"
+    "url": "git+https://github.com/Demon-radio/Bemora.lol.git"
   },
   "homepage": "https://github.com/Demon-radio/Bemora.lol",
+  "bugs": {
+    "url": "https://github.com/Demon-radio/Bemora.lol/issues"
+  },
   "devDependencies": {
+    "@types/node": "^22.7.4",
     "@vitest/coverage-v8": "^4.1.10",
+    "prettier": "^3.8.4",
+    "typescript": "~5.9.3",
     "vitest": "^4.1.9"
+  },
+  "directories": {
+    "doc": "docs",
+    "example": "examples",
+    "test": "tests"
   }
 }
