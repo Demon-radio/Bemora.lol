@@ -70,8 +70,11 @@ jobs:
           cache: 'pnpm'
           cache-dependency-path: bemora/pnpm-lock.yaml
       - run: pnpm install --ignore-workspace
+      # Scoped to bemora's own tree: the root workspace's dev tooling
+      # (orval/vite chains in lib/, artifacts/) is not shipped and must not
+      # gate this package. --prod drops dev-only findings (vitest/vite).
       - name: pnpm audit
-        run: pnpm audit --audit-level=high
+        run: pnpm audit --ignore-workspace --prod --audit-level=high
 
   license-check:
     name: License Check
