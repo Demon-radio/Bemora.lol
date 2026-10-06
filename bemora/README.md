@@ -4,7 +4,7 @@
 
 <br />
 
-[![version](https://img.shields.io/badge/version-1.0.0--alpha.2-6366f1?style=for-the-badge)](package.json)
+[![version](https://img.shields.io/badge/version-1.0.0--alpha.4-6366f1?style=for-the-badge)](package.json)
 [![license](https://img.shields.io/badge/license-MIT-06b6d4?style=for-the-badge)](LICENSE)
 [![node](https://img.shields.io/badge/node-%3E%3D18-10b981?style=for-the-badge)](package.json)
 [![CI](https://img.shields.io/badge/CI-passing-22c55e?style=for-the-badge)](.github/workflows/ci.yml)
@@ -16,7 +16,7 @@
 <li>This is an <strong>alpha release</strong> — not for mission‑critical use yet!</li>
 <li>Currently maintained by a single person (see "Contributing" if you want to help!)</li>
 <li>We're working on a third‑party security audit — stay tuned!</li>
-<li>327 unit tests + a live integration suite hit real free endpoints; core reliability modules (circuit breaker, retry, rate limiting, registry) are at ~90–100% line coverage. Provider wrapper modules (the 100+ thin API clients) are covered mainly by integration tests, not unit tests — see <a href="CHANGELOG.md">CHANGELOG.md</a> for the honest breakdown.</li>
+<li>348 unit tests + a live integration suite hit real free endpoints; core reliability modules (circuit breaker, retry, rate limiting, registry) are at ~90–100% line coverage. Provider wrapper modules (the 100+ thin API clients) are covered mainly by integration tests, not unit tests — see <a href="CHANGELOG.md">CHANGELOG.md</a> for the honest breakdown.</li>
 </ul>
 </div>
 
@@ -26,7 +26,7 @@
 
 Add bemora to **Cursor**, **Claude Desktop**, or **Windsurf** and your AI gets access to **100+ APIs** with zero config! Perfect for building AI agents, chatbots, internal tools, and more.
 
-[Quick Start](#-quick-start) · [MCP Setup (10 sec)](#-mcp-server-for-cursor--claude) · [All 30+ APIs](#-all-apis) · [AI Agent Docs](#-ai-agent-power)
+[Quick Start](#-quick-start) · [MCP Setup (10 sec)](#-mcp-server-for-cursor--claude) · [All 100+ APIs](#-all-apis) · [AI Agent Docs](#-ai-agent-power)
 
 ---
 
@@ -50,6 +50,37 @@ Universities · Nutrition (barcode lookup) · Natural Disasters · Blockchain (B
 </div>
 
 ---
+
+## ⚡ 60-second quickstart
+
+No keys, no signup — these calls work on a fresh install:
+
+```bash
+npm install bemora
+```
+
+```js
+import { Bemora } from 'bemora';
+const api = new Bemora();
+
+// One interface for everything — same call shape, same errors, same caching:
+const iss = await api.space.issPosition(); // → { lat, lon, ... } (no key)
+const meal = await api.food.random(); // → recipe + ingredients (no key)
+const weapons = await api.gaming.crossfireSearch({ query: 'Desert Eagle' }); // (no key)
+```
+
+Need a keyed API? Same shape — just add the key:
+
+```js
+const weather = await api.weather.current({ city: 'Cairo' }); // BEMORA_WEATHER_KEY
+```
+
+## Why Bemora instead of one SDK per API?
+
+- **One call shape** for 107 namespaces — learn `api.<area>.<method>(params)` once, never read another SDK README.
+- **One reliability system** — retries, timeouts, circuit breakers, caching, and rate-limit tracking behave identically everywhere.
+- **One error system** — every failure is a coded `BemoraError` (`RATE_LIMITED`, `AUTH_ERROR`, …), never a new shape to parse.
+- **One agent surface** — the same namespaces become MCP tools and CLI commands with zero extra work.
 
 ## Why bemora?
 

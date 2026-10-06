@@ -45,7 +45,7 @@ Key rules:
 
 ## How to add a plugin
 
-See `examples/plugins/prayer-times.js` for a complete working plugin:
+See `examples/plugins/prayer-times.js` for a complete working plugin. To add a whole provider namespace without touching core, start from `examples/custom-provider/` and read `docs/custom-providers.md`.
 
 ```js
 const plugin = {

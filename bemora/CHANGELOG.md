@@ -5,6 +5,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.0-alpha.5] — 2026-10-06
+
+### Added
+
+- MCP input schemas for 344/348 catalog methods (`src/mcp-server/schemas.js`, extracted from the server into an import-safe, unit-tested module); only websocket streams and static lookups keep the generic fallback. Locked by 5 new tests in `tests/unit/mcp-catalog.test.js`.
+- Community provider path: `examples/custom-provider/` starter (runnable offline) + `docs/custom-providers.md` guide + `tests/unit/custom-provider-template.test.js` (4 tests).
+- 60-second no-key quickstart and "Why Bemora instead of one SDK per API?" value proposition at the top of both READMEs (real, executed calls only).
+
+### Fixed
+
+- Package README badge and transparency note updated (`alpha.2` → `alpha.4`, 327 → 348 tests).
+
+---
+
 ## [1.0.0-alpha.4] — 2026-10-05
 
 ### Added

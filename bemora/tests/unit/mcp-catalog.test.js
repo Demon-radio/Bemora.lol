@@ -11,6 +11,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Bemora from '../../src/index.js';
 import PROVIDER_INFO from '../../src/mcp-server/provider-info.js';
+import SCHEMAS, { getParameterSchema } from '../../src/mcp-server/schemas.js';
 
 const root = path.dirname(path.dirname(path.dirname(fileURLToPath(import.meta.url))));
 
@@ -84,5 +85,83 @@ describe('MCP catalog', () => {
     const dupes = keys.filter((k, i) => keys.indexOf(k) !== i);
     expect(dupes).toEqual([]);
     expect(keys.length).toBe(Object.keys(PROVIDER_INFO).length);
+  });
+});
+
+describe('MCP input schemas', () => {
+  const api = new Bemora({}, { logLevel: 'silent' });
+
+  // Methods that intentionally keep the generic fallback: websocket stream
+  // constructors (not JSON-call friendly) and synchronous static lookups.
+  const GENERIC_OK = new Set(['rss.sources', 'realtime.binance', 'realtime.kraken', 'prayer.methods']);
+
+  it('every schema entry resolves to a real cataloged method (no dead schemas)', () => {
+    const dead = [];
+    for (const [provider, methods] of Object.entries(SCHEMAS)) {
+      for (const method of Object.keys(methods)) {
+        if (!PROVIDER_INFO[provider]?.methods[method]) dead.push(`${provider}.${method}`);
+        if (typeof api[provider]?.[method] !== 'function') dead.push(`${provider}.${method} (no impl)`);
+      }
+    }
+    expect(dead).toEqual([]);
+  });
+
+  it('every cataloged method has a specific schema except known stream/static exceptions', () => {
+    const missing = [];
+    for (const [provider, info] of Object.entries(PROVIDER_INFO)) {
+      for (const method of Object.keys(info.methods)) {
+        if (!SCHEMAS[provider]?.[method] && !GENERIC_OK.has(`${provider}.${method}`)) {
+          missing.push(`${provider}.${method}`);
+        }
+      }
+    }
+    expect(missing).toEqual([]);
+  });
+
+  it('schemas are valid draft-style JSON Schemas with matching required arrays', () => {
+    const bad = [];
+    const check = (prefix, s) => {
+      if (s.type !== 'object' || typeof s.properties !== 'object' || !Array.isArray(s.required)) {
+        bad.push(prefix);
+        return;
+      }
+      for (const r of s.required) {
+        if (!(r in s.properties)) bad.push(`${prefix} (required ${r} missing from properties)`);
+      }
+    };
+    for (const [provider, methods] of Object.entries(SCHEMAS)) {
+      for (const [method, s] of Object.entries(methods)) check(`${provider}.${method}`, s);
+    }
+    expect(bad).toEqual([]);
+  });
+
+  it('getParameterSchema returns specific schemas, generic fallback otherwise', () => {
+    expect(getParameterSchema('weather', 'current').properties).toHaveProperty('city');
+    expect(getParameterSchema('gaming', 'crossfireSearch').required).toContain('query');
+    expect(getParameterSchema('coinWizard', 'convert').required).toContain('id');
+    const fallback = getParameterSchema('realtime', 'binance');
+    expect(fallback.additionalProperties).toBe(true);
+    const unknown = getParameterSchema('nope', 'missing');
+    expect(unknown.additionalProperties).toBe(true);
+  });
+
+  it('removed providers have no schemas', () => {
+    for (const dead of [
+      'pokemon',
+      'rickmorty',
+      'starwars',
+      'harrypotter',
+      'chucknorris',
+      'bored',
+      'kanye',
+      'dadjokes',
+      'advice',
+      'randomuser',
+      'fun',
+      'memes',
+      'zodiac',
+    ]) {
+      expect(SCHEMAS[dead]).toBeUndefined();
+    }
   });
 });

@@ -29,6 +29,37 @@ Postal Codes · Breweries · Sports · Domain Lookup · Utils · and 65+ more
 
 ---
 
+## ⚡ 60-second quickstart
+
+No keys, no signup — these calls work on a fresh install:
+
+```bash
+npm install bemora
+```
+
+```js
+import { Bemora } from 'bemora';
+const api = new Bemora();
+
+// One interface for everything — same call shape, same errors, same caching:
+const iss = await api.space.issPosition(); // → { lat, lon, ... } (no key)
+const meal = await api.food.random(); // → recipe + ingredients (no key)
+const weapons = await api.gaming.crossfireSearch({ query: 'Desert Eagle' }); // (no key)
+```
+
+Need a keyed API? Same shape — just add the key:
+
+```js
+const weather = await api.weather.current({ city: 'Cairo' }); // BEMORA_WEATHER_KEY
+```
+
+## Why Bemora instead of one SDK per API?
+
+- **One call shape** for 107 namespaces — learn `api.<area>.<method>(params)` once, never read another SDK README.
+- **One reliability system** — retries, timeouts, circuit breakers, caching, and rate-limit tracking behave identically everywhere.
+- **One error system** — every failure is a coded `BemoraError` (`RATE_LIMITED`, `AUTH_ERROR`, …), never a new shape to parse.
+- **One agent surface** — the same namespaces become MCP tools and CLI commands with zero extra work.
+
 ## Why bemora?
 
 Every project ends up like this:

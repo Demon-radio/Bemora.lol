@@ -1,6 +1,6 @@
 {
   "name": "bemora",
-  "version": "1.0.0-alpha.4",
+  "version": "1.0.0-alpha.5",
   "description": "Unified API library for apps and AI agents — payments (Stripe, PayPal), email (SendGrid, SES, Resend), SMS (Twilio), auth (JWT, Clerk, Auth0), storage (S3, R2, GCS), vector DBs, AI providers (OpenAI, Anthropic, Gemini, Groq, & more), Cloudflare, and 100+ other APIs — all with circuit breakers, retries, PII redaction, and multi-tenant support (beta/alpha)",
   "main": "src/index.js",
   "types": "src/types/index.d.ts",

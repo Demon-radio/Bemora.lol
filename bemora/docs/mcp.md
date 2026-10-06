@@ -28,3 +28,7 @@
 - `bemora_rate_limits` — used/limit per provider
 
 Tools needing a missing key are still listed but suffixed `[NEEDS KEY: ...]` in their description. See `examples/with-mcp.js` and `src/mcp-server/provider-info.js` (the single source of truth for the catalog).
+
+## Input schemas
+
+Every tool carries a specific JSON input schema (`src/mcp-server/schemas.js`) — required params, types, and hints for enums/formats — so AI agents call tools correctly on the first try. The only exceptions use a permissive fallback: websocket stream constructors (`realtime.binance`, `realtime.kraken`, not JSON-call friendly) and synchronous static lookups (`rss.sources`, `prayer.methods`). Schema coverage is locked by `tests/unit/mcp-catalog.test.js`: adding a catalog method without a schema fails the suite.

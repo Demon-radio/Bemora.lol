@@ -14,6 +14,7 @@ Organized by area. Items marked ✅ are done. Everything else is a direction, no
 
 - ✅ 90+ providers across weather, finance, research, geo, media, sports, science, government, developer tools, gaming (incl. CrossFire via Fandom MediaWiki API), AI
 - ✅ `smart.*` auto-failover layer (CoinGecko → Binance → stale cache, etc.)
+- ✅ Community provider path: any developer can ship `bemora-plugin-*` adding a namespace via `use()` — starter in `examples/custom-provider/`, contract in `docs/custom-providers.md`, pattern locked by `tests/unit/custom-provider-template.test.js`
 - ✅ Removed dead/fictional providers from MCP catalog (`pokemon`, `harrypotter`, `starwars`, `rickmorty`, `chucknorris`, `bored`, `kanye`, `dadjokes`, `advice`, `randomuser`, `fun`, `memes`, `zodiac` — pruned in `1.0.0-alpha.1`, catalog fixed after)
 - 🔲 Live provider health dashboard (expand `core/health.js` coverage beyond the current 18 no-key providers)
 - 🔲 MCP exposure for enterprise namespaces (`payments`, `email`, `sms`, `auth`, `storage`, `vectordb`, …) — intentionally not exposed yet; needs authZ guardrails before AI-tool access
@@ -22,12 +23,13 @@ Organized by area. Items marked ✅ are done. Everything else is a direction, no
 
 - ✅ `PluginSystem` with `beforeRequest`/`afterResponse`/`onError` hooks; unified contract — object form `{ name, install, ...hooks }` and function form (bare `install(api)`, name from `fn.pluginName` / function name / `opts.name`); `loadPlugin('bemora-plugin-*')` accepts both; contract tests in `tests/unit/plugin-contracts.test.js`
 - ✅ Complete example: `examples/plugins/prayer-times.js`
+- ✅ Provider SDK docs: `docs/custom-providers.md` (community path + first-party path + rules)
 - 🔲 First-party `bemora-plugin-redis-cache` package
 
 ## MCP
 
 - ✅ 90+ tools generated from `provider-info.js`, `bemora_status`/`bemora_metrics`/`bemora_rate_limits`/`bemora_list_categories`/`bemora_providers_in_category` observability tools
-- 🔲 Per-tool `inputSchema` for every provider (today only ~19 have specific schemas; the rest fall back to a permissive empty schema)
+- ✅ Per-tool `inputSchema` for 344/348 catalog methods (`src/mcp-server/schemas.js`, locked by tests); only websocket streams and static lookups keep the generic fallback
 - 🔲 Rich descriptions for all tools (most are still `Call {provider}.{method} method`)
 
 ## CLI
@@ -44,7 +46,7 @@ Organized by area. Items marked ✅ are done. Everything else is a direction, no
 ## Documentation
 
 - ✅ `docs/` skeleton (getting-started through api-reference)
-- 🔲 Full rewrite of `README.md` provider tables to drop the pruned fun providers (README still documents `pokemon`/`rickmorty`/etc. — see Known limitations in `CHANGELOG.md`)
+- ✅ 60-second no-key quickstart + value proposition on both READMEs (executed calls only)
 - 🔲 Auto-generate `docs/api-reference.md` from `src/index.js` + `provider-info.js` so they can't drift again
 
 ## Developer experience
