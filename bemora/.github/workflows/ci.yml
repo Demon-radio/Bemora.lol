@@ -11,8 +11,10 @@ jobs:
     name: Test (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
     strategy:
+      # NOTE: the library itself supports Node >= 18 (see engines), but the
+      # vitest 4 test runner requires Node 20+ (node:util styleText).
       matrix:
-        node-version: ['18', '20', '22']
+        node-version: ['20', '22']
     defaults:
       run:
         working-directory: bemora
