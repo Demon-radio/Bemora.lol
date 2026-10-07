@@ -460,8 +460,14 @@ describe('Pinecone provider', () => {
 
   it('upsert — 429 → throws RateLimitError', async () => {
     mockPost.mockRejectedValueOnce(axiosError(429));
+    // NOTE: vectors must be valid here — empty vectors are rejected by
+    // input validation before any HTTP call, so the mocked 429 would never
+    // be reached and this would test nothing.
     await expect(
-      pinecone.upsert({ indexHost: PINECONE_HOST, vectors: [] }, FAKE_KEY),
+      pinecone.upsert(
+        { indexHost: PINECONE_HOST, vectors: [{ id: 'v1', values: [0.1, 0.2, 0.3] }] },
+        FAKE_KEY,
+      ),
     ).rejects.toBeInstanceOf(RateLimitError);
   });
 });
