@@ -65,7 +65,8 @@ export async function getNearEarthObjects({ startDate, endDate, apiKey = 'DEMO_K
 }
 
 /**
- * Get ISS current position
+ * Get ISS current position (source: wheretheiss.at — open-notify.org retired).
+ * Keeps the historical { position: { latitude, longitude }, timestamp } shape.
  */
 export async function getISSPosition() {
   const cacheKey = 'space:iss:position';
@@ -73,8 +74,12 @@ export async function getISSPosition() {
   if (cached) return { ...cached, _cached: true };
 
   try {
-    const { data } = await http.get('http://api.open-notify.org/iss-now.json');
-    const result = { position: data.iss_position, timestamp: data.timestamp, _cached: false };
+    const { data } = await http.get('https://api.wheretheiss.at/v1/satellites/25544');
+    const result = {
+      position: { latitude: String(data.latitude), longitude: String(data.longitude) },
+      timestamp: data.timestamp,
+      _cached: false,
+    };
     cache.set(cacheKey, result, 10);
     return result;
   } catch (err) {

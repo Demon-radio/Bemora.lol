@@ -133,7 +133,7 @@ console.log(`${weather.city}: ${weather.temperature}°C`);
 | `api.translate` | MyMemory | Translate text, detect language (1k words/day) |
 | `api.crypto` | CoinGecko | Prices, trending, top by market cap |
 | `api.food` | TheMealDB | Recipes, random meals, categories |
-| `api.space.issPosition` | Open Notify | ISS real-time position |
+| `api.space.issPosition` | wheretheiss.at | ISS real-time position |
 | `api.music.artist` | MusicBrainz | Artist info, discography |
 | `api.music.itunes` | iTunes Search | Songs, albums, artists, previews |
 | `api.search` | DuckDuckGo + Wikipedia | Instant answers, full-text search |

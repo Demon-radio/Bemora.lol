@@ -96,10 +96,10 @@ maybeDescribe('Crypto (CoinGecko — no key)', { timeout: 15000 }, () => {
 });
 
 // ---------------------------------------------------------------------------
-// open-notify.org — no key
+// wheretheiss.at — no key (replaces retired open-notify.org)
 // getISSPosition returns: { lat, lon, timestamp }
 // ---------------------------------------------------------------------------
-maybeDescribe('ISS position (open-notify.org — no key)', { timeout: 15000 }, () => {
+maybeDescribe('ISS position (wheretheiss.at — no key)', { timeout: 15000 }, () => {
   it('returns the current ISS position', async () => {
     const result = await space.getISSPosition();
     expect(result).toHaveProperty('lat');

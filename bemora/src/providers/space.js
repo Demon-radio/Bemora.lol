@@ -121,14 +121,18 @@ export async function getNearEarthObjects({ start_date, end_date } = {}, apiKey)
 }
 
 /**
- * ISS current position (Free, no key)
+ * ISS current position (Free, no key).
+ * Source: wheretheiss.at (open-notify.org retired) — normalized to the
+ * long-standing { lat, lon, timestamp } shape.
  */
 export async function getISSPosition() {
   try {
-    const { data } = await http.get('http://api.open-notify.org/iss-now.json');
+    const { data } = await http.get('https://api.wheretheiss.at/v1/satellites/25544');
     return {
-      lat: parseFloat(data.iss_position.latitude),
-      lon: parseFloat(data.iss_position.longitude),
+      lat: data.latitude,
+      lon: data.longitude,
+      altitude_km: data.altitude,
+      velocity_kmh: data.velocity,
       timestamp: data.timestamp,
       _cached: false,
     };

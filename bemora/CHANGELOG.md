@@ -5,6 +5,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [Unreleased]
+
+### Fixed
+
+- ISS position migrated from dead open-notify.org to wheretheiss.at (`space.getISSPosition` keeps its `{ lat, lon, timestamp }` shape plus altitude/velocity; `spaceExtended` keeps `{ position, timestamp }`). Provider id renamed `open-notify` → `wheretheiss`.
+
+---
+
 ## [1.0.0-alpha.6] — 2026-10-07
 
 ### Added

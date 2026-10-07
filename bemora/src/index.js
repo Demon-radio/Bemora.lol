@@ -911,7 +911,7 @@ export class Bemora {
     chessDailyPuzzle: this._wrap('chess', () => gaming.getChessDailyPuzzle()),
     searchGameWiki: this._wrap('gamewiki', (p) => gaming.searchGameWiki(p)),
   }; }
-  _buildSpaceExtended() { return { apod: this._wrap('nasa', (p) => spaceExtended.getAPOD(p)), marsPhotos: this._wrap('nasa', (p) => spaceExtended.getMarsPhotos(p)), nearEarthObjects: this._wrap('nasa', (p) => spaceExtended.getNearEarthObjects(p)), issPosition: this._wrap('open-notify', () => spaceExtended.getISSPosition()) }; }
+  _buildSpaceExtended() { return { apod: this._wrap('nasa', (p) => spaceExtended.getAPOD(p)), marsPhotos: this._wrap('nasa', (p) => spaceExtended.getMarsPhotos(p)), nearEarthObjects: this._wrap('nasa', (p) => spaceExtended.getNearEarthObjects(p)), issPosition: this._wrap('wheretheiss', () => spaceExtended.getISSPosition()) }; }
 
   _buildFree() { return { weather: this._wrap('open-meteo', (p) => pub.openMeteoWeather(p)), wttr: this._wrap('wttr', (p) => pub.wttrWeather(p)), exchangeRates: this._wrap('exchangerate.host', (p) => pub.freeExchangeRates(p)), binanceTicker: this._wrap('binance', (p) => pub.binanceTicker(p)), binanceTickers: this._wrap('binance', (p) => pub.binanceTickers(p)), football: this._wrap('openligadb', (p) => pub.openLigaFixtures(p)) }; }
   _buildRSS() { return { fetch: this._wrap('rss', (p) => rss.fetchFeed(p)), custom: this._wrap('rss', (p) => rss.fetchCustomFeed(p)), aggregate: this._wrap('rss', (p) => rss.aggregateFeeds(p)), sources: () => rss.AVAILABLE_SOURCES }; }
