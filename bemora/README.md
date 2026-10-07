@@ -487,7 +487,7 @@ await api.ai.embed({ input: 'machine learning in Arabic' });
 
 ```js
 // QR Code (no key)
-api.utils.qr({ text: 'https://bemora.dev', size: 300 });
+api.utils.qr({ text: 'https://www.npmjs.com/package/bemora', size: 300 });
 // → { qr_url: 'https://api.qrserver.com/...' }
 
 // URL shortener (no key)

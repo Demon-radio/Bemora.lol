@@ -1,16 +1,26 @@
 # Publishing
 
-Releases are manual (no auto-publish on merge). Suggested order for a first public release:
+Two paths — automated (preferred) or manual. No auto-publish on merge in either case.
+
+## Automated (GitHub Release → npm)
+
+Publishing a GitHub Release triggers `.github/workflows/release.yml`, which runs lint + typecheck + unit tests and publishes: prereleases go out under the `alpha` tag, full releases update `latest`.
+
+One-time setup: add an npm automation token at Settings → Secrets and variables → Actions → **New repository secret** named `NPM_TOKEN`.
+
+Suggested order for a first public release:
 
 ```text
 final review (status → diff)
    ↓
 git commit → git push
    ↓
-GitHub review
+GitHub Release (mark prerelease for alphas)
    ↓
-npm publish --tag alpha
+CI publishes to npm automatically
 ```
+
+## Manual
 
 ```bash
 cd bemora

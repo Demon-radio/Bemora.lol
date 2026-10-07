@@ -8,6 +8,7 @@
 [![npm downloads](https://img.shields.io/npm/dm/bemora?style=for-the-badge&color=8b5cf6)](https://www.npmjs.com/package/bemora)
 [![license](https://img.shields.io/npm/l/bemora?style=for-the-badge&color=06b6d4)](LICENSE)
 [![node](https://img.shields.io/node/v/bemora?style=for-the-badge&color=10b981)](package.json)
+[![CI](https://github.com/Demon-radio/Bemora.lol/actions/workflows/ci.yml/badge.svg)](https://github.com/Demon-radio/Bemora.lol/actions/workflows/ci.yml)
 [![GitHub stars](https://img.shields.io/github/stars/Demon-radio/Bemora.lol?style=for-the-badge&color=f59e0b)](https://github.com/Demon-radio/Bemora.lol/stargazers)
 
 <br/>
@@ -514,7 +515,7 @@ await api.ai.embed({ input: 'machine learning in Arabic' });
 
 ```js
 // QR Code (no key)
-api.utils.qr({ text: 'https://bemora.dev', size: 300 });
+api.utils.qr({ text: 'https://www.npmjs.com/package/bemora', size: 300 });
 // → { qr_url: 'https://api.qrserver.com/...' }
 
 // URL shortener (no key)
@@ -900,6 +901,8 @@ bemora/
 3. Export in `src/index.js` under `this.myProvider = ...`
 4. Add example in `examples/`
 5. Open a PR ✅
+
+Full guide: [CONTRIBUTING.md](CONTRIBUTING.md) · [bemora/CONTRIBUTING.md](bemora/CONTRIBUTING.md) · Roadmap: [bemora/ROADMAP.md](bemora/ROADMAP.md) · Changes: [bemora/CHANGELOG.md](bemora/CHANGELOG.md)
 
 ---
 

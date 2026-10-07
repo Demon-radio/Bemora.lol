@@ -154,7 +154,10 @@
     "frankfurter",
     "exchange-rate-history"
   ],
-  "author": "bemora",
+  "author": {
+    "name": "Demon-radio",
+    "url": "https://github.com/Demon-radio"
+  },
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.1",
@@ -182,7 +185,7 @@
     "type": "git",
     "url": "git+https://github.com/Demon-radio/Bemora.lol.git"
   },
-  "homepage": "https://github.com/Demon-radio/Bemora.lol",
+  "homepage": "https://www.npmjs.com/package/bemora",
   "bugs": {
     "url": "https://github.com/Demon-radio/Bemora.lol/issues"
   },
