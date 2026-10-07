@@ -5,6 +5,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.0-alpha.6] — 2026-10-07
+
+### Added
+
+- Two new no-key provider namespaces: `api.scholarly` (OpenAlex works search + Crossref DOI metadata for citations/RAG) and `api.registry` (PyPI + npm metadata, OSV.dev vulnerability checks for pinned versions) — all endpoints live-verified, with MCP catalog entries, input schemas, and mocked unit tests. A third candidate (Certificate Transparency via crt.sh) was prototyped and **rejected**: the endpoint hangs 30–45s+ per query, failing the reliability bar — documented here instead of shipped.
+
+---
+
 ## [1.0.0-alpha.5] — 2026-10-06
 
 ### Added

@@ -169,6 +169,8 @@ console.log(`${weather.city}: ${weather.temperature}°C`);
 | `api.gaming` (Chess) | Chess.com + Lichess | Player profile/stats, daily puzzle |
 | `api.thesaurus` | Datamuse | Synonyms, antonyms, rhymes, word suggestions |
 | `api.currencyHistory` | Frankfurter (ECB) | Latest/historical/time-series FX rates |
+| `api.scholarly` | OpenAlex + Crossref | Paper search, citations, DOI metadata |
+| `api.registry` | PyPI + npm + OSV.dev | Package metadata, vulnerability checks |
 
 > **Removed in `1.0.0-alpha.1`** (attack-surface reduction): `api.pokemon`, `api.rickmorty`, `api.starwars`, `api.harrypotter`, `api.chucknorris`, `api.bored`, `api.kanye`, `api.dadjokes`, `api.advice`, `api.randomuser`, `api.fun`, `api.memes`, `api.zodiac`. They are also gone from the MCP catalog.
 

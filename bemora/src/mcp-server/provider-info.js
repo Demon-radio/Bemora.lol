@@ -1018,6 +1018,27 @@ const PROVIDER_INFO = {
       "searchSpecies": "Call biodiversity.searchSpecies({ query, limit? }) — search the GBIF taxonomic backbone",
       "occurrences": "Call biodiversity.occurrences({ species, country?, limit? }) — recent sighting records"
     }
+  },
+  "scholarly": {
+    "description": "Scholarly works and citations (OpenAlex + Crossref) — no key",
+    "requiresKey": false,
+    "category": "research",
+    "methods": {
+      "searchWorks": "Call scholarly.searchWorks({ query, limit? }) — search 250M+ works with citations",
+      "getWork": "Call scholarly.getWork({ id }) — one work by OpenAlex ID or DOI",
+      "crossrefSearch": "Call scholarly.crossrefSearch({ query, limit? }) — DOI metadata search",
+      "doiMetadata": "Call scholarly.doiMetadata({ doi }) — metadata for one DOI"
+    }
+  },
+  "registry": {
+    "description": "Package registries and vulnerability intel (PyPI, npm, OSV.dev) — no key",
+    "requiresKey": false,
+    "category": "developer",
+    "methods": {
+      "pypiInfo": "Call registry.pypiInfo({ package }) — versions, deps, license for a PyPI package",
+      "npmInfo": "Call registry.npmInfo({ package }) — version, deps, license for an npm package",
+      "osvQuery": "Call registry.osvQuery({ ecosystem, package, version }) — known CVEs affecting a pinned version"
+    }
   }
 };
 

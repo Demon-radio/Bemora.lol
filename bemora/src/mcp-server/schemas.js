@@ -572,6 +572,21 @@ const SCHEMAS = {
   realtime: {
     getPrice: obj({ exchange: str('default binance'), symbol: str('e.g. BTCUSDT'), timeout: num() }, ['symbol']),
   },
+  scholarly: {
+    searchWorks: obj({ query: str(), limit: num() }, ['query']),
+    getWork: obj({ id: str('OpenAlex ID or DOI') }, ['id']),
+    crossrefSearch: obj({ query: str(), limit: num() }, ['query']),
+    doiMetadata: obj({ doi: str('e.g. 10.1038/nature12373') }, ['doi']),
+  },
+  registry: {
+    pypiInfo: obj({ package: str('e.g. requests') }, ['package']),
+    npmInfo: obj({ package: str('e.g. express') }, ['package']),
+    osvQuery: obj({ ecosystem: str('e.g. PyPI, npm, Go'), package: str(), version: str() }, [
+      'ecosystem',
+      'package',
+      'version',
+    ]),
+  },
 };
 
 /**

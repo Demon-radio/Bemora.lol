@@ -108,6 +108,9 @@ import * as govspending from './providers/govspending.js';
 import * as wikidata from './providers/wikidata.js';
 import * as arxiv from './providers/arxiv.js';
 import * as biodiversity from './providers/biodiversity.js';
+import * as scholarly from './providers/scholarly.js';
+// Aliased: `registry` is already bound to ./core/registry.js in this module.
+import * as registryProvider from './providers/registry.js';
 import * as smart from './providers/smart.js';
 // ── Enterprise providers ──────────────────────────────────────────────────────
 import * as stripeProvider from './providers/payments/stripe.js';
@@ -381,6 +384,8 @@ export class Bemora {
     this.wikidata  = this._buildWikidata();
     this.arxiv     = this._buildArxiv();
     this.biodiversity = this._buildBiodiversity();
+    this.scholarly = this._buildScholarly();
+    this.registry = this._buildRegistry();
 
     this.free      = this._buildFree();
     this.rss       = this._buildRSS();
@@ -1051,6 +1056,21 @@ export class Bemora {
     return {
       searchSpecies: this._wrap('gbif', (p) => biodiversity.searchSpecies(p)),
       occurrences: this._wrap('gbif', (p) => biodiversity.occurrences(p)),
+    };
+  }
+  _buildScholarly() {
+    return {
+      searchWorks: this._wrap('openalex', (p) => scholarly.searchWorks(p)),
+      getWork: this._wrap('openalex', (p) => scholarly.getWork(p)),
+      crossrefSearch: this._wrap('crossref', (p) => scholarly.crossrefSearch(p)),
+      doiMetadata: this._wrap('crossref', (p) => scholarly.doiMetadata(p)),
+    };
+  }
+  _buildRegistry() {
+    return {
+      pypiInfo: this._wrap('pypi', (p) => registryProvider.pypiInfo(p)),
+      npmInfo: this._wrap('npmjs', (p) => registryProvider.npmInfo(p)),
+      osvQuery: this._wrap('osv', (p) => registryProvider.osvQuery(p)),
     };
   }
   // ── Enterprise _build methods ─────────────────────────────────────────────
