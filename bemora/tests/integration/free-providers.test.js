@@ -350,7 +350,7 @@ maybeDescribe('Wikidata (wikidata.org — no key)', { timeout: 15000 }, () => {
 // ---------------------------------------------------------------------------
 // arXiv (no key)
 // ---------------------------------------------------------------------------
-maybeDescribe('arXiv (export.arxiv.org — no key)', { timeout: 15000 }, () => {
+maybeDescribe('arXiv (export.arxiv.org — no key)', { timeout: 30000, retry: 2 }, () => {
   it('searches papers by query', async () => {
     const result = await arxiv.search({ query: 'quantum computing', maxResults: 3 });
     expect(result.papers.length).toBeGreaterThan(0);

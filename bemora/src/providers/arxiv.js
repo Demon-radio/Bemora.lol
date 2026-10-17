@@ -3,7 +3,7 @@ import { wrapProviderError } from '../core/errors.js';
 import * as cache from '../core/cache.js';
 import { USER_AGENT } from '../core/headers.js';
 
-const http = httpClient({ headers: { 'User-Agent': USER_AGENT } });
+const http = httpClient({ timeout: 20000, headers: { 'User-Agent': USER_AGENT } });
 
 /**
  * Extract the text content of a single XML tag from a block (lightweight
