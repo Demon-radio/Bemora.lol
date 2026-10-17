@@ -54,6 +54,9 @@ jobs:
           # Integration tests run in no-key mode; keys are only needed
           # for provider-specific integration tests that should be opt-in.
           BEMORA_LOG_LEVEL: silent
+          # Live APIs are occasionally slower than the 8s library default;
+          # the integration config also sets this, kept here as a belt-and-braces.
+          BEMORA_HTTP_TIMEOUT_MS: '20000'
 
   audit:
     name: Security Audit

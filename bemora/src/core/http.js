@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { DEFAULT_HEADERS } from './headers.js';
 
-const DEFAULT_TIMEOUT_MS = 8000;
+const DEFAULT_TIMEOUT_MS = Number(process.env.BEMORA_HTTP_TIMEOUT_MS) || 8000;
 
 /**
  * Optional global tracing-header injector for OpenTelemetry W3C context propagation.
