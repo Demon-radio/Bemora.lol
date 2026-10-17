@@ -1,0 +1,251 @@
+# bemora (v1.0.0-alpha.9)
+
+> Unified JavaScript/TypeScript API library and MCP server: one call shape `api.<namespace>.<method>(params)` across 100+ APIs (weather, finance, news, science, health, government, developer tooling, AI, and more), with retries, timeouts, circuit breakers, caching, rate-limit tracking, PII redaction and multi-tenant support. Most providers are keyless and work out of the box; keyed providers throw a coded ConfigurationError until their key is set.
+
+- 157 providers · 548 methods · 143 keyless (no API key).
+- Install: `npm install bemora`. Node >= 18, ESM.
+- Use: `import Bemora from 'bemora'; const api = new Bemora(); await api.space.issPosition();`
+- MCP: `npx bemora-mcp` — every provider becomes an MCP tool named `<provider>_<method>`.
+- Full API reference: https://github.com/Demon-radio/Bemora.lol/blob/main/llms-full.txt
+- Repository: https://github.com/Demon-radio/Bemora.lol
+
+## Docs
+
+- [Getting started](https://github.com/Demon-radio/Bemora.lol/blob/main/docs/getting-started.md)
+- [Providers](https://github.com/Demon-radio/Bemora.lol/blob/main/docs/providers.md)
+- [API reference](https://github.com/Demon-radio/Bemora.lol/blob/main/docs/api-reference.md) (generated)
+- [MCP server](https://github.com/Demon-radio/Bemora.lol/blob/main/docs/mcp.md)
+- [Config & keys](https://github.com/Demon-radio/Bemora.lol/blob/main/docs/configuration.md)
+- [Errors](https://github.com/Demon-radio/Bemora.lol/blob/main/docs/errors.md)
+
+## Provider index
+
+### weather
+
+- `aviationwx` (no key): metar, taf
+- `enriched` (no key): weather, compareCities
+- `metno` (no key): forecast
+- `nws` (no key): forecast, alerts
+- `tides` (no key): waterLevel, predictions, stations
+- `weather` (requires `BEMORA_WEATHER_KEY`): current, forecast
+- `weatheralerts` (no key): usAlerts, pointForecast
+
+### geo
+
+- `census` (no key): geocode, reverse
+- `countries` (no key): byName, byCode, byRegion, all
+- `geocoding` (no key): search
+- `geography` (no key): countryInfo, allCountries, capitalCity
+- `ip` (no key): lookup, batchLookup, myIp
+- `location` (no key): geocode, reverse, distance
+- `military` (no key): time
+- `photon` (no key): search, reverse
+- `postal` (no key): lookup
+- `postcodes` (no key): lookup, reverse, validate, random
+
+### science
+
+- `airquality` (no key): current, forecast, classify
+- `astronomy` (no key): sunriseSunset, moonPhase
+- `biodiversity` (no key): searchSpecies, occurrences
+- `carbon` (no key): current, forecast, regional, generationMix
+- `disasters` (no key): activeEvents, categories
+- `earth` (no key): elevation, marine, flood, climate, historical
+- `earthquake` (no key): recent, byLocation, biggestToday
+- `ensembl` (no key): lookupSymbol, sequence, xrefs
+- `eonet` (no key): events, category, wildfires, volcanoes, storms
+- `exoplanet` (no key): planets, planet, query
+- `launches` (no key): upcoming, previous, byId
+- `pubchem` (no key): compound, compoundByCid, synonyms
+- `science` (no key): nasaApod, randomFact
+- `space` (requires `BEMORA_NASA_KEY`): apod, mars, asteroids, issPosition
+- `spaceExtended` (no key): apod, marsPhotos, nearEarthObjects, issPosition
+- `spaceweather` (no key): kp, solarWind, aurora, alerts
+- `uniprot` (no key): search, entry
+- `water` (no key): usgs
+
+### health
+
+- `biomed` (no key): pubmedSearch, pubmedSummary, clinicalTrials, europePmc
+- `covid` (no key): global, country, historical, topCountries
+- `fda` (no key): drugEvents, foodRecalls, deviceEvents
+- `gho` (no key): indicators, data, country
+- `icd10` (no key): search, lookup
+- `medical` (no key): drug, disease, exercises, nutrition, bmi
+- `nutrition` (no key): byBarcode, search
+- `rxnav` (no key): drugs, interactions
+
+### finance
+
+- `blockchain` (no key): bitcoinStats, bitcoinAddress, ethGasPrice
+- `blockchair` (no key): stats, address, transaction
+- `coinbase` (no key): spot, exchangeRates
+- `coinlore` (no key): tickers, global, coin
+- `coinpaprika` (no key): tickers, ticker, global, search, exchanges
+- `coinWizard` (no key): info, chart, ohlc, global, exchanges, categories, gainersLosers, search, convert, list
+- `combined` (no key): marketSnapshot, newsDigest
+- `crypto` (no key): price, trending, top
+- `currency` (requires `BEMORA_CURRENCY_KEY`): rates, convert
+- `currencyHistory` (no key): latest, historical, timeSeries
+- `defillama` (no key): protocols, protocol, chains, tvl, prices
+- `eurostat` (no key): dataset, gdp
+- `exchangerate` (no key): latest
+- `finance` (no key): stockQuote, cryptoPrice
+- `gold` (requires `BEMORA_GOLD_KEY`): price, silver
+- `imf` (no key): data, country, indicators
+- `kraken` (no key): ticker, ohlc, trades
+- `mempool` (no key): fees, blockHeight, blocks, difficultyAdjustment, mempool
+- `nbp` (no key): table, rate, gold
+- `realtime` (no key): binance, kraken, getPrice
+- `stocks` (requires `BEMORA_STOCKS_KEY`): quote, search, overview
+- `worldbank` (no key): indicator, population, gdp
+
+### government
+
+- `govspending` (no key): searchAwards, agencySpending
+- `treasury` (no key): averageInterestRates, debtToPenny, exchangeRates
+
+### news
+
+- `gdacs` (no key): events
+- `lobsters` (no key): hottest, newest, active, byTag
+- `news` (requires `BEMORA_NEWS_KEY`): headlines, search
+- `politics` (no key): presidents
+- `rss` (no key): fetch, custom, aggregate, sources
+- `spacenews` (no key): articles, blogs, reports
+
+### research
+
+- `archiveorg` (no key): search, metadata
+- `arxiv` (no key): search
+- `books` (no key): search, getById, random
+- `law` (no key): search
+- `literature` (no key): randomQuote, searchQuotes
+- `poetry` (no key): random, byAuthor, byTitle, search
+- `research` (no key): wikipedia, article, books
+- `scholarly` (no key): searchWorks, getWork, crossrefSearch, doiMetadata
+- `university` (no key): search, byCountry
+- `wikidata` (no key): search, getEntity
+
+### developer
+
+- `certs` (no key): search
+- `dev` (no key): npmPackage, npmDownloads, githubRepos, githubReleases, validateEmail, dnsLookup, loremIpsum, httpStatus
+- `devto` (no key): articles, byTag, tags
+- `dns` (no key): resolve, a, aaaa, cname, mx, txt, ns, srv
+- `domain` (no key): whois, dnsRecords, resolveIp
+- `fakedb` (no key): getPosts, getComments, getUser, getUsers, getTodos, getAlbums, getPhotos, create
+- `httptool` (no key): get, headers, ip, uuid
+- `macaddress` (no key): lookup
+- `markdown` (no key): render, renderGfm, analyze
+- `packages` (no key): crates, packagist, rubygems, maven, nuget, dockerhub, homebrew, goproxy
+- `registry` (no key): pypiInfo, npmInfo, osvQuery
+- `stackexchange` (no key): searchQuestions, getQuestion, getTopUsers
+- `statuspage` (no key): service, incidents, components
+- `techdb` (no key): listDevices, getDevice, searchDevices, compareDevices
+- `websites` (no key): status, detectTechStack, getMeta
+- `webtools` (no key): favicon, screenshot, metadata
+
+### social
+
+- `bluesky` (no key): searchActors, profile, authorFeed
+- `social` (no key): githubUser, githubRepo, githubTrending, hackerNews, productHunt
+
+### media
+
+- `images` (requires `BEMORA_UNSPLASH_KEY or BEMORA_PEXELS_KEY`): search, random, pexels
+
+### entertainment
+
+- `anilist` (no key): search, anime, manga, character
+- `anime` (no key): search, details, top, nowAiring, random, manga, mangaDetails, episodes, episode, characters, character, videos, pictures, recommendations, news, quote, quotesByCharacter
+- `art` (no key): search, details, searchMet, metDetails
+- `comics` (no key): randomXKCD, getXKCD
+- `deezer` (no key): search, track, album, artist, chart
+- `fandom` (no key): search, getPage, recentActivity
+- `gaming` (no key): freeFirePlayer, pubgPlayer, crossfireNews, freeFireNews, pubgPatchNotes, crossfireWeapons, crossfireWeapon, crossfireMaps, crossfireCharacters, crossfireGameModes, crossfireEvents, crossfireSearch, fortniteCosmetic, fortniteShop, lolChampions, lolChampion, minecraftPlayer, minecraftServerStatus, chessPlayer, chessDailyPuzzle, searchGameWiki
+- `ghibli` (no key): films, film, people
+- `kitsu` (no key): search, anime
+- `lyrics` (no key): search
+- `movies` (requires `BEMORA_MOVIES_KEY`): search, details, trending, tv
+- `music` (no key): artist, album, itunes
+- `podcasts` (no key): search, episodes, index
+- `spotify` (requires `BEMORA_SPOTIFY_CLIENT_ID and BEMORA_SPOTIFY_CLIENT_SECRET`): searchTracks, getArtist, getArtistTopTracks
+- `steam` (requires `BEMORA_STEAM_KEY`): getPlayerSummaries, getOwnedGames, searchApps
+- `tv` (requires `BEMORA_MOVIES_KEY`): search, details, trending
+- `tvmaze` (no key): search, show, episodes, schedule, people
+
+### sports
+
+- `baseball` (no key): mlbTeams, mlbSchedule
+- `basketball` (no key): nbaTeams, nbaGames, nbaPlayer
+- `football` (requires `BEMORA_FOOTBALL_KEY`): fixtures, standings, teams
+- `hockey` (no key): nhlTeams, nhlPlayer
+- `sportsdb` (no key): searchTeam, searchPlayer, leagueEvents, leagues
+
+### travel
+
+- `adsb` (no key): aircraft, callsign
+- `citybikes` (no key): networks, network
+- `flights` (requires `BEMORA_FLIGHTS_KEY`): live, airport, airline
+- `opensky` (no key): states
+- `transit` (no key): locations, departures, journeys
+
+### food
+
+- `brewery` (no key): search, random, getById
+- `drinks` (no key): randomCocktail, searchCocktail, searchIngredient
+- `food` (no key): searchMeals, getRandomMeal, random, getMeal, byCategory, categories, searchSpoonacular, getSpoonacularRecipe, searchEdamam, analyzeEdamam
+
+### language
+
+- `grammar` (no key): check
+- `language` (no key): detect, translate
+- `thesaurus` (no key): synonyms, antonyms, rhymes, suggest
+- `translate` (no key): text, many, detect
+
+### nature
+
+- `animals` (no key): randomDog, randomCat, randomFox, randomDuck, randomPanda, randomBird
+- `pets` (no key): random
+- `wildlife` (no key): randomFact
+
+### religion
+
+- `islamic` (no key): quranChapters, quranChapter, randomVerse, azkar, prayerTimes
+- `prayer` (no key): today, byCoords, monthly, methods
+- `religion` (no key): randomVerse, getVerse
+
+### business
+
+- `jobs` (no key): search
+
+### ai
+
+- `ai` (requires `BEMORA_GROQ_KEY or BEMORA_OPENAI_KEY`): openaiChat, openai, groqChat, groq, anthropicChat, geminiChat, smartChat, chat, generateImage, imagine, embed
+- `demographics` (no key): gender, age, nationality
+- `pollinations` (no key): text, image
+- `predict` (no key): nationality, gender, age, all
+
+### utility
+
+- `math` (no key): evaluate, randomFact
+- `placeholder` (no key): image, picsum, avatar, dicebear
+- `quickchart` (no key): render, bar, line, pie
+- `reader` (no key): article, rssToJson
+- `speech` (no key): tts, voices
+- `utils` (no key): qr, uuid, passwordStrength, hash, base64Encode, base64Decode, loremIpsum, emojiSearch, randomEmoji, hexToRgb, rgbToHex, httpStatus, shorten, time, timezones, holidays, quote, quotes, define, trivia, color, randomNumber, formatDate, validateJSON, parseURL, slugify
+- `vehicles` (no key): randomCar, vinDecode, recalls, makes, models
+
+### meta
+
+- `free` (no key): weather, wttr, exchangeRates, binanceTicker, binanceTickers, football
+- `smart` (no key): weather, news, currency, cryptoPrice, ip, translate, holidays, weatherAggregate
+
+### search
+
+- `search` (no key): instant, web
+
+## Optional
+
+- Full method signatures, params and examples: [llms-full.txt](https://github.com/Demon-radio/Bemora.lol/blob/main/llms-full.txt)

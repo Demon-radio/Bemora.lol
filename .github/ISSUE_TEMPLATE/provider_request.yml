@@ -1,0 +1,33 @@
+name: Provider request
+description: Ask for a new third-party API integration
+labels: [provider-request]
+body:
+  - type: input
+    id: api
+    attributes:
+      label: API name and docs URL
+      placeholder: https://docs.example.com/api
+    validations:
+      required: true
+  - type: dropdown
+    id: key
+    attributes:
+      label: Authentication
+      options:
+        - Free, no key required
+        - Free API key (signup)
+        - Paid key required
+    validations:
+      required: true
+  - type: textarea
+    id: endpoints
+    attributes:
+      label: Which endpoints matter?
+      description: List the 2-5 endpoints that cover 80% of use cases.
+    validations:
+      required: true
+  - type: textarea
+    id: verification
+    attributes:
+      label: Did you verify the free tier live?
+      description: Paste a curl or fetch result proving the endpoint works without (or with a free) key. Several "free" APIs have quietly moved behind paywalls — we verify before wiring.

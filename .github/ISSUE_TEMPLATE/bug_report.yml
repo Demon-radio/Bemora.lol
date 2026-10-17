@@ -1,0 +1,39 @@
+name: Bug report
+description: Something in bemora is broken
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: bemora version
+      placeholder: 1.0.0-alpha.3
+    validations:
+      required: true
+  - type: input
+    id: node
+    attributes:
+      label: Node.js version
+      placeholder: 20.x
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you call, and what did you get instead of what you expected?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: Copy-paste JS that reproduces the problem. Redact API keys.
+      render: javascript
+    validations:
+      required: true
+  - type: textarea
+    id: errors
+    attributes:
+      label: Error output
+      description: Include error code, provider, and HTTP status if present. Never paste real API keys.
+      render: text

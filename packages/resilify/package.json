@@ -1,0 +1,93 @@
+{
+  "name": "resilify",
+  "version": "0.2.0",
+  "description": "Production-grade resilience for any async call — retries with exponential backoff, circuit breaker, bulkhead, rate limiting, and multi-provider failover in one zero-config library.",
+  "main": "src/index.js",
+  "type": "module",
+  "types": "src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    },
+    "./circuit": {
+      "default": "./src/circuit.js"
+    },
+    "./retry": {
+      "default": "./src/retry.js"
+    },
+    "./ratelimit": {
+      "default": "./src/ratelimit.js"
+    },
+    "./fallback": {
+      "default": "./src/fallback.js"
+    },
+    "./bulkhead": {
+      "default": "./src/bulkhead.js"
+    }
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [
+    "resilience",
+    "circuit-breaker",
+    "retry",
+    "exponential-backoff",
+    "backoff",
+    "jitter",
+    "failover",
+    "fallback",
+    "fault-tolerance",
+    "bulkhead",
+    "concurrency",
+    "rate-limit",
+    "rate-limiter",
+    "timeout",
+    "abort",
+    "http",
+    "api",
+    "reliability",
+    "microservices",
+    "distributed-systems",
+    "typescript",
+    "zero-config",
+    "enterprise",
+    "production",
+    "ai-agent",
+    "llm",
+    "sdk"
+  ],
+  "author": {
+    "name": "Demon-radio",
+    "url": "https://github.com/Demon-radio"
+  },
+  "contributors": [
+    {
+      "name": "Mostafa",
+      "url": "https://github.com/Demon-radio"
+    }
+  ],
+  "license": "MIT",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Demon-radio/Bemora.lol"
+  },
+  "bugs": {
+    "url": "https://github.com/Demon-radio/Bemora.lol/issues"
+  },
+  "homepage": "https://github.com/Demon-radio/Bemora.lol#readme",
+  "devDependencies": {
+    "vitest": "^4.1.10"
+  }
+}

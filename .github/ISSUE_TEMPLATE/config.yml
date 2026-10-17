@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability (private)
+    url: https://github.com/Demon-radio/Bemora.lol/security/advisories/new
+    about: Do NOT open a public issue for security problems. Use private advisories instead — see SECURITY.md.

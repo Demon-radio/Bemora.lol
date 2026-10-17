@@ -1,0 +1,2986 @@
+# bemora — full reference (v1.0.0-alpha.9)
+
+> Unified JavaScript/TypeScript API library and MCP server. One call shape: `await api.<namespace>.<method>(params)`. Auto-generated from the MCP catalog by `scripts/generate-docs.js`; do not edit by hand.
+
+Totals: 157 providers · 548 methods · 143 keyless.
+
+## Install & setup
+
+```bash
+npm install bemora
+```
+
+```js
+import Bemora from 'bemora';
+
+const api = new Bemora({
+  weatherKey: process.env.BEMORA_WEATHER_KEY, // optional; env vars are read automatically
+});
+
+// Keyless provider — works immediately:
+const iss = await api.space.issPosition();
+
+// Keyed provider — reads BEMORA_WEATHER_KEY (or the key passed above):
+const weather = await api.weather.current({ city: 'Cairo' });
+```
+
+Keys are read from constructor options (e.g. `weatherKey`), from `BEMORA_<PROVIDER>_KEY` env vars, or set later with `api.setKey(name, value)`. Keyed providers throw a coded `ConfigurationError` when the key is missing.
+
+Every namespace is also an MCP tool: run `npx bemora-mcp` and call tool `<provider>_<method>` (e.g. `weather_current`, `space_issPosition`, `smart_weather`). Param names and types below are the tool input schemas.
+
+## Provider reference
+
+## weather
+
+### aviationwx — Aviation Weather Center METAR/TAF — no key
+
+- **Auth:** none (keyless).
+- **Category:** weather
+
+- `api.aviationwx.metar(station:string)` — Call aviationwx.metar({ station? }) — current METAR
+    - `station` — string — ICAO code, e.g. KJFK
+- `api.aviationwx.taf(station:string)` — Call aviationwx.taf({ station? }) — TAF forecast
+    - `station` — string — ICAO code, e.g. KJFK
+
+```js
+await api.aviationwx.metar({});
+```
+
+### enriched — Enriched API provider
+
+- **Auth:** none (keyless).
+- **Category:** weather
+
+- `api.enriched.weather(city*:string, units:string)` — Call enriched.weather method
+    - `city` (required) — string
+    - `units` — string
+- `api.enriched.compareCities(cities*:array, units:string)` — Call enriched.compareCities method
+    - `cities` (required) — array — e.g. ["Cairo","Dubai"]
+    - `units` — string
+
+```js
+await api.enriched.weather({ city: '…' });
+```
+
+### metno — MET Norway location forecast — no key
+
+- **Auth:** none (keyless).
+- **Category:** weather
+
+- `api.metno.forecast(lat*:number, lon*:number)` — Call metno.forecast({ lat, lon }) — compact 24h timeseries forecast
+    - `lat` (required) — number
+    - `lon` (required) — number
+
+```js
+await api.metno.forecast({ lat: 0, lon: 0 });
+```
+
+### nws — US National Weather Service forecasts and alerts — no key
+
+- **Auth:** none (keyless).
+- **Category:** weather
+
+- `api.nws.forecast(lat*:number, lon*:number)` — Call nws.forecast({ lat, lon }) — NWS point forecast periods
+    - `lat` (required) — number
+    - `lon` (required) — number
+- `api.nws.alerts(area:string)` — Call nws.alerts({ area }) — active alerts for a state/area code
+    - `area` — string — two-letter state/area code, e.g. CA
+
+```js
+await api.nws.forecast({ lat: 0, lon: 0 });
+```
+
+### tides — NOAA tides and currents — no key
+
+- **Auth:** none (keyless).
+- **Category:** weather
+
+- `api.tides.waterLevel(station:string, units:string)` — Call tides.waterLevel({ station?, units? }) — latest water level
+    - `station` — string — default 8443970 (Boston)
+    - `units` — string — metric or english
+- `api.tides.predictions(station:string, units:string, date:string)` — Call tides.predictions({ station?, units?, date? }) — tide predictions
+    - `station` — string
+    - `units` — string
+    - `date` — string — today or YYYYMMDD
+- `api.tides.stations(—)` — Call tides.stations() — tide station list
+
+```js
+await api.tides.waterLevel({});
+```
+
+### weather — Weather API provider
+
+- **Auth:** requires `BEMORA_WEATHER_KEY` — get one at https://openweathermap.org/api
+- **Category:** weather
+
+- `api.weather.current(city:string, units:string)` — Call weather.current method
+    - `city` — string
+    - `units` — string — metric or imperial
+- `api.weather.forecast(city:string, units:string)` — Call weather.forecast method
+    - `city` — string
+    - `units` — string — metric or imperial
+
+```js
+await api.weather.current({});
+```
+
+### weatheralerts — Weatheralerts API provider
+
+- **Auth:** none (keyless).
+- **Category:** weather
+
+- `api.weatheralerts.usAlerts(state:string)` — Call weatheralerts.usAlerts method
+    - `state` — string — two-letter code, e.g. CA — omit for nationwide
+- `api.weatheralerts.pointForecast(lat*:number, lon*:number)` — Call weatheralerts.pointForecast method
+    - `lat` (required) — number
+    - `lon` (required) — number
+
+```js
+await api.weatheralerts.usAlerts({});
+```
+
+## geo
+
+### census — US Census geocoder — no key
+
+- **Auth:** none (keyless).
+- **Category:** geo
+
+- `api.census.geocode(address*:string)` — Call census.geocode({ address }) — geocode a US address
+    - `address` (required) — string — US street address
+- `api.census.reverse(lat*:number, lon*:number)` — Call census.reverse({ lat, lon }) — reverse geocode US coordinates
+    - `lat` (required) — number
+    - `lon` (required) — number
+
+```js
+await api.census.geocode({ address: '…' });
+```
+
+### countries — Countries API provider
+
+- **Auth:** none (keyless).
+- **Category:** geo
+
+- `api.countries.byName(name*:string)` — Call countries.byName method
+    - `name` (required) — string
+- `api.countries.byCode(code*:string)` — Call countries.byCode method
+    - `code` (required) — string — ISO 3166-1 alpha-2/3 code, e.g. EG
+- `api.countries.byRegion(region*:string)` — Call countries.byRegion method
+    - `region` (required) — string — africa, americas, asia, europe, oceania
+- `api.countries.all(—)` — Call countries.all method
+
+```js
+await api.countries.byName({ name: '…' });
+```
+
+### geocoding — Place/name geocoding (Open-Meteo) — no key
+
+- **Auth:** none (keyless).
+- **Category:** geo
+
+- `api.geocoding.search(name*:string, count:number, language:string)` — Call geocoding.search({ name, count?, language? }) — place name to coordinates
+    - `name` (required) — string — place name, e.g. Cairo
+    - `count` — number
+    - `language` — string — default en
+
+```js
+await api.geocoding.search({ name: '…' });
+```
+
+### geography — Geography API provider
+
+- **Auth:** none (keyless).
+- **Category:** geo
+
+- `api.geography.countryInfo(country*:string)` — Call geography.countryInfo method
+    - `country` (required) — string
+- `api.geography.allCountries(—)` — Call geography.allCountries method
+- `api.geography.capitalCity(country*:string)` — Call geography.capitalCity method
+    - `country` (required) — string
+
+```js
+await api.geography.countryInfo({ country: '…' });
+```
+
+### ip — Ip API provider
+
+- **Auth:** none (keyless).
+- **Category:** geo
+
+- `api.ip.lookup(ip:string)` — Call ip.lookup method
+    - `ip` — string — omit for caller IP
+- `api.ip.batchLookup(ips*:array)` — Call ip.batchLookup method
+    - `ips` (required) — array — up to ~100 IPs
+- `api.ip.myIp(—)` — Call ip.myIp method
+
+```js
+await api.ip.lookup({});
+```
+
+### location — Location API provider
+
+- **Auth:** none (keyless).
+- **Category:** geo
+
+- `api.location.geocode(address*:string, limit:number)` — Call location.geocode method
+    - `address` (required) — string
+    - `limit` — number
+- `api.location.reverse(lat*:number, lon*:number)` — Call location.reverse method
+    - `lat` (required) — number
+    - `lon` (required) — number
+- `api.location.distance(from*:object, to*:object, unit:string)` — Call location.distance method
+    - `from` (required) — object — { lat, lon }
+    - `to` (required) — object — { lat, lon }
+    - `unit` — string — km or mi
+
+```js
+await api.location.geocode({ address: '…' });
+```
+
+### military — Military API provider
+
+- **Auth:** none (keyless).
+- **Category:** geo
+
+- `api.military.time(time*:string)` — Call military.time method
+    - `time` (required) — string
+
+```js
+await api.military.time({ time: '…' });
+```
+
+### photon — Photon (Komoot) OpenStreetMap geocoding — no key
+
+- **Auth:** none (keyless).
+- **Category:** geo
+
+- `api.photon.search(query*:string, limit:number)` — Call photon.search({ query, limit? }) — geocode a place
+    - `query` (required) — string
+    - `limit` — number
+- `api.photon.reverse(lat*:number, lon*:number)` — Call photon.reverse({ lat, lon }) — reverse geocode
+    - `lat` (required) — number
+    - `lon` (required) — number
+
+```js
+await api.photon.search({ query: '…' });
+```
+
+### postal — Postal API provider
+
+- **Auth:** none (keyless).
+- **Category:** geo
+
+- `api.postal.lookup(country*:string, postalCode*:string)` — Call postal.lookup method
+    - `country` (required) — string — ISO code, e.g. us
+    - `postalCode` (required) — string — e.g. 90210
+
+```js
+await api.postal.lookup({ country: '…', postalCode: '…' });
+```
+
+### postcodes — UK Postcodes.io — no key
+
+- **Auth:** none (keyless).
+- **Category:** geo
+
+- `api.postcodes.lookup(postcode*:string)` — Call postcodes.lookup({ postcode }) — UK postcode lookup
+    - `postcode` (required) — string — e.g. SW1A1AA
+- `api.postcodes.reverse(lat*:number, lon*:number)` — Call postcodes.reverse({ lat, lon }) — nearest postcode
+    - `lat` (required) — number
+    - `lon` (required) — number
+- `api.postcodes.validate(postcode*:string)` — Call postcodes.validate({ postcode }) — validate a postcode
+    - `postcode` (required) — string
+- `api.postcodes.random(—)` — Call postcodes.random() — random postcode
+
+```js
+await api.postcodes.lookup({ postcode: '…' });
+```
+
+## science
+
+### airquality — Airquality API provider
+
+- **Auth:** none (keyless).
+- **Category:** science
+
+- `api.airquality.current(lat*:number, lon*:number)` — Call airquality.current method
+    - `lat` (required) — number
+    - `lon` (required) — number
+- `api.airquality.forecast(lat*:number, lon*:number, days:number)` — Call airquality.forecast method
+    - `lat` (required) — number
+    - `lon` (required) — number
+    - `days` — number
+- `api.airquality.classify(aqi*:number)` — Call airquality.classify method
+    - `aqi` (required) — number
+
+```js
+await api.airquality.current({ lat: 0, lon: 0 });
+```
+
+### astronomy — Astronomy API provider
+
+- **Auth:** none (keyless).
+- **Category:** science
+
+- `api.astronomy.sunriseSunset(lat*:number, lon*:number, date:string)` — Call astronomy.sunriseSunset method
+    - `lat` (required) — number
+    - `lon` (required) — number
+    - `date` — string
+- `api.astronomy.moonPhase(date:string)` — Call astronomy.moonPhase method
+    - `date` — string — YYYY-MM-DD
+
+```js
+await api.astronomy.sunriseSunset({ lat: 0, lon: 0 });
+```
+
+### biodiversity — Species and occurrence data (GBIF) — no key
+
+- **Auth:** none (keyless).
+- **Category:** science
+
+- `api.biodiversity.searchSpecies(query*:string, limit:number)` — Call biodiversity.searchSpecies({ query, limit? }) — search the GBIF taxonomic backbone
+    - `query` (required) — string
+    - `limit` — number
+- `api.biodiversity.occurrences(species*:string, country:string, limit:number)` — Call biodiversity.occurrences({ species, country?, limit? }) — recent sighting records
+    - `species` (required) — string
+    - `country` — string
+    - `limit` — number
+
+```js
+await api.biodiversity.searchSpecies({ query: '…' });
+```
+
+### carbon — UK Carbon Intensity energy mix — no key
+
+- **Auth:** none (keyless).
+- **Category:** science
+
+- `api.carbon.current(—)` — Call carbon.current() — current carbon intensity
+- `api.carbon.forecast(—)` — Call carbon.forecast() — 24h intensity forecast
+- `api.carbon.regional(—)` — Call carbon.regional() — regional intensity
+- `api.carbon.generationMix(—)` — Call carbon.generationMix() — current generation mix
+
+```js
+await api.carbon.current({});
+```
+
+### disasters — Natural disaster & Earth event tracking (NASA EONET) — no key
+
+- **Auth:** none (keyless).
+- **Category:** science
+
+- `api.disasters.activeEvents(category:string, status:string, limit:number, days:number)` — Call disasters.activeEvents method
+    - `category` — string
+    - `status` — string
+    - `limit` — number
+    - `days` — number
+- `api.disasters.categories(—)` — Call disasters.categories method
+
+```js
+await api.disasters.activeEvents({});
+```
+
+### earth — Terrain, marine, flood, climate and historical weather (Open-Meteo) — no key
+
+- **Auth:** none (keyless).
+- **Category:** science
+
+- `api.earth.elevation(lat*:number, lon*:number)` — Call earth.elevation({ lat, lon }) — terrain elevation in metres
+    - `lat` (required) — number
+    - `lon` (required) — number
+- `api.earth.marine(lat*:number, lon*:number)` — Call earth.marine({ lat, lon }) — wave height/period and sea surface temperature
+    - `lat` (required) — number
+    - `lon` (required) — number
+- `api.earth.flood(lat*:number, lon*:number, days:number)` — Call earth.flood({ lat, lon, days? }) — river discharge forecast
+    - `lat` (required) — number
+    - `lon` (required) — number
+    - `days` — number
+- `api.earth.climate(lat*:number, lon*:number, startDate*:string, endDate*:string)` — Call earth.climate({ lat, lon, startDate, endDate }) — climate model projections
+    - `lat` (required) — number
+    - `lon` (required) — number
+    - `startDate` (required) — string — YYYY-MM-DD
+    - `endDate` (required) — string — YYYY-MM-DD
+- `api.earth.historical(lat*:number, lon*:number, startDate*:string, endDate*:string)` — Call earth.historical({ lat, lon, startDate, endDate }) — historical weather observations
+    - `lat` (required) — number
+    - `lon` (required) — number
+    - `startDate` (required) — string — YYYY-MM-DD
+    - `endDate` (required) — string — YYYY-MM-DD
+
+```js
+await api.earth.elevation({ lat: 0, lon: 0 });
+```
+
+### earthquake — Earthquake API provider
+
+- **Auth:** none (keyless).
+- **Category:** science
+
+- `api.earthquake.recent(minMagnitude:number, limit:number)` — Call earthquake.recent method
+    - `minMagnitude` — number
+    - `limit` — number
+- `api.earthquake.byLocation(lat*:number, lon*:number, radiusKm:number, minMagnitude:number)` — Call earthquake.byLocation method
+    - `lat` (required) — number
+    - `lon` (required) — number
+    - `radiusKm` — number
+    - `minMagnitude` — number
+- `api.earthquake.biggestToday(—)` — Call earthquake.biggestToday method
+
+```js
+await api.earthquake.recent({});
+```
+
+### ensembl — Ensembl genome database — no key
+
+- **Auth:** none (keyless).
+- **Category:** science
+
+- `api.ensembl.lookupSymbol(symbol*:string, species:string)` — Call ensembl.lookupSymbol({ symbol, species? }) — gene by symbol
+    - `symbol` (required) — string — e.g. BRCA2
+    - `species` — string — default homo_sapiens
+- `api.ensembl.sequence(id*:string)` — Call ensembl.sequence({ id }) — nucleotide sequence
+    - `id` (required) — string — Ensembl gene/transcript id
+- `api.ensembl.xrefs(symbol*:string, species:string)` — Call ensembl.xrefs({ symbol, species? }) — external references
+    - `symbol` (required) — string
+    - `species` — string — default homo_sapiens
+
+```js
+await api.ensembl.lookupSymbol({ symbol: '…' });
+```
+
+### eonet — NASA EONET natural events (fires, volcanoes, storms) — no key
+
+- **Auth:** none (keyless).
+- **Category:** science
+
+- `api.eonet.events(limit:number)` — Call eonet.events({ limit? }) — latest natural events
+    - `limit` — number
+- `api.eonet.category(category*:string, limit:number)` — Call eonet.category({ category, limit? }) — events in a category
+    - `category` (required) — string — e.g. wildfires, volcanoes, severeStorms
+    - `limit` — number
+- `api.eonet.wildfires(limit:number)` — Call eonet.wildfires({ limit? }) — active wildfires
+    - `limit` — number
+- `api.eonet.volcanoes(limit:number)` — Call eonet.volcanoes({ limit? }) — active volcanoes
+    - `limit` — number
+- `api.eonet.storms(limit:number)` — Call eonet.storms({ limit? }) — severe storms
+    - `limit` — number
+
+```js
+await api.eonet.events({});
+```
+
+### exoplanet — NASA Exoplanet Archive TAP — no key
+
+- **Auth:** none (keyless).
+- **Category:** science
+
+- `api.exoplanet.planets(limit:number)` — Call exoplanet.planets({ limit? }) — exoplanets
+    - `limit` — number
+- `api.exoplanet.planet(name*:string)` — Call exoplanet.planet({ name }) — exoplanet by name
+    - `name` (required) — string — e.g. WASP-39 b
+- `api.exoplanet.query(adql*:string)` — Call exoplanet.query({ adql }) — raw ADQL query
+    - `adql` (required) — string — ADQL SELECT query
+
+```js
+await api.exoplanet.planets({});
+```
+
+### launches — Rocket launch schedule (TheSpaceDevs Launch Library 2) — no key
+
+- **Auth:** none (keyless).
+- **Category:** science
+
+- `api.launches.upcoming(limit:number)` — Call launches.upcoming({ limit? }) — upcoming launches
+    - `limit` — number
+- `api.launches.previous(limit:number)` — Call launches.previous({ limit? }) — past launches
+    - `limit` — number
+- `api.launches.byId(id*:string)` — Call launches.byId({ id }) — detailed launch by id
+    - `id` (required) — string — launch id or slug
+
+```js
+await api.launches.upcoming({});
+```
+
+### pubchem — PubChem chemistry database — no key
+
+- **Auth:** none (keyless).
+- **Category:** science
+
+- `api.pubchem.compound(name*:string)` — Call pubchem.compound({ name }) — compound by name
+    - `name` (required) — string — e.g. aspirin
+- `api.pubchem.compoundByCid(cid*:string)` — Call pubchem.compoundByCid({ cid }) — compound by CID
+    - `cid` (required) — string — PubChem CID
+- `api.pubchem.synonyms(name*:string)` — Call pubchem.synonyms({ name }) — compound synonyms
+    - `name` (required) — string
+
+```js
+await api.pubchem.compound({ name: '…' });
+```
+
+### science — Science API provider
+
+- **Auth:** none (keyless).
+- **Category:** science
+
+- `api.science.nasaApod(date:string)` — Call science.nasaApod method
+    - `date` — string — YYYY-MM-DD
+- `api.science.randomFact(—)` — Call science.randomFact method
+
+```js
+await api.science.nasaApod({});
+```
+
+### space — Space API provider
+
+- **Auth:** requires `BEMORA_NASA_KEY` — get one at https://api.nasa.gov
+- **Category:** science
+
+- `api.space.apod(date:string)` — Call space.apod method
+    - `date` — string — YYYY-MM-DD, omit for today
+- `api.space.mars(rover:string, sol:number, camera:string)` — Call space.mars method
+    - `rover` — string — curiosity, opportunity, spirit or perseverance
+    - `sol` — number
+    - `camera` — string
+- `api.space.asteroids(start_date:string, end_date:string)` — Call space.asteroids method
+    - `start_date` — string — YYYY-MM-DD
+    - `end_date` — string — YYYY-MM-DD
+- `api.space.issPosition(—)` — Call space.issPosition method
+
+```js
+await api.space.apod({});
+```
+
+### spaceExtended — SpaceExtended API provider
+
+- **Auth:** none (keyless).
+- **Category:** science
+
+- `api.spaceExtended.apod(date:string)` — Call spaceExtended.apod method
+    - `date` — string — YYYY-MM-DD, omit for today
+- `api.spaceExtended.marsPhotos(rover:string, sol:number)` — Call spaceExtended.marsPhotos method
+    - `rover` — string
+    - `sol` — number
+- `api.spaceExtended.nearEarthObjects(startDate*:string, endDate*:string)` — Call spaceExtended.nearEarthObjects method
+    - `startDate` (required) — string — YYYY-MM-DD
+    - `endDate` (required) — string — YYYY-MM-DD
+- `api.spaceExtended.issPosition(—)` — Call spaceExtended.issPosition method
+
+```js
+await api.spaceExtended.apod({});
+```
+
+### spaceweather — NOAA SWPC space weather — no key
+
+- **Auth:** none (keyless).
+- **Category:** science
+
+- `api.spaceweather.kp(—)` — Call spaceweather.kp() — planetary K-index
+- `api.spaceweather.solarWind(—)` — Call spaceweather.solarWind() — solar wind plasma
+- `api.spaceweather.aurora(—)` — Call spaceweather.aurora() — aurora forecast
+- `api.spaceweather.alerts(—)` — Call spaceweather.alerts() — active space weather alerts
+
+```js
+await api.spaceweather.kp({});
+```
+
+### uniprot — UniProt protein database — no key
+
+- **Auth:** none (keyless).
+- **Category:** science
+
+- `api.uniprot.search(query*:string, size:number)` — Call uniprot.search({ query, size? }) — search proteins
+    - `query` (required) — string — e.g. p53
+    - `size` — number
+- `api.uniprot.entry(accession*:string)` — Call uniprot.entry({ accession }) — protein entry
+    - `accession` (required) — string — e.g. P04637
+
+```js
+await api.uniprot.search({ query: '…' });
+```
+
+### water — USGS real-time streamflow and water data — no key
+
+- **Auth:** none (keyless).
+- **Category:** science
+
+- `api.water.usgs(site*:string, parameter:string, period:string)` — Call water.usgs({ site, parameter?, period? }) — instantaneous USGS site values
+    - `site` (required) — string — USGS site number, e.g. 01646500
+    - `parameter` — string — default 00060 discharge
+    - `period` — string — default P1D
+
+```js
+await api.water.usgs({ site: '…' });
+```
+
+## health
+
+### biomed — Biomedical literature and trials (PubMed, Europe PMC, ClinicalTrials.gov) — no key
+
+- **Auth:** none (keyless).
+- **Category:** health
+
+- `api.biomed.pubmedSearch(query*:string, limit:number)` — Call biomed.pubmedSearch({ query, limit? }) — search PubMed via NCBI eutils
+    - `query` (required) — string — e.g. diabetes
+    - `limit` — number
+- `api.biomed.pubmedSummary(ids*:array)` — Call biomed.pubmedSummary({ ids }) — summaries for one or more PMIDs
+    - `ids` (required) — array — one or more PMIDs
+- `api.biomed.clinicalTrials(query*:string, limit:number)` — Call biomed.clinicalTrials({ query, limit? }) — ClinicalTrials.gov v2 study search
+    - `query` (required) — string
+    - `limit` — number
+- `api.biomed.europePmc(query*:string, limit:number)` — Call biomed.europePmc({ query, limit? }) — Europe PMC article search
+    - `query` (required) — string
+    - `limit` — number
+
+```js
+await api.biomed.pubmedSearch({ query: '…' });
+```
+
+### covid — Covid API provider
+
+- **Auth:** none (keyless).
+- **Category:** health
+
+- `api.covid.global(—)` — Call covid.global method
+- `api.covid.country(country*:string)` — Call covid.country method
+    - `country` (required) — string — name, ISO code or id
+- `api.covid.historical(country:string, days:number)` — Call covid.historical method
+    - `country` — string
+    - `days` — number
+- `api.covid.topCountries(limit:number)` — Call covid.topCountries method
+    - `limit` — number
+
+```js
+await api.covid.global({});
+```
+
+### fda — openFDA adverse events and recalls — no key
+
+- **Auth:** none (keyless).
+- **Category:** health
+
+- `api.fda.drugEvents(search:string, limit:number)` — Call fda.drugEvents({ search?, limit? }) — drug adverse event reports
+    - `search` — string — openFDA search query
+    - `limit` — number
+- `api.fda.foodRecalls(search:string, limit:number)` — Call fda.foodRecalls({ search?, limit? }) — food enforcement/recall reports
+    - `search` — string — openFDA search query
+    - `limit` — number
+- `api.fda.deviceEvents(search:string, limit:number)` — Call fda.deviceEvents({ search?, limit? }) — medical device event (MDR) reports
+    - `search` — string — openFDA search query
+    - `limit` — number
+
+```js
+await api.fda.drugEvents({});
+```
+
+### gho — WHO Global Health Observatory — no key
+
+- **Auth:** none (keyless).
+- **Category:** health
+
+- `api.gho.indicators(—)` — Call gho.indicators() — health indicators
+- `api.gho.data(indicator*:string)` — Call gho.data({ indicator }) — indicator data
+    - `indicator` (required) — string — WHO indicator code
+- `api.gho.country(indicator*:string, country*:string)` — Call gho.country({ indicator, country }) — data for a country
+    - `indicator` (required) — string
+    - `country` (required) — string — ISO3 code
+
+```js
+await api.gho.indicators({});
+```
+
+### icd10 — NLM Clinical Tables ICD-10 lookup — no key
+
+- **Auth:** none (keyless).
+- **Category:** health
+
+- `api.icd10.search(terms*:string, max:number)` — Call icd10.search({ terms, max? }) — search ICD-10 codes
+    - `terms` (required) — string — e.g. diabetes
+    - `max` — number
+- `api.icd10.lookup(code*:string)` — Call icd10.lookup({ code }) — lookup an ICD-10 code
+    - `code` (required) — string — e.g. E11
+
+```js
+await api.icd10.search({ terms: '…' });
+```
+
+### medical — Medical API provider
+
+- **Auth:** none (keyless).
+- **Category:** health
+
+- `api.medical.drug(name*:string, limit:number)` — Call medical.drug method
+    - `name` (required) — string
+    - `limit` — number
+- `api.medical.disease(disease*:string)` — Call medical.disease method
+    - `disease` (required) — string
+- `api.medical.exercises(muscle:string, equipment:string, limit:number)` — Call medical.exercises method
+    - `muscle` — string
+    - `equipment` — string
+    - `limit` — number
+- `api.medical.nutrition(query*:string)` — Call medical.nutrition method
+    - `query` (required) — string
+- `api.medical.bmi(weight_kg*:number, height_cm*:number)` — Call medical.bmi method
+    - `weight_kg` (required) — number
+    - `height_cm` (required) — number
+
+```js
+await api.medical.drug({ name: '…' });
+```
+
+### nutrition — Food & nutrition data (Open Food Facts) — no key
+
+- **Auth:** none (keyless).
+- **Category:** health
+
+- `api.nutrition.byBarcode(barcode*:string)` — Call nutrition.byBarcode method
+    - `barcode` (required) — string
+- `api.nutrition.search(query*:string, limit:number)` — Call nutrition.search method
+    - `query` (required) — string
+    - `limit` — number
+
+```js
+await api.nutrition.byBarcode({ barcode: '…' });
+```
+
+### rxnav — NLM RxNav drug information — no key
+
+- **Auth:** none (keyless).
+- **Category:** health
+
+- `api.rxnav.drugs(name*:string)` — Call rxnav.drugs({ name }) — drug concepts
+    - `name` (required) — string — e.g. aspirin
+- `api.rxnav.interactions(rxcui*:string)` — Call rxnav.interactions({ rxcui }) — drug interactions
+    - `rxcui` (required) — string — RxCUI code
+
+```js
+await api.rxnav.drugs({ name: '…' });
+```
+
+## finance
+
+### blockchain — Blockchain stats (Bitcoin, Ethereum gas) — no key
+
+- **Auth:** none (keyless).
+- **Category:** finance
+
+- `api.blockchain.bitcoinStats(—)` — Call blockchain.bitcoinStats method
+- `api.blockchain.bitcoinAddress(address*:string)` — Call blockchain.bitcoinAddress method
+    - `address` (required) — string
+- `api.blockchain.ethGasPrice(—)` — Call blockchain.ethGasPrice method
+
+```js
+await api.blockchain.bitcoinStats({});
+```
+
+### blockchair — Blockchair multi-chain block explorer — no key
+
+- **Auth:** none (keyless).
+- **Category:** finance
+
+- `api.blockchair.stats(chain:string)` — Call blockchair.stats({ chain? }) — chain statistics
+    - `chain` — string — default bitcoin
+- `api.blockchair.address(chain:string, address*:string)` — Call blockchair.address({ chain?, address }) — address summary
+    - `chain` — string — default bitcoin
+    - `address` (required) — string — crypto address
+- `api.blockchair.transaction(chain:string, hash*:string)` — Call blockchair.transaction({ chain?, hash }) — transaction summary
+    - `chain` — string — default bitcoin
+    - `hash` (required) — string — transaction hash
+
+```js
+await api.blockchair.stats({});
+```
+
+### coinbase — Coinbase spot prices and exchange rates — no key
+
+- **Auth:** none (keyless).
+- **Category:** finance
+
+- `api.coinbase.spot(pair:string)` — Call coinbase.spot({ pair? }) — spot price for a trading pair
+    - `pair` — string — e.g. BTC-USD
+- `api.coinbase.exchangeRates(currency:string)` — Call coinbase.exchangeRates({ currency? }) — exchange rates for a base currency
+    - `currency` — string — base currency, e.g. BTC
+
+```js
+await api.coinbase.spot({});
+```
+
+### coinlore — CoinLore crypto tickers and global stats — no key
+
+- **Auth:** none (keyless).
+- **Category:** finance
+
+- `api.coinlore.tickers(start:number, limit:number)` — Call coinlore.tickers({ start?, limit? }) — coin tickers
+    - `start` — number
+    - `limit` — number
+- `api.coinlore.global(—)` — Call coinlore.global() — global market stats
+- `api.coinlore.coin(id*:string)` — Call coinlore.coin({ id }) — single coin
+    - `id` (required) — string — CoinLore coin id, e.g. 90
+
+```js
+await api.coinlore.tickers({});
+```
+
+### coinpaprika — Coinpaprika crypto market data — no key
+
+- **Auth:** none (keyless).
+- **Category:** finance
+
+- `api.coinpaprika.tickers(limit:number)` — Call coinpaprika.tickers({ limit? }) — top coins by market cap
+    - `limit` — number
+- `api.coinpaprika.ticker(id*:string)` — Call coinpaprika.ticker({ id }) — single coin details
+    - `id` (required) — string — Coinpaprika coin id, e.g. btc-bitcoin
+- `api.coinpaprika.global(—)` — Call coinpaprika.global() — global crypto market stats
+- `api.coinpaprika.search(query*:string)` — Call coinpaprika.search({ query }) — search coins
+    - `query` (required) — string
+- `api.coinpaprika.exchanges(limit:number)` — Call coinpaprika.exchanges({ limit? }) — exchanges
+    - `limit` — number
+
+```js
+await api.coinpaprika.tickers({});
+```
+
+### coinWizard — CoinWizard API provider
+
+- **Auth:** none (keyless).
+- **Category:** finance
+
+- `api.coinWizard.info(id*:string)` — Call coinWizard.info method
+    - `id` (required) — string — CoinGecko id, e.g. bitcoin
+- `api.coinWizard.chart(id*:string, days:string, vsCurrency:string)` — Call coinWizard.chart method
+    - `id` (required) — string
+    - `days` — string — 1, 7, 30, 90, 365 or max
+    - `vsCurrency` — string
+- `api.coinWizard.ohlc(id*:string, days:number, vsCurrency:string)` — Call coinWizard.ohlc method
+    - `id` (required) — string
+    - `days` — number
+    - `vsCurrency` — string
+- `api.coinWizard.global(—)` — Call coinWizard.global method
+- `api.coinWizard.exchanges(limit:number)` — Call coinWizard.exchanges method
+    - `limit` — number
+- `api.coinWizard.categories(limit:number)` — Call coinWizard.categories method
+    - `limit` — number
+- `api.coinWizard.gainersLosers(limit:number, vsCurrency:string)` — Call coinWizard.gainersLosers method
+    - `limit` — number
+    - `vsCurrency` — string
+- `api.coinWizard.search(query*:string)` — Call coinWizard.search method
+    - `query` (required) — string
+- `api.coinWizard.convert(id*:string, amount:number, vsCurrency:string)` — Call coinWizard.convert method
+    - `id` (required) — string
+    - `amount` — number
+    - `vsCurrency` — string
+- `api.coinWizard.list(—)` — Call coinWizard.list method
+
+```js
+await api.coinWizard.info({ id: '…' });
+```
+
+### combined — Combined API provider
+
+- **Auth:** none (keyless).
+- **Category:** finance
+
+- `api.combined.marketSnapshot(currency:string)` — Call combined.marketSnapshot method
+    - `currency` — string
+- `api.combined.newsDigest(topic*:string, language:string)` — Call combined.newsDigest method
+    - `topic` (required) — string
+    - `language` — string
+
+```js
+await api.combined.marketSnapshot({});
+```
+
+### crypto — Crypto API provider
+
+- **Auth:** none (keyless).
+- **Category:** finance
+
+- `api.crypto.price(coins:string, currency:string)` — Call crypto.price method
+    - `coins` — string — coin id or comma-separated ids, e.g. bitcoin
+    - `currency` — string
+- `api.crypto.trending(—)` — Call crypto.trending method
+- `api.crypto.top(limit:number, currency:string)` — Call crypto.top method
+    - `limit` — number
+    - `currency` — string
+
+```js
+await api.crypto.price({});
+```
+
+### currency — Currency API provider
+
+- **Auth:** requires `BEMORA_CURRENCY_KEY` — get one at https://www.exchangerate-api.com
+- **Category:** finance
+
+- `api.currency.rates(base:string, symbols:array)` — Call currency.rates method
+    - `base` — string
+    - `symbols` — array
+- `api.currency.convert(from:string, to:string, amount:number)` — Call currency.convert method
+    - `from` — string
+    - `to` — string
+    - `amount` — number
+
+```js
+await api.currency.rates({});
+```
+
+### currencyHistory — CurrencyHistory API provider
+
+- **Auth:** none (keyless).
+- **Category:** finance
+
+- `api.currencyHistory.latest(base:string, symbols:array)` — Call currencyHistory.latest method
+    - `base` — string
+    - `symbols` — array
+- `api.currencyHistory.historical(date*:string, base:string, symbols:array)` — Call currencyHistory.historical method
+    - `date` (required) — string — YYYY-MM-DD
+    - `base` — string
+    - `symbols` — array
+- `api.currencyHistory.timeSeries(startDate*:string, endDate*:string, base:string, symbols:array)` — Call currencyHistory.timeSeries method
+    - `startDate` (required) — string — YYYY-MM-DD
+    - `endDate` (required) — string — YYYY-MM-DD
+    - `base` — string
+    - `symbols` — array
+
+```js
+await api.currencyHistory.latest({});
+```
+
+### defillama — DefiLlama DeFi TVL and token prices — no key
+
+- **Auth:** none (keyless).
+- **Category:** finance
+
+- `api.defillama.protocols(limit:number)` — Call defillama.protocols({ limit? }) — DeFi protocols by TVL
+    - `limit` — number
+- `api.defillama.protocol(slug*:string)` — Call defillama.protocol({ slug }) — protocol details
+    - `slug` (required) — string — e.g. aave
+- `api.defillama.chains(—)` — Call defillama.chains() — chain TVL list
+- `api.defillama.tvl(protocol*:string)` — Call defillama.tvl({ protocol }) — current TVL for a protocol
+    - `protocol` (required) — string — e.g. aave
+- `api.defillama.prices(coins*:string)` — Call defillama.prices({ coins }) — current token prices
+    - `coins` (required) — string — e.g. coingecko:bitcoin,coingecko:ethereum
+
+```js
+await api.defillama.protocols({});
+```
+
+### eurostat — Eurostat European statistics — no key
+
+- **Auth:** none (keyless).
+- **Category:** finance
+
+- `api.eurostat.dataset(dataset*:string, geo:string, time:string)` — Call eurostat.dataset({ dataset, geo?, time? }) — dataset values
+    - `dataset` (required) — string — e.g. nama_10_gdp
+    - `geo` — string
+    - `time` — string
+- `api.eurostat.gdp(geo:string, time:string)` — Call eurostat.gdp({ geo?, time? }) — GDP dataset
+    - `geo` — string
+    - `time` — string
+
+```js
+await api.eurostat.dataset({ dataset: '…' });
+```
+
+### exchangerate — ExchangeRate-API open endpoint — no key
+
+- **Auth:** none (keyless).
+- **Category:** finance
+
+- `api.exchangerate.latest(base:string)` — Call exchangerate.latest({ base? }) — latest FX rates
+    - `base` — string — base currency, e.g. USD
+
+```js
+await api.exchangerate.latest({});
+```
+
+### finance — Finance API provider
+
+- **Auth:** none (keyless).
+- **Category:** finance
+
+- `api.finance.stockQuote(symbol*:string)` — Call finance.stockQuote method
+    - `symbol` (required) — string
+- `api.finance.cryptoPrice(coin*:string)` — Call finance.cryptoPrice method
+    - `coin` (required) — string — CoinGecko id
+
+```js
+await api.finance.stockQuote({ symbol: '…' });
+```
+
+### gold — Gold API provider
+
+- **Auth:** requires `BEMORA_GOLD_KEY` — get one at https://goldapi.io
+- **Category:** finance
+
+- `api.gold.price(currency:string)` — Call gold.price method
+    - `currency` — string
+- `api.gold.silver(currency:string)` — Call gold.silver method
+    - `currency` — string
+
+```js
+await api.gold.price({});
+```
+
+### imf — IMF DataMapper macroeconomic data — no key
+
+- **Auth:** none (keyless).
+- **Category:** finance
+
+- `api.imf.data(indicator*:string)` — Call imf.data({ indicator }) — all values for an indicator
+    - `indicator` (required) — string — e.g. NGDP_RPCH
+- `api.imf.country(indicator*:string, country*:string)` — Call imf.country({ indicator, country }) — indicator for a country
+    - `indicator` (required) — string
+    - `country` (required) — string — ISO3 code, e.g. DEU
+- `api.imf.indicators(—)` — Call imf.indicators() — available indicators
+
+```js
+await api.imf.data({ indicator: '…' });
+```
+
+### kraken — Kraken exchange public market data — no key
+
+- **Auth:** none (keyless).
+- **Category:** finance
+
+- `api.kraken.ticker(pair:string)` — Call kraken.ticker({ pair? }) — ticker for a pair
+    - `pair` — string — e.g. XBTUSD
+- `api.kraken.ohlc(pair:string, interval:number)` — Call kraken.ohlc({ pair?, interval? }) — OHLC candles
+    - `pair` — string — e.g. XBTUSD
+    - `interval` — number — minutes, e.g. 60
+- `api.kraken.trades(pair:string, count:number)` — Call kraken.trades({ pair?, count? }) — recent trades
+    - `pair` — string
+    - `count` — number
+
+```js
+await api.kraken.ticker({});
+```
+
+### mempool — mempool.space Bitcoin network data — no key
+
+- **Auth:** none (keyless).
+- **Category:** finance
+
+- `api.mempool.fees(—)` — Call mempool.fees() — recommended fee rates
+- `api.mempool.blockHeight(—)` — Call mempool.blockHeight() — current block height
+- `api.mempool.blocks(limit:number)` — Call mempool.blocks({ limit? }) — recent blocks
+    - `limit` — number
+- `api.mempool.difficultyAdjustment(—)` — Call mempool.difficultyAdjustment() — difficulty retarget info
+- `api.mempool.mempool(—)` — Call mempool.mempool() — mempool statistics
+
+```js
+await api.mempool.fees({});
+```
+
+### nbp — National Bank of Poland exchange rates — no key
+
+- **Auth:** none (keyless).
+- **Category:** finance
+
+- `api.nbp.table(table:string)` — Call nbp.table({ table? }) — exchange rate table
+    - `table` — string — A, B or C — default A
+- `api.nbp.rate(code:string, table:string)` — Call nbp.rate({ code?, table? }) — rate for a currency
+    - `code` — string — e.g. USD
+    - `table` — string — default A
+- `api.nbp.gold(—)` — Call nbp.gold() — NBP gold price
+
+```js
+await api.nbp.table({});
+```
+
+### realtime — Realtime API provider
+
+- **Auth:** none (keyless).
+- **Category:** finance
+
+- `api.realtime.binance(—)` — Call realtime.binance method
+- `api.realtime.kraken(—)` — Call realtime.kraken method
+- `api.realtime.getPrice(exchange:string, symbol*:string, timeout:number)` — Call realtime.getPrice method
+    - `exchange` — string — default binance
+    - `symbol` (required) — string — e.g. BTCUSDT
+    - `timeout` — number
+
+```js
+await api.realtime.binance({});
+```
+
+### stocks — Stocks API provider
+
+- **Auth:** requires `BEMORA_STOCKS_KEY` — get one at https://www.alphavantage.co/support/#api-key
+- **Category:** finance
+
+- `api.stocks.quote(symbol*:string)` — Call stocks.quote method
+    - `symbol` (required) — string — e.g. AAPL
+- `api.stocks.search(query*:string)` — Call stocks.search method
+    - `query` (required) — string
+- `api.stocks.overview(symbol*:string)` — Call stocks.overview method
+    - `symbol` (required) — string
+
+```js
+await api.stocks.quote({ symbol: '…' });
+```
+
+### worldbank — World Bank economic indicators (GDP, population, etc.) — no key
+
+- **Auth:** none (keyless).
+- **Category:** finance
+
+- `api.worldbank.indicator(country*:string, indicator:string, limit:number)` — Call worldbank.indicator method
+    - `country` (required) — string — ISO code, e.g. EG
+    - `indicator` — string — default NY.GDP.MKTP.CD
+    - `limit` — number
+- `api.worldbank.population(country*:string, limit:number)` — Call worldbank.population method
+    - `country` (required) — string
+    - `limit` — number
+- `api.worldbank.gdp(country*:string, limit:number)` — Call worldbank.gdp method
+    - `country` (required) — string
+    - `limit` — number
+
+```js
+await api.worldbank.indicator({ country: '…' });
+```
+
+## government
+
+### govspending — US federal government spending data (USAspending.gov) — no key
+
+- **Auth:** none (keyless).
+- **Category:** government
+
+- `api.govspending.searchAwards(keyword:string, startDate:string, endDate:string, limit:number)` — Call govspending.searchAwards({ keyword?, startDate?, endDate?, limit? }) — search federal contract/grant awards
+    - `keyword` — string
+    - `startDate` — string — YYYY-MM-DD
+    - `endDate` — string — YYYY-MM-DD
+    - `limit` — number
+- `api.govspending.agencySpending(fiscalYear:number)` — Call govspending.agencySpending({ fiscalYear? }) — top-level agency spending totals
+    - `fiscalYear` — number
+
+```js
+await api.govspending.searchAwards({});
+```
+
+### treasury — US Treasury Fiscal Data (rates, debt, exchanges) — no key
+
+- **Auth:** none (keyless).
+- **Category:** government
+
+- `api.treasury.averageInterestRates(limit:number)` — Call treasury.averageInterestRates({ limit? }) — average interest rates on Treasury securities
+    - `limit` — number
+- `api.treasury.debtToPenny(limit:number)` — Call treasury.debtToPenny({ limit? }) — US national debt to the penny
+    - `limit` — number
+- `api.treasury.exchangeRates(limit:number)` — Call treasury.exchangeRates({ limit? }) — Treasury rates of exchange
+    - `limit` — number
+
+```js
+await api.treasury.averageInterestRates({});
+```
+
+## news
+
+### gdacs — GDACS global disaster alerts — no key
+
+- **Auth:** none (keyless).
+- **Category:** news
+
+- `api.gdacs.events(limit:number, type:string)` — Call gdacs.events({ limit?, type? }) — active disaster alerts
+    - `limit` — number
+    - `type` — string — e.g. EQ, TC, FL, WF, VO, DR
+
+```js
+await api.gdacs.events({});
+```
+
+### lobsters — Lobsters tech link aggregator — no key
+
+- **Auth:** none (keyless).
+- **Category:** news
+
+- `api.lobsters.hottest(—)` — Call lobsters.hottest() — hottest stories
+- `api.lobsters.newest(—)` — Call lobsters.newest() — newest stories
+- `api.lobsters.active(—)` — Call lobsters.active() — most active stories
+- `api.lobsters.byTag(tag*:string)` — Call lobsters.byTag({ tag }) — stories for a tag
+    - `tag` (required) — string — e.g. programming
+
+```js
+await api.lobsters.hottest({});
+```
+
+### news — News API provider
+
+- **Auth:** requires `BEMORA_NEWS_KEY` — get one at https://newsapi.org/register
+- **Category:** news
+
+- `api.news.headlines(country:string, category:string, q:string, pageSize:number)` — Call news.headlines method
+    - `country` — string — ISO code, e.g. eg
+    - `category` — string
+    - `q` — string
+    - `pageSize` — number
+- `api.news.search(q*:string, language:string, sortBy:string, pageSize:number)` — Call news.search method
+    - `q` (required) — string
+    - `language` — string
+    - `sortBy` — string
+    - `pageSize` — number
+
+```js
+await api.news.headlines({});
+```
+
+### politics — Politics API provider
+
+- **Auth:** none (keyless).
+- **Category:** news
+
+- `api.politics.presidents(—)` — Call politics.presidents method
+
+```js
+await api.politics.presidents({});
+```
+
+### rss — Rss API provider
+
+- **Auth:** none (keyless).
+- **Category:** news
+
+- `api.rss.fetch(source*:string, limit:number)` — Call rss.fetch method
+    - `source` (required) — string
+    - `limit` — number
+- `api.rss.custom(url*:string, limit:number)` — Call rss.custom method
+    - `url` (required) — string
+    - `limit` — number
+- `api.rss.aggregate(sources*:array, limit:number, sortBy:string)` — Call rss.aggregate method
+    - `sources` (required) — array
+    - `limit` — number
+    - `sortBy` — string
+- `api.rss.sources(—)` — Call rss.sources method
+
+```js
+await api.rss.fetch({ source: '…' });
+```
+
+### spacenews — Spaceflight News API (articles, blogs, reports) — no key
+
+- **Auth:** none (keyless).
+- **Category:** news
+
+- `api.spacenews.articles(limit:number, search:string)` — Call spacenews.articles({ limit?, search? }) — spaceflight news articles
+    - `limit` — number
+    - `search` — string
+- `api.spacenews.blogs(limit:number)` — Call spacenews.blogs({ limit? }) — spaceflight blog posts
+    - `limit` — number
+- `api.spacenews.reports(limit:number)` — Call spacenews.reports({ limit? }) — spaceflight reports
+    - `limit` — number
+
+```js
+await api.spacenews.articles({});
+```
+
+## research
+
+### archiveorg — Internet Archive search and metadata — no key
+
+- **Auth:** none (keyless).
+- **Category:** research
+
+- `api.archiveorg.search(query*:string, rows:number)` — Call archiveorg.search({ query, rows? }) — search archive.org
+    - `query` (required) — string
+    - `rows` — number
+- `api.archiveorg.metadata(identifier*:string)` — Call archiveorg.metadata({ identifier }) — item metadata
+    - `identifier` (required) — string — archive.org item id
+
+```js
+await api.archiveorg.search({ query: '…' });
+```
+
+### arxiv — Academic paper search (arXiv) — no key
+
+- **Auth:** none (keyless).
+- **Category:** research
+
+- `api.arxiv.search(query*:string, maxResults:number)` — Call arxiv.search({ query, maxResults? }) — search papers, returns title/authors/summary/pdf link
+    - `query` (required) — string
+    - `maxResults` — number
+
+```js
+await api.arxiv.search({ query: '…' });
+```
+
+### books — Books API provider
+
+- **Auth:** none (keyless).
+- **Category:** research
+
+- `api.books.search(query*:string, limit:number)` — Call books.search method
+    - `query` (required) — string
+    - `limit` — number
+- `api.books.getById(id*:string)` — Call books.getById method
+    - `id` (required) — string
+- `api.books.random(—)` — Call books.random method
+
+```js
+await api.books.search({ query: '…' });
+```
+
+### law — Law API provider
+
+- **Auth:** none (keyless).
+- **Category:** research
+
+- `api.law.search(query*:string)` — Call law.search method
+    - `query` (required) — string
+
+```js
+await api.law.search({ query: '…' });
+```
+
+### literature — Literature API provider
+
+- **Auth:** none (keyless).
+- **Category:** research
+
+- `api.literature.randomQuote(—)` — Call literature.randomQuote method
+- `api.literature.searchQuotes(query*:string)` — Call literature.searchQuotes method
+    - `query` (required) — string
+
+```js
+await api.literature.randomQuote({});
+```
+
+### poetry — PoetryDB public-domain poetry — no key
+
+- **Auth:** none (keyless).
+- **Category:** research
+
+- `api.poetry.random(limit:number)` — Call poetry.random({ limit? }) — random poem(s)
+    - `limit` — number
+- `api.poetry.byAuthor(author*:string, limit:number)` — Call poetry.byAuthor({ author, limit? }) — poems by author
+    - `author` (required) — string — e.g. Emily Dickinson
+    - `limit` — number
+- `api.poetry.byTitle(title*:string)` — Call poetry.byTitle({ title }) — poems by title
+    - `title` (required) — string
+- `api.poetry.search(query*:string, limit:number)` — Call poetry.search({ query, limit? }) — poems matching a line
+    - `query` (required) — string
+    - `limit` — number
+
+```js
+await api.poetry.random({});
+```
+
+### research — Research API provider
+
+- **Auth:** none (keyless).
+- **Category:** research
+
+- `api.research.wikipedia(query*:string, language:string, limit:number)` — Call research.wikipedia method
+    - `query` (required) — string
+    - `language` — string
+    - `limit` — number
+- `api.research.article(title*:string, language:string)` — Call research.article method
+    - `title` (required) — string
+    - `language` — string
+- `api.research.books(query*:string, limit:number)` — Call research.books method
+    - `query` (required) — string
+    - `limit` — number
+
+```js
+await api.research.wikipedia({ query: '…' });
+```
+
+### scholarly — Scholarly works and citations (OpenAlex + Crossref) — no key
+
+- **Auth:** none (keyless).
+- **Category:** research
+
+- `api.scholarly.searchWorks(query*:string, limit:number)` — Call scholarly.searchWorks({ query, limit? }) — search 250M+ works with citations
+    - `query` (required) — string
+    - `limit` — number
+- `api.scholarly.getWork(id*:string)` — Call scholarly.getWork({ id }) — one work by OpenAlex ID or DOI
+    - `id` (required) — string — OpenAlex ID or DOI
+- `api.scholarly.crossrefSearch(query*:string, limit:number)` — Call scholarly.crossrefSearch({ query, limit? }) — DOI metadata search
+    - `query` (required) — string
+    - `limit` — number
+- `api.scholarly.doiMetadata(doi*:string)` — Call scholarly.doiMetadata({ doi }) — metadata for one DOI
+    - `doi` (required) — string — e.g. 10.1038/nature12373
+
+```js
+await api.scholarly.searchWorks({ query: '…' });
+```
+
+### university — University lookup (Hipolabs) — no key
+
+- **Auth:** none (keyless).
+- **Category:** research
+
+- `api.university.search(country:string, name:string)` — Call university.search method
+    - `country` — string
+    - `name` — string
+- `api.university.byCountry(country*:string)` — Call university.byCountry method
+    - `country` (required) — string
+
+```js
+await api.university.search({});
+```
+
+### wikidata — Wikidata structured knowledge graph — no key
+
+- **Auth:** none (keyless).
+- **Category:** research
+
+- `api.wikidata.search(query*:string, language:string, limit:number)` — Call wikidata.search({ query, language?, limit? }) — search entities by label
+    - `query` (required) — string
+    - `language` — string
+    - `limit` — number
+- `api.wikidata.getEntity(id*:string, language:string)` — Call wikidata.getEntity({ id, language? }) — fetch an entity's core facts by Q-id
+    - `id` (required) — string — Q-id, e.g. Q79
+    - `language` — string
+
+```js
+await api.wikidata.search({ query: '…' });
+```
+
+## developer
+
+### certs — crt.sh certificate transparency search — no key
+
+- **Auth:** none (keyless).
+- **Category:** developer
+
+- `api.certs.search(domain*:string, limit:number)` — Call certs.search({ domain, limit? }) — TLS certificates for a domain
+    - `domain` (required) — string — e.g. example.com
+    - `limit` — number
+
+```js
+await api.certs.search({ domain: '…' });
+```
+
+### dev — Dev API provider
+
+- **Auth:** none (keyless).
+- **Category:** developer
+
+- `api.dev.npmPackage(name*:string)` — Call dev.npmPackage method
+    - `name` (required) — string
+- `api.dev.npmDownloads(name*:string)` — Call dev.npmDownloads method
+    - `name` (required) — string
+- `api.dev.githubRepos(username*:string, sort:string, limit:number)` — Call dev.githubRepos method
+    - `username` (required) — string
+    - `sort` — string
+    - `limit` — number
+- `api.dev.githubReleases(owner*:string, repo*:string, limit:number)` — Call dev.githubReleases method
+    - `owner` (required) — string
+    - `repo` (required) — string
+    - `limit` — number
+- `api.dev.validateEmail(email*:string)` — Call dev.validateEmail method
+    - `email` (required) — string
+- `api.dev.dnsLookup(domain*:string, type:string)` — Call dev.dnsLookup method
+    - `domain` (required) — string
+    - `type` — string — default A
+- `api.dev.loremIpsum(paragraphs:number, type:string, amount:number)` — Call dev.loremIpsum method
+    - `paragraphs` — number
+    - `type` — string
+    - `amount` — number
+- `api.dev.httpStatus(code*:number)` — Call dev.httpStatus method
+    - `code` (required) — number
+
+```js
+await api.dev.npmPackage({ name: '…' });
+```
+
+### devto — Dev.to developer articles and tags — no key
+
+- **Auth:** none (keyless).
+- **Category:** developer
+
+- `api.devto.articles(tag:string, page:number, perPage:number)` — Call devto.articles({ tag?, page?, perPage? }) — developer articles
+    - `tag` — string
+    - `page` — number
+    - `perPage` — number
+- `api.devto.byTag(tag*:string, perPage:number)` — Call devto.byTag({ tag, perPage? }) — articles for a specific tag
+    - `tag` (required) — string — e.g. javascript
+    - `perPage` — number
+- `api.devto.tags(perPage:number)` — Call devto.tags({ perPage? }) — trending tags
+    - `perPage` — number
+
+```js
+await api.devto.articles({});
+```
+
+### dns — DNS-over-HTTPS lookups via Cloudflare + Google — no key
+
+- **Auth:** none (keyless).
+- **Category:** developer
+
+- `api.dns.resolve(name*:string, type:string)` — Call dns.resolve({ name, type? }) — raw DoH record for any type
+    - `name` (required) — string — hostname, e.g. example.com
+    - `type` — string — A, AAAA, CNAME, MX, TXT, NS or SRV
+- `api.dns.a(name*:string)` — Call dns.a({ name }) — A records
+    - `name` (required) — string
+- `api.dns.aaaa(name*:string)` — Call dns.aaaa({ name }) — AAAA (IPv6) records
+    - `name` (required) — string
+- `api.dns.cname(name*:string)` — Call dns.cname({ name }) — CNAME records
+    - `name` (required) — string
+- `api.dns.mx(name*:string)` — Call dns.mx({ name }) — mail exchange records
+    - `name` (required) — string
+- `api.dns.txt(name*:string)` — Call dns.txt({ name }) — TXT records
+    - `name` (required) — string
+- `api.dns.ns(name*:string)` — Call dns.ns({ name }) — nameserver records
+    - `name` (required) — string
+- `api.dns.srv(name*:string)` — Call dns.srv({ name }) — SRV service records
+    - `name` (required) — string
+
+```js
+await api.dns.resolve({ name: '…' });
+```
+
+### domain — Domain API provider
+
+- **Auth:** none (keyless).
+- **Category:** developer
+
+- `api.domain.whois(domain*:string)` — Call domain.whois method
+    - `domain` (required) — string — e.g. example.com
+- `api.domain.dnsRecords(domain*:string, type:string)` — Call domain.dnsRecords method
+    - `domain` (required) — string
+    - `type` — string — default A
+- `api.domain.resolveIp(domain*:string)` — Call domain.resolveIp method
+    - `domain` (required) — string
+
+```js
+await api.domain.whois({ domain: '…' });
+```
+
+### fakedb — Fakedb API provider
+
+- **Auth:** none (keyless).
+- **Category:** developer
+
+- `api.fakedb.getPosts(userId:number, id:number)` — Call fakedb.getPosts method
+    - `userId` — number
+    - `id` — number
+- `api.fakedb.getComments(postId*:number)` — Call fakedb.getComments method
+    - `postId` (required) — number
+- `api.fakedb.getUser(id*:number)` — Call fakedb.getUser method
+    - `id` (required) — number
+- `api.fakedb.getUsers(—)` — Call fakedb.getUsers method
+- `api.fakedb.getTodos(userId:number, completed:boolean)` — Call fakedb.getTodos method
+    - `userId` — number
+    - `completed` — boolean
+- `api.fakedb.getAlbums(userId:number)` — Call fakedb.getAlbums method
+    - `userId` — number
+- `api.fakedb.getPhotos(albumId*:number)` — Call fakedb.getPhotos method
+    - `albumId` (required) — number
+- `api.fakedb.create(resource:string, body*:object)` — Call fakedb.create method
+    - `resource` — string — default posts
+    - `body` (required) — object
+
+```js
+await api.fakedb.getPosts({});
+```
+
+### httptool — httpbin request inspection — no key
+
+- **Auth:** none (keyless).
+- **Category:** developer
+
+- `api.httptool.get(—)` — Call httptool.get() — echo GET request
+- `api.httptool.headers(—)` — Call httptool.headers() — echo headers
+- `api.httptool.ip(—)` — Call httptool.ip() — caller IP
+- `api.httptool.uuid(—)` — Call httptool.uuid() — random UUID
+
+```js
+await api.httptool.get({});
+```
+
+### macaddress — MAC address vendor lookup — no key
+
+- **Auth:** none (keyless).
+- **Category:** developer
+
+- `api.macaddress.lookup(mac*:string)` — Call macaddress.lookup({ mac }) — vendor for a MAC address
+    - `mac` (required) — string — e.g. 00:1A:2B:3C:4D:5E
+
+```js
+await api.macaddress.lookup({ mac: '…' });
+```
+
+### markdown — Markdown API provider
+
+- **Auth:** none (keyless).
+- **Category:** developer
+
+- `api.markdown.render(text:string, mode:string, context:string)` — Call markdown.render method
+    - `text` — string
+    - `mode` — string
+    - `context` — string
+- `api.markdown.renderGfm(text*:string)` — Call markdown.renderGfm method
+    - `text` (required) — string
+- `api.markdown.analyze(text*:string)` — Call markdown.analyze method
+    - `text` (required) — string
+
+```js
+await api.markdown.render({});
+```
+
+### packages — Language package registries — no key
+
+- **Auth:** none (keyless).
+- **Category:** developer
+
+- `api.packages.crates(name*:string)` — Call packages.crates({ name }) — Rust crate
+    - `name` (required) — string — e.g. serde
+- `api.packages.packagist(package*:string)` — Call packages.packagist({ package }) — PHP package
+    - `package` (required) — string — e.g. laravel/framework
+- `api.packages.rubygems(name*:string)` — Call packages.rubygems({ name }) — Ruby gem
+    - `name` (required) — string — e.g. rails
+- `api.packages.maven(groupId*:string, artifactId*:string)` — Call packages.maven({ groupId, artifactId }) — Maven artifact
+    - `groupId` (required) — string — e.g. org.apache.commons
+    - `artifactId` (required) — string — e.g. commons-lang3
+- `api.packages.nuget(id*:string)` — Call packages.nuget({ id }) — NuGet package
+    - `id` (required) — string — e.g. Newtonsoft.Json
+- `api.packages.dockerhub(name:string)` — Call packages.dockerhub({ name? }) — Docker Hub repository
+    - `name` — string — default library/nginx
+- `api.packages.homebrew(name*:string)` — Call packages.homebrew({ name }) — Homebrew formula
+    - `name` (required) — string — e.g. nginx
+- `api.packages.goproxy(module*:string)` — Call packages.goproxy({ module }) — Go module versions
+    - `module` (required) — string — e.g. github.com/gin-gonic/gin
+
+```js
+await api.packages.crates({ name: '…' });
+```
+
+### registry — Package registries and vulnerability intel (PyPI, npm, OSV.dev) — no key
+
+- **Auth:** none (keyless).
+- **Category:** developer
+
+- `api.registry.pypiInfo(package*:string)` — Call registry.pypiInfo({ package }) — versions, deps, license for a PyPI package
+    - `package` (required) — string — e.g. requests
+- `api.registry.npmInfo(package*:string)` — Call registry.npmInfo({ package }) — version, deps, license for an npm package
+    - `package` (required) — string — e.g. express
+- `api.registry.osvQuery(ecosystem*:string, package*:string, version*:string)` — Call registry.osvQuery({ ecosystem, package, version }) — known CVEs affecting a pinned version
+    - `ecosystem` (required) — string — e.g. PyPI, npm, Go
+    - `package` (required) — string
+    - `version` (required) — string
+
+```js
+await api.registry.pypiInfo({ package: '…' });
+```
+
+### stackexchange — Stackexchange API provider
+
+- **Auth:** none (keyless).
+- **Category:** developer
+
+- `api.stackexchange.searchQuestions(query*:string, site:string, limit:number, sort:string)` — Call stackexchange.searchQuestions method
+    - `query` (required) — string
+    - `site` — string
+    - `limit` — number
+    - `sort` — string
+- `api.stackexchange.getQuestion(id*:number, site:string)` — Call stackexchange.getQuestion method
+    - `id` (required) — number
+    - `site` — string
+- `api.stackexchange.getTopUsers(site:string, limit:number)` — Call stackexchange.getTopUsers method
+    - `site` — string
+    - `limit` — number
+
+```js
+await api.stackexchange.searchQuestions({ query: '…' });
+```
+
+### statuspage — Statuspage.io service status — no key
+
+- **Auth:** none (keyless).
+- **Category:** developer
+
+- `api.statuspage.service(service*:string)` — Call statuspage.service({ service }) — current service status
+    - `service` (required) — string — github, discord, openai, cloudflare or a statuspage subdomain
+- `api.statuspage.incidents(service*:string)` — Call statuspage.incidents({ service }) — recent incidents
+    - `service` (required) — string
+- `api.statuspage.components(service*:string)` — Call statuspage.components({ service }) — component status
+    - `service` (required) — string
+
+```js
+await api.statuspage.service({ service: '…' });
+```
+
+### techdb — Techdb API provider
+
+- **Auth:** none (keyless).
+- **Category:** developer
+
+- `api.techdb.listDevices(—)` — Call techdb.listDevices method
+- `api.techdb.getDevice(id*:string)` — Call techdb.getDevice method
+    - `id` (required) — string
+- `api.techdb.searchDevices(query*:string)` — Call techdb.searchDevices method
+    - `query` (required) — string
+- `api.techdb.compareDevices(ids*:array)` — Call techdb.compareDevices method
+    - `ids` (required) — array
+
+```js
+await api.techdb.listDevices({});
+```
+
+### websites — Websites API provider
+
+- **Auth:** none (keyless).
+- **Category:** developer
+
+- `api.websites.status(url*:string)` — Call websites.status method
+    - `url` (required) — string
+- `api.websites.detectTechStack(url*:string)` — Call websites.detectTechStack method
+    - `url` (required) — string
+- `api.websites.getMeta(url*:string)` — Call websites.getMeta method
+    - `url` (required) — string
+
+```js
+await api.websites.status({ url: '…' });
+```
+
+### webtools — Favicon, screenshot, and link-preview metadata tools — no key
+
+- **Auth:** none (keyless).
+- **Category:** developer
+
+- `api.webtools.favicon(domain*:string, size:number)` — Call webtools.favicon method
+    - `domain` (required) — string
+    - `size` — number
+- `api.webtools.screenshot(url*:string, width:number)` — Call webtools.screenshot method
+    - `url` (required) — string
+    - `width` — number
+- `api.webtools.metadata(url*:string)` — Call webtools.metadata method
+    - `url` (required) — string
+
+```js
+await api.webtools.favicon({ domain: '…' });
+```
+
+## social
+
+### bluesky — Bluesky public AppView (profiles, actors, feeds) — no key
+
+- **Auth:** none (keyless).
+- **Category:** social
+
+- `api.bluesky.searchActors(query*:string, limit:number)` — Call bluesky.searchActors({ query, limit? }) — search Bluesky actors
+    - `query` (required) — string
+    - `limit` — number
+- `api.bluesky.profile(actor*:string)` — Call bluesky.profile({ actor }) — a Bluesky profile by handle or DID
+    - `actor` (required) — string — handle or DID, e.g. bsky.app
+- `api.bluesky.authorFeed(actor*:string, limit:number)` — Call bluesky.authorFeed({ actor, limit? }) — recent posts for an actor
+    - `actor` (required) — string
+    - `limit` — number
+
+```js
+await api.bluesky.searchActors({ query: '…' });
+```
+
+### social — Social API provider
+
+- **Auth:** none (keyless).
+- **Category:** social
+
+- `api.social.githubUser(username*:string)` — Call social.githubUser method
+    - `username` (required) — string
+- `api.social.githubRepo(owner*:string, repo*:string)` — Call social.githubRepo method
+    - `owner` (required) — string
+    - `repo` (required) — string
+- `api.social.githubTrending(—)` — Call social.githubTrending method
+- `api.social.hackerNews(limit:number)` — Call social.hackerNews method
+    - `limit` — number
+- `api.social.productHunt(—)` — Call social.productHunt method
+
+```js
+await api.social.githubUser({ username: '…' });
+```
+
+## media
+
+### images — Images API provider
+
+- **Auth:** requires `BEMORA_UNSPLASH_KEY or BEMORA_PEXELS_KEY` — get one at https://unsplash.com/developers
+- **Category:** media
+
+- `api.images.search(query*:string, perPage:number, orientation:string)` — Call images.search method
+    - `query` (required) — string
+    - `perPage` — number
+    - `orientation` — string — landscape, portrait or squarish
+- `api.images.random(query:string, orientation:string)` — Call images.random method
+    - `query` — string
+    - `orientation` — string
+- `api.images.pexels(query*:string, perPage:number, orientation:string)` — Call images.pexels method
+    - `query` (required) — string
+    - `perPage` — number
+    - `orientation` — string
+
+```js
+await api.images.search({ query: '…' });
+```
+
+## entertainment
+
+### anilist — AniList anime and manga GraphQL — no key
+
+- **Auth:** none (keyless).
+- **Category:** entertainment
+
+- `api.anilist.search(query*:string, perPage:number)` — Call anilist.search({ query, perPage? }) — search anime
+    - `query` (required) — string
+    - `perPage` — number
+- `api.anilist.anime(id*:number)` — Call anilist.anime({ id }) — anime details
+    - `id` (required) — number
+- `api.anilist.manga(query*:string, perPage:number)` — Call anilist.manga({ query, perPage? }) — search manga
+    - `query` (required) — string
+    - `perPage` — number
+- `api.anilist.character(query*:string, perPage:number)` — Call anilist.character({ query, perPage? }) — search characters
+    - `query` (required) — string
+    - `perPage` — number
+
+```js
+await api.anilist.search({ query: '…' });
+```
+
+### anime — Anime API provider
+
+- **Auth:** none (keyless).
+- **Category:** entertainment
+
+- `api.anime.search(query*:string, limit:number, page:number, type:string, orderBy:string)` — Call anime.search method
+    - `query` (required) — string
+    - `limit` — number
+    - `page` — number
+    - `type` — string
+    - `orderBy` — string
+- `api.anime.details(id*:number)` — Call anime.details method
+    - `id` (required) — number
+- `api.anime.top(limit:number, type:string, filter:string)` — Call anime.top method
+    - `limit` — number
+    - `type` — string
+    - `filter` — string
+- `api.anime.nowAiring(—)` — Call anime.nowAiring method
+- `api.anime.random(—)` — Call anime.random method
+- `api.anime.manga(query*:string, limit:number)` — Call anime.manga method
+    - `query` (required) — string
+    - `limit` — number
+- `api.anime.mangaDetails(id*:number)` — Call anime.mangaDetails method
+    - `id` (required) — number
+- `api.anime.episodes(id*:number, page:number)` — Call anime.episodes method
+    - `id` (required) — number
+    - `page` — number
+- `api.anime.episode(id*:number, episode*:number)` — Call anime.episode method
+    - `id` (required) — number
+    - `episode` (required) — number
+- `api.anime.characters(id*:number)` — Call anime.characters method
+    - `id` (required) — number
+- `api.anime.character(id*:number)` — Call anime.character method
+    - `id` (required) — number
+- `api.anime.videos(id*:number)` — Call anime.videos method
+    - `id` (required) — number
+- `api.anime.pictures(id*:number)` — Call anime.pictures method
+    - `id` (required) — number
+- `api.anime.recommendations(id*:number)` — Call anime.recommendations method
+    - `id` (required) — number
+- `api.anime.news(id*:number)` — Call anime.news method
+    - `id` (required) — number
+- `api.anime.quote(anime:string)` — Call anime.quote method
+    - `anime` — string
+- `api.anime.quotesByCharacter(character*:string)` — Call anime.quotesByCharacter method
+    - `character` (required) — string
+
+```js
+await api.anime.search({ query: '…' });
+```
+
+### art — Art API provider
+
+- **Auth:** none (keyless).
+- **Category:** entertainment
+
+- `api.art.search(query*:string, limit:number, page:number)` — Call art.search method
+    - `query` (required) — string
+    - `limit` — number
+    - `page` — number
+- `api.art.details(id*:number)` — Call art.details method
+    - `id` (required) — number
+- `api.art.searchMet(query*:string, isHighlight:boolean, hasImages:boolean)` — Call art.searchMet method
+    - `query` (required) — string
+    - `isHighlight` — boolean
+    - `hasImages` — boolean
+- `api.art.metDetails(id*:number)` — Call art.metDetails method
+    - `id` (required) — number
+
+```js
+await api.art.search({ query: '…' });
+```
+
+### comics — Comics API provider
+
+- **Auth:** none (keyless).
+- **Category:** entertainment
+
+- `api.comics.randomXKCD(—)` — Call comics.randomXKCD method
+- `api.comics.getXKCD(num*:number)` — Call comics.getXKCD method
+    - `num` (required) — number — comic number
+
+```js
+await api.comics.randomXKCD({});
+```
+
+### deezer — Deezer music catalog — no key
+
+- **Auth:** none (keyless).
+- **Category:** entertainment
+
+- `api.deezer.search(query*:string, limit:number)` — Call deezer.search({ query, limit? }) — search tracks
+    - `query` (required) — string
+    - `limit` — number
+- `api.deezer.track(id*:number)` — Call deezer.track({ id }) — track details
+    - `id` (required) — number
+- `api.deezer.album(id*:number)` — Call deezer.album({ id }) — album details
+    - `id` (required) — number
+- `api.deezer.artist(id*:number)` — Call deezer.artist({ id }) — artist details
+    - `id` (required) — number
+- `api.deezer.chart(—)` — Call deezer.chart() — top chart tracks
+
+```js
+await api.deezer.search({ query: '…' });
+```
+
+### fandom — Fandom API provider
+
+- **Auth:** none (keyless).
+- **Category:** entertainment
+
+- `api.fandom.search(wiki*:string, query*:string, limit:number)` — Call fandom.search method
+    - `wiki` (required) — string
+    - `query` (required) — string
+    - `limit` — number
+- `api.fandom.getPage(wiki*:string, pageId:number, title:string)` — Call fandom.getPage method
+    - `wiki` (required) — string
+    - `pageId` — number
+    - `title` — string
+- `api.fandom.recentActivity(wiki*:string, limit:number)` — Call fandom.recentActivity method
+    - `wiki` (required) — string
+    - `limit` — number
+
+```js
+await api.fandom.search({ wiki: '…', query: '…' });
+```
+
+### gaming — Gaming API provider
+
+- **Auth:** none (keyless).
+- **Category:** entertainment
+
+- `api.gaming.freeFirePlayer(playerId*:string)` — Call gaming.freeFirePlayer method
+    - `playerId` (required) — string
+- `api.gaming.pubgPlayer(playerName*:string, platform:string)` — Call gaming.pubgPlayer method
+    - `playerName` (required) — string
+    - `platform` — string — default steam
+- `api.gaming.crossfireNews(—)` — Call gaming.crossfireNews method
+- `api.gaming.freeFireNews(—)` — Call gaming.freeFireNews method
+- `api.gaming.pubgPatchNotes(—)` — Call gaming.pubgPatchNotes method
+- `api.gaming.crossfireWeapons(limit:number)` — Call gaming.crossfireWeapons method
+    - `limit` — number
+- `api.gaming.crossfireWeapon(name*:string)` — Call gaming.crossfireWeapon method
+    - `name` (required) — string — e.g. AK-47
+- `api.gaming.crossfireMaps(limit:number)` — Call gaming.crossfireMaps method
+    - `limit` — number
+- `api.gaming.crossfireCharacters(limit:number)` — Call gaming.crossfireCharacters method
+    - `limit` — number
+- `api.gaming.crossfireGameModes(limit:number)` — Call gaming.crossfireGameModes method
+    - `limit` — number
+- `api.gaming.crossfireEvents(limit:number)` — Call gaming.crossfireEvents method
+    - `limit` — number
+- `api.gaming.crossfireSearch(query*:string, limit:number)` — Call gaming.crossfireSearch method
+    - `query` (required) — string
+    - `limit` — number
+- `api.gaming.fortniteCosmetic(name*:string)` — Call gaming.fortniteCosmetic method
+    - `name` (required) — string — e.g. Skull Trooper
+- `api.gaming.fortniteShop(—)` — Call gaming.fortniteShop method
+- `api.gaming.lolChampions(—)` — Call gaming.lolChampions method
+- `api.gaming.lolChampion(name*:string)` — Call gaming.lolChampion method
+    - `name` (required) — string — e.g. ahri
+- `api.gaming.minecraftPlayer(username*:string)` — Call gaming.minecraftPlayer method
+    - `username` (required) — string
+- `api.gaming.minecraftServerStatus(host*:string)` — Call gaming.minecraftServerStatus method
+    - `host` (required) — string — e.g. mc.hypixel.net
+- `api.gaming.chessPlayer(username*:string)` — Call gaming.chessPlayer method
+    - `username` (required) — string
+- `api.gaming.chessDailyPuzzle(—)` — Call gaming.chessDailyPuzzle method
+- `api.gaming.searchGameWiki(wiki*:string, query*:string, limit:number)` — Call gaming.searchGameWiki method
+    - `wiki` (required) — string — Fandom subdomain, e.g. valorant
+    - `query` (required) — string
+    - `limit` — number
+
+```js
+await api.gaming.freeFirePlayer({ playerId: '…' });
+```
+
+### ghibli — Studio Ghibli films — no key
+
+- **Auth:** none (keyless).
+- **Category:** entertainment
+
+- `api.ghibli.films(—)` — Call ghibli.films() — all films
+- `api.ghibli.film(id*:string)` — Call ghibli.film({ id }) — film details
+    - `id` (required) — string
+- `api.ghibli.people(—)` — Call ghibli.people() — people
+
+```js
+await api.ghibli.films({});
+```
+
+### kitsu — Kitsu anime catalog — no key
+
+- **Auth:** none (keyless).
+- **Category:** entertainment
+
+- `api.kitsu.search(query*:string, limit:number)` — Call kitsu.search({ query, limit? }) — search anime
+    - `query` (required) — string
+    - `limit` — number
+- `api.kitsu.anime(id*:string)` — Call kitsu.anime({ id }) — anime details
+    - `id` (required) — string
+
+```js
+await api.kitsu.search({ query: '…' });
+```
+
+### lyrics — Lyrics API provider
+
+- **Auth:** none (keyless).
+- **Category:** entertainment
+
+- `api.lyrics.search(artist*:string, title*:string)` — Call lyrics.search method
+    - `artist` (required) — string
+    - `title` (required) — string
+
+```js
+await api.lyrics.search({ artist: '…', title: '…' });
+```
+
+### movies — Movies API provider
+
+- **Auth:** requires `BEMORA_MOVIES_KEY` — get one at https://www.themoviedb.org/settings/api
+- **Category:** entertainment
+
+- `api.movies.search(query*:string, year:number, page:number)` — Call movies.search method
+    - `query` (required) — string
+    - `year` — number
+    - `page` — number
+- `api.movies.details(id*:number)` — Call movies.details method
+    - `id` (required) — number — TMDB movie id
+- `api.movies.trending(window:string)` — Call movies.trending method
+    - `window` — string — day or week
+- `api.movies.tv(query*:string, page:number)` — Call movies.tv method
+    - `query` (required) — string
+    - `page` — number
+
+```js
+await api.movies.search({ query: '…' });
+```
+
+### music — Music API provider
+
+- **Auth:** none (keyless).
+- **Category:** entertainment
+
+- `api.music.artist(name*:string, limit:number)` — Call music.artist method
+    - `name` (required) — string
+    - `limit` — number
+- `api.music.album(query*:string, artist:string, limit:number)` — Call music.album method
+    - `query` (required) — string
+    - `artist` — string
+    - `limit` — number
+- `api.music.itunes(term*:string, media:string, limit:number)` — Call music.itunes method
+    - `term` (required) — string
+    - `media` — string
+    - `limit` — number
+
+```js
+await api.music.artist({ name: '…' });
+```
+
+### podcasts — Podcasts API provider
+
+- **Auth:** none (keyless).
+- **Category:** entertainment
+
+- `api.podcasts.search(query:string, limit:number, country:string, language:string)` — Call podcasts.search method
+    - `query` — string
+    - `limit` — number
+    - `country` — string
+    - `language` — string
+- `api.podcasts.episodes(feedUrl*:string, limit:number)` — Call podcasts.episodes method
+    - `feedUrl` (required) — string
+    - `limit` — number
+- `api.podcasts.index(query*:string, limit:number)` — Call podcasts.index method
+    - `query` (required) — string
+    - `limit` — number
+
+```js
+await api.podcasts.search({});
+```
+
+### spotify — Spotify API provider
+
+- **Auth:** requires `BEMORA_SPOTIFY_CLIENT_ID and BEMORA_SPOTIFY_CLIENT_SECRET` — get one at https://developer.spotify.com/
+- **Category:** entertainment
+
+- `api.spotify.searchTracks(query*:string, limit:number)` — Call spotify.searchTracks method
+    - `query` (required) — string
+    - `limit` — number
+- `api.spotify.getArtist(id*:string)` — Call spotify.getArtist method
+    - `id` (required) — string — Spotify artist id
+- `api.spotify.getArtistTopTracks(id*:string, country:string)` — Call spotify.getArtistTopTracks method
+    - `id` (required) — string
+    - `country` — string
+
+```js
+await api.spotify.searchTracks({ query: '…' });
+```
+
+### steam — Steam API provider
+
+- **Auth:** requires `BEMORA_STEAM_KEY` — get one at https://steamcommunity.com/dev/apikey
+- **Category:** entertainment
+
+- `api.steam.getPlayerSummaries(steamIds*:string)` — Call steam.getPlayerSummaries method
+    - `steamIds` (required) — string — comma-separated SteamIDs
+- `api.steam.getOwnedGames(steamId*:string, includeAppInfo:boolean)` — Call steam.getOwnedGames method
+    - `steamId` (required) — string
+    - `includeAppInfo` — boolean
+- `api.steam.searchApps(query*:string)` — Call steam.searchApps method
+    - `query` (required) — string
+
+```js
+await api.steam.getPlayerSummaries({ steamIds: '…' });
+```
+
+### tv — Tv API provider
+
+- **Auth:** requires `BEMORA_MOVIES_KEY` — get one at https://www.themoviedb.org/settings/api
+- **Category:** entertainment
+
+- `api.tv.search(query*:string)` — Call tv.search method
+    - `query` (required) — string
+- `api.tv.details(id*:number)` — Call tv.details method
+    - `id` (required) — number — TMDB TV id
+- `api.tv.trending(—)` — Call tv.trending method
+
+```js
+await api.tv.search({ query: '…' });
+```
+
+### tvmaze — TVmaze TV show data — no key
+
+- **Auth:** none (keyless).
+- **Category:** entertainment
+
+- `api.tvmaze.search(query*:string)` — Call tvmaze.search({ query }) — search shows
+    - `query` (required) — string
+- `api.tvmaze.show(id*:number)` — Call tvmaze.show({ id }) — show details
+    - `id` (required) — number — TVmaze show id
+- `api.tvmaze.episodes(id*:number)` — Call tvmaze.episodes({ id }) — show episodes
+    - `id` (required) — number
+- `api.tvmaze.schedule(country:string, date:string)` — Call tvmaze.schedule({ country?, date? }) — TV schedule
+    - `country` — string — ISO code, default US
+    - `date` — string — YYYY-MM-DD
+- `api.tvmaze.people(query*:string)` — Call tvmaze.people({ query }) — search people
+    - `query` (required) — string
+
+```js
+await api.tvmaze.search({ query: '…' });
+```
+
+## sports
+
+### baseball — Baseball API provider
+
+- **Auth:** none (keyless).
+- **Category:** sports
+
+- `api.baseball.mlbTeams(—)` — Call baseball.mlbTeams method
+- `api.baseball.mlbSchedule(date:string, teamId:number)` — Call baseball.mlbSchedule method
+    - `date` — string — YYYY-MM-DD
+    - `teamId` — number
+
+```js
+await api.baseball.mlbTeams({});
+```
+
+### basketball — Basketball API provider
+
+- **Auth:** none (keyless).
+- **Category:** sports
+
+- `api.basketball.nbaTeams(—)` — Call basketball.nbaTeams method
+- `api.basketball.nbaGames(dates*:array)` — Call basketball.nbaGames method
+    - `dates` (required) — array — YYYY-MM-DD strings
+- `api.basketball.nbaPlayer(id*:number)` — Call basketball.nbaPlayer method
+    - `id` (required) — number
+
+```js
+await api.basketball.nbaTeams({});
+```
+
+### football — Football API provider
+
+- **Auth:** requires `BEMORA_FOOTBALL_KEY` — get one at https://dashboard.api-football.com/register
+- **Category:** sports
+
+- `api.football.fixtures(league:number, date:string)` — Call football.fixtures method
+    - `league` — number
+    - `date` — string — YYYY-MM-DD
+- `api.football.standings(league*:number, season*:number)` — Call football.standings method
+    - `league` (required) — number — 39 = Premier League
+    - `season` (required) — number
+- `api.football.teams(name*:string)` — Call football.teams method
+    - `name` (required) — string — e.g. Zamalek
+
+```js
+await api.football.fixtures({});
+```
+
+### hockey — Hockey API provider
+
+- **Auth:** none (keyless).
+- **Category:** sports
+
+- `api.hockey.nhlTeams(—)` — Call hockey.nhlTeams method
+- `api.hockey.nhlPlayer(id*:number)` — Call hockey.nhlPlayer method
+    - `id` (required) — number
+
+```js
+await api.hockey.nhlTeams({});
+```
+
+### sportsdb — Sportsdb API provider
+
+- **Auth:** none (keyless).
+- **Category:** sports
+
+- `api.sportsdb.searchTeam(name*:string)` — Call sportsdb.searchTeam method
+    - `name` (required) — string — e.g. Arsenal
+- `api.sportsdb.searchPlayer(name*:string)` — Call sportsdb.searchPlayer method
+    - `name` (required) — string
+- `api.sportsdb.leagueEvents(leagueId*:string)` — Call sportsdb.leagueEvents method
+    - `leagueId` (required) — string
+- `api.sportsdb.leagues(sport:string)` — Call sportsdb.leagues method
+    - `sport` — string — e.g. Soccer
+
+```js
+await api.sportsdb.searchTeam({ name: '…' });
+```
+
+## travel
+
+### adsb — Aircraft and flight-route lookup (ADSBDB) — no key
+
+- **Auth:** none (keyless).
+- **Category:** travel
+
+- `api.adsb.aircraft(icao*:string)` — Call adsb.aircraft({ icao }) — aircraft details by ICAO 24-bit address
+    - `icao` (required) — string — ICAO 24-bit hex address, e.g. 406b30
+- `api.adsb.callsign(callsign*:string)` — Call adsb.callsign({ callsign }) — flight route by callsign
+    - `callsign` (required) — string — flight callsign, e.g. BAW123
+
+```js
+await api.adsb.aircraft({ icao: '…' });
+```
+
+### citybikes — CityBikes bike-share networks — no key
+
+- **Auth:** none (keyless).
+- **Category:** travel
+
+- `api.citybikes.networks(limit:number)` — Call citybikes.networks({ limit? }) — bike-share networks
+    - `limit` — number
+- `api.citybikes.network(id*:string)` — Call citybikes.network({ id }) — network stations
+    - `id` (required) — string — CityBikes network id, e.g. bicing
+
+```js
+await api.citybikes.networks({});
+```
+
+### flights — Flights API provider
+
+- **Auth:** requires `BEMORA_FLIGHTS_KEY` — get one at https://aviationstack.com/signup
+- **Category:** travel
+
+- `api.flights.live(flight_iata:string, dep_iata:string, arr_iata:string, airline_iata:string, limit:number)` — Call flights.live method
+    - `flight_iata` — string
+    - `dep_iata` — string
+    - `arr_iata` — string
+    - `airline_iata` — string
+    - `limit` — number
+- `api.flights.airport(iata*:string)` — Call flights.airport method
+    - `iata` (required) — string — e.g. CAI
+- `api.flights.airline(name:string, iata:string)` — Call flights.airline method
+    - `name` — string
+    - `iata` — string
+
+```js
+await api.flights.live({});
+```
+
+### opensky — OpenSky Network live aircraft state vectors — no key
+
+- **Auth:** none (keyless).
+- **Category:** travel
+
+- `api.opensky.states(bbox:object)` — Call opensky.states({ bbox? }) — live aircraft positions worldwide or in a bounding box
+    - `bbox` — object — optional { lamin, lomin, lamax, lomax }
+
+```js
+await api.opensky.states({});
+```
+
+### transit — VBB public transit (Berlin) — no key
+
+- **Auth:** none (keyless).
+- **Category:** travel
+
+- `api.transit.locations(query*:string, results:number)` — Call transit.locations({ query, results? }) — search stops
+    - `query` (required) — string
+    - `results` — number
+- `api.transit.departures(stop*:string, duration:number)` — Call transit.departures({ stop, duration? }) — station departures
+    - `stop` (required) — string — stop id or name
+    - `duration` — number
+- `api.transit.journeys(from*:string, to*:string)` — Call transit.journeys({ from, to }) — plan a journey
+    - `from` (required) — string
+    - `to` (required) — string
+
+```js
+await api.transit.locations({ query: '…' });
+```
+
+## food
+
+### brewery — Brewery API provider
+
+- **Auth:** none (keyless).
+- **Category:** food
+
+- `api.brewery.search(query:string, city:string, state:string, limit:number)` — Call brewery.search method
+    - `query` — string
+    - `city` — string
+    - `state` — string
+    - `limit` — number
+- `api.brewery.random(—)` — Call brewery.random method
+- `api.brewery.getById(id*:string)` — Call brewery.getById method
+    - `id` (required) — string
+
+```js
+await api.brewery.search({});
+```
+
+### drinks — Drinks API provider
+
+- **Auth:** none (keyless).
+- **Category:** food
+
+- `api.drinks.randomCocktail(—)` — Call drinks.randomCocktail method
+- `api.drinks.searchCocktail(name*:string)` — Call drinks.searchCocktail method
+    - `name` (required) — string
+- `api.drinks.searchIngredient(name*:string)` — Call drinks.searchIngredient method
+    - `name` (required) — string
+
+```js
+await api.drinks.randomCocktail({});
+```
+
+### food — Food API provider
+
+- **Auth:** none (keyless).
+- **Category:** food
+
+- `api.food.searchMeals(name*:string)` — Call food.searchMeals method
+    - `name` (required) — string
+- `api.food.getRandomMeal(—)` — Call food.getRandomMeal method
+- `api.food.random(—)` — Call food.random method
+- `api.food.getMeal(id*:string)` — Call food.getMeal method
+    - `id` (required) — string — MealDB meal id
+- `api.food.byCategory(category*:string)` — Call food.byCategory method
+    - `category` (required) — string — e.g. Chicken
+- `api.food.categories(—)` — Call food.categories method
+- `api.food.searchSpoonacular(query*:string, number:number)` — Call food.searchSpoonacular method
+    - `query` (required) — string
+    - `number` — number
+- `api.food.getSpoonacularRecipe(id*:number)` — Call food.getSpoonacularRecipe method
+    - `id` (required) — number
+- `api.food.searchEdamam(query*:string, from:number, to:number)` — Call food.searchEdamam method
+    - `query` (required) — string
+    - `from` — number
+    - `to` — number
+- `api.food.analyzeEdamam(ingredients*:array)` — Call food.analyzeEdamam method
+    - `ingredients` (required) — array
+
+```js
+await api.food.searchMeals({ name: '…' });
+```
+
+## language
+
+### grammar — LanguageTool grammar/spelling/style checking — no key
+
+- **Auth:** none (keyless).
+- **Category:** language
+
+- `api.grammar.check(text*:string, language:string)` — Call grammar.check({ text, language? }) — spelling, grammar and style matches for a text
+    - `text` (required) — string — text to check
+    - `language` — string — default en-US
+
+```js
+await api.grammar.check({ text: '…' });
+```
+
+### language — Language API provider
+
+- **Auth:** none (keyless).
+- **Category:** language
+
+- `api.language.detect(text*:string)` — Call language.detect method
+    - `text` (required) — string
+- `api.language.translate(text*:string, from:string, to*:string)` — Call language.translate method
+    - `text` (required) — string
+    - `from` — string
+    - `to` (required) — string
+
+```js
+await api.language.detect({ text: '…' });
+```
+
+### thesaurus — Thesaurus API provider
+
+- **Auth:** none (keyless).
+- **Category:** language
+
+- `api.thesaurus.synonyms(word*:string)` — Call thesaurus.synonyms method
+    - `word` (required) — string
+- `api.thesaurus.antonyms(word*:string)` — Call thesaurus.antonyms method
+    - `word` (required) — string
+- `api.thesaurus.rhymes(word*:string)` — Call thesaurus.rhymes method
+    - `word` (required) — string
+- `api.thesaurus.suggest(text*:string)` — Call thesaurus.suggest method
+    - `text` (required) — string
+
+```js
+await api.thesaurus.synonyms({ word: '…' });
+```
+
+### translate — Translate API provider
+
+- **Auth:** none (keyless).
+- **Category:** language
+
+- `api.translate.text(text*:string, from:string, to*:string)` — Call translate.text method
+    - `text` (required) — string
+    - `from` — string
+    - `to` (required) — string
+- `api.translate.many(text*:string, from:string, targets*:array)` — Call translate.many method
+    - `text` (required) — string
+    - `from` — string
+    - `targets` (required) — array — target language codes
+- `api.translate.detect(text*:string)` — Call translate.detect method
+    - `text` (required) — string
+
+```js
+await api.translate.text({ text: '…', to: '…' });
+```
+
+## nature
+
+### animals — Animals API provider
+
+- **Auth:** none (keyless).
+- **Category:** nature
+
+- `api.animals.randomDog(—)` — Call animals.randomDog method
+- `api.animals.randomCat(—)` — Call animals.randomCat method
+- `api.animals.randomFox(—)` — Call animals.randomFox method
+- `api.animals.randomDuck(—)` — Call animals.randomDuck method
+- `api.animals.randomPanda(—)` — Call animals.randomPanda method
+- `api.animals.randomBird(—)` — Call animals.randomBird method
+
+```js
+await api.animals.randomDog({});
+```
+
+### pets — Pets API provider
+
+- **Auth:** none (keyless).
+- **Category:** nature
+
+- `api.pets.random(—)` — Call pets.random method
+
+```js
+await api.pets.random({});
+```
+
+### wildlife — Wildlife API provider
+
+- **Auth:** none (keyless).
+- **Category:** nature
+
+- `api.wildlife.randomFact(—)` — Call wildlife.randomFact method
+
+```js
+await api.wildlife.randomFact({});
+```
+
+## religion
+
+### islamic — Islamic API provider
+
+- **Auth:** none (keyless).
+- **Category:** religion
+
+- `api.islamic.quranChapters(—)` — Call islamic.quranChapters method
+- `api.islamic.quranChapter(number*:number, edition:string)` — Call islamic.quranChapter method
+    - `number` (required) — number
+    - `edition` — string
+- `api.islamic.randomVerse(—)` — Call islamic.randomVerse method
+- `api.islamic.azkar(type:string)` — Call islamic.azkar method
+    - `type` — string — morning or evening
+- `api.islamic.prayerTimes(city*:string, country:string, method:number)` — Call islamic.prayerTimes method
+    - `city` (required) — string
+    - `country` — string
+    - `method` — number
+
+```js
+await api.islamic.quranChapters({});
+```
+
+### prayer — Prayer API provider
+
+- **Auth:** none (keyless).
+- **Category:** religion
+
+- `api.prayer.today(city*:string, country:string, method:number, date:string)` — Call prayer.today method
+    - `city` (required) — string
+    - `country` — string
+    - `method` — number
+    - `date` — string
+- `api.prayer.byCoords(lat*:number, lon*:number, method:number)` — Call prayer.byCoords method
+    - `lat` (required) — number
+    - `lon` (required) — number
+    - `method` — number
+- `api.prayer.monthly(city*:string, country:string, method:number, month:number, year:number)` — Call prayer.monthly method
+    - `city` (required) — string
+    - `country` — string
+    - `method` — number
+    - `month` — number
+    - `year` — number
+- `api.prayer.methods(—)` — Call prayer.methods method
+
+```js
+await api.prayer.today({ city: '…' });
+```
+
+### religion — Religion API provider
+
+- **Auth:** none (keyless).
+- **Category:** religion
+
+- `api.religion.randomVerse(—)` — Call religion.randomVerse method
+- `api.religion.getVerse(reference*:string)` — Call religion.getVerse method
+    - `reference` (required) — string — e.g. John 3:16
+
+```js
+await api.religion.randomVerse({});
+```
+
+## business
+
+### jobs — Jobs API provider
+
+- **Auth:** none (keyless).
+- **Category:** business
+
+- `api.jobs.search(query*:string, location:string, limit:number)` — Call jobs.search method
+    - `query` (required) — string
+    - `location` — string
+    - `limit` — number
+
+```js
+await api.jobs.search({ query: '…' });
+```
+
+## ai
+
+### ai — Ai API provider
+
+- **Auth:** requires `BEMORA_GROQ_KEY or BEMORA_OPENAI_KEY` — get one at https://console.groq.com
+- **Category:** ai
+
+- `api.ai.openaiChat(messages*:array, model:string)` — Call ai.openaiChat method
+    - `messages` (required) — array
+    - `model` — string
+- `api.ai.openai(messages*:array, model:string)` — Call ai.openai method
+    - `messages` (required) — array
+    - `model` — string
+- `api.ai.groqChat(messages*:array, model:string)` — Call ai.groqChat method
+    - `messages` (required) — array
+    - `model` — string
+- `api.ai.groq(messages*:array, model:string)` — Call ai.groq method
+    - `messages` (required) — array
+    - `model` — string
+- `api.ai.anthropicChat(messages*:array, model:string, temperature:number, maxTokens:number)` — Call ai.anthropicChat method
+    - `messages` (required) — array
+    - `model` — string
+    - `temperature` — number
+    - `maxTokens` — number
+- `api.ai.geminiChat(messages*:array, model:string, temperature:number)` — Call ai.geminiChat method
+    - `messages` (required) — array
+    - `model` — string
+    - `temperature` — number
+- `api.ai.smartChat(messages*:array)` — Call ai.smartChat method
+    - `messages` (required) — array
+- `api.ai.chat(messages*:array, model:string)` — Call ai.chat method
+    - `messages` (required) — array
+    - `model` — string
+- `api.ai.generateImage(prompt*:string, size:string, quality:string)` — Call ai.generateImage method
+    - `prompt` (required) — string
+    - `size` — string — e.g. 1024x1024
+    - `quality` — string
+- `api.ai.imagine(prompt*:string, size:string, quality:string)` — Call ai.imagine method
+    - `prompt` (required) — string
+    - `size` — string — e.g. 1024x1024
+    - `quality` — string
+- `api.ai.embed(input*:string, model:string)` — Call ai.embed method
+    - `input` (required) — string
+    - `model` — string
+
+```js
+await api.ai.openaiChat({ messages: [] });
+```
+
+### demographics — Name-based gender, age and nationality prediction (Genderize/Agify/Nationalize) — no key
+
+- **Auth:** none (keyless).
+- **Category:** ai
+
+- `api.demographics.gender(name*:string)` — Call demographics.gender({ name }) — likely gender for a name
+    - `name` (required) — string
+- `api.demographics.age(name*:string)` — Call demographics.age({ name }) — likely age for a name
+    - `name` (required) — string
+- `api.demographics.nationality(name*:string)` — Call demographics.nationality({ name }) — likely nationality for a name
+    - `name` (required) — string
+
+```js
+await api.demographics.gender({ name: '…' });
+```
+
+### pollinations — Pollinations keyless AI text and image generation — no key
+
+- **Auth:** none (keyless).
+- **Category:** ai
+
+- `api.pollinations.text(prompt*:string)` — Call pollinations.text({ prompt }) — generate text
+    - `prompt` (required) — string
+- `api.pollinations.image(prompt*:string, width:number, height:number)` — Call pollinations.image({ prompt, width?, height? }) — image URL
+    - `prompt` (required) — string
+    - `width` — number
+    - `height` — number
+
+```js
+await api.pollinations.text({ prompt: '…' });
+```
+
+### predict — Predict API provider
+
+- **Auth:** none (keyless).
+- **Category:** ai
+
+- `api.predict.nationality(name*:string)` — Call predict.nationality method
+    - `name` (required) — string
+- `api.predict.gender(name*:string)` — Call predict.gender method
+    - `name` (required) — string
+- `api.predict.age(name*:string)` — Call predict.age method
+    - `name` (required) — string
+- `api.predict.all(name*:string)` — Call predict.all method
+    - `name` (required) — string
+
+```js
+await api.predict.nationality({ name: '…' });
+```
+
+## utility
+
+### math — Math API provider
+
+- **Auth:** none (keyless).
+- **Category:** utility
+
+- `api.math.evaluate(expression*:string)` — Call math.evaluate method
+    - `expression` (required) — string — e.g. 2*(3+4)
+- `api.math.randomFact(number:number, type:string)` — Call math.randomFact method
+    - `number` — number
+    - `type` — string
+
+```js
+await api.math.evaluate({ expression: '…' });
+```
+
+### placeholder — Placeholder API provider
+
+- **Auth:** none (keyless).
+- **Category:** utility
+
+- `api.placeholder.image(width:number, height:number, text:string, bg:string, fg:string)` — Call placeholder.image method
+    - `width` — number
+    - `height` — number
+    - `text` — string
+    - `bg` — string
+    - `fg` — string
+- `api.placeholder.picsum(width:number, height:number, seed:string, grayscale:boolean, blur:number)` — Call placeholder.picsum method
+    - `width` — number
+    - `height` — number
+    - `seed` — string
+    - `grayscale` — boolean
+    - `blur` — number
+- `api.placeholder.avatar(name:string, size:number, background:string, color:string, rounded:boolean)` — Call placeholder.avatar method
+    - `name` — string
+    - `size` — number
+    - `background` — string
+    - `color` — string
+    - `rounded` — boolean
+- `api.placeholder.dicebear(seed:string, style:string)` — Call placeholder.dicebear method
+    - `seed` — string
+    - `style` — string — default identicon
+
+```js
+await api.placeholder.image({});
+```
+
+### quickchart — QuickChart chart image generator — no key
+
+- **Auth:** none (keyless).
+- **Category:** utility
+
+- `api.quickchart.render(chart*:object, width:number, height:number, backgroundColor:string)` — Call quickchart.render({ chart, width?, height?, backgroundColor? }) — chart URL
+    - `chart` (required) — object — chart config object or JSON string
+    - `width` — number
+    - `height` — number
+    - `backgroundColor` — string
+- `api.quickchart.bar(labels*:array, data*:array, title:string)` — Call quickchart.bar({ labels, data, title? }) — bar chart URL
+    - `labels` (required) — array
+    - `data` (required) — array
+    - `title` — string
+- `api.quickchart.line(labels*:array, data*:array, title:string)` — Call quickchart.line({ labels, data, title? }) — line chart URL
+    - `labels` (required) — array
+    - `data` (required) — array
+    - `title` — string
+- `api.quickchart.pie(labels*:array, data*:array, title:string)` — Call quickchart.pie({ labels, data, title? }) — pie chart URL
+    - `labels` (required) — array
+    - `data` (required) — array
+    - `title` — string
+
+```js
+await api.quickchart.render({ chart: '…' });
+```
+
+### reader — Readability and RSS readers — no key
+
+- **Auth:** none (keyless).
+- **Category:** utility
+
+- `api.reader.article(url*:string)` — Call reader.article({ url }) — extract readable article text
+    - `url` (required) — string — page URL to extract
+- `api.reader.rssToJson(url*:string)` — Call reader.rssToJson({ url }) — convert an RSS feed to JSON
+    - `url` (required) — string — RSS feed URL
+
+```js
+await api.reader.article({ url: '…' });
+```
+
+### speech — Google Translate text-to-speech — no key
+
+- **Auth:** none (keyless).
+- **Category:** utility
+
+- `api.speech.tts(text*:string, lang:string)` — Call speech.tts({ text, lang? }) — TTS audio URL
+    - `text` (required) — string
+    - `lang` — string — e.g. en
+- `api.speech.voices(—)` — Call speech.voices() — supported languages
+
+```js
+await api.speech.tts({ text: '…' });
+```
+
+### utils — Utils API provider
+
+- **Auth:** none (keyless).
+- **Category:** utility
+
+- `api.utils.qr(text*:string, size:number, format:string)` — Call utils.qr method
+    - `text` (required) — string
+    - `size` — number
+    - `format` — string — png or svg
+- `api.utils.uuid(—)` — Call utils.uuid method
+- `api.utils.passwordStrength(password*:string)` — Call utils.passwordStrength method
+    - `password` (required) — string
+- `api.utils.hash(text*:string, algorithm:string)` — Call utils.hash method
+    - `text` (required) — string
+    - `algorithm` — string — md5, sha1, sha256, sha512
+- `api.utils.base64Encode(text*:string)` — Call utils.base64Encode method
+    - `text` (required) — string
+- `api.utils.base64Decode(encoded*:string)` — Call utils.base64Decode method
+    - `encoded` (required) — string
+- `api.utils.loremIpsum(type:string, count:number)` — Call utils.loremIpsum method
+    - `type` — string — words, sentences or paragraphs
+    - `count` — number
+- `api.utils.emojiSearch(query:string, category:string, limit:number)` — Call utils.emojiSearch method
+    - `query` — string
+    - `category` — string
+    - `limit` — number
+- `api.utils.randomEmoji(category:string)` — Call utils.randomEmoji method
+    - `category` — string
+- `api.utils.hexToRgb(hex*:string)` — Call utils.hexToRgb method
+    - `hex` (required) — string — e.g. FF5733
+- `api.utils.rgbToHex(r*:number, g*:number, b*:number)` — Call utils.rgbToHex method
+    - `r` (required) — number
+    - `g` (required) — number
+    - `b` (required) — number
+- `api.utils.httpStatus(code*:number)` — Call utils.httpStatus method
+    - `code` (required) — number — e.g. 404
+- `api.utils.shorten(url*:string)` — Call utils.shorten method
+    - `url` (required) — string
+- `api.utils.time(timezone*:string)` — Call utils.time method
+    - `timezone` (required) — string — e.g. Africa/Cairo
+- `api.utils.timezones(—)` — Call utils.timezones method
+- `api.utils.holidays(country*:string, year:number)` — Call utils.holidays method
+    - `country` (required) — string — ISO country code
+    - `year` — number
+- `api.utils.quote(tag:string)` — Call utils.quote method
+    - `tag` — string
+- `api.utils.quotes(limit:number, tag:string)` — Call utils.quotes method
+    - `limit` — number
+    - `tag` — string
+- `api.utils.define(word*:string)` — Call utils.define method
+    - `word` (required) — string
+- `api.utils.trivia(amount:number, difficulty:string, type:string)` — Call utils.trivia method
+    - `amount` — number
+    - `difficulty` — string — easy, medium or hard
+    - `type` — string
+- `api.utils.color(hex*:string)` — Call utils.color method
+    - `hex` (required) — string
+- `api.utils.randomNumber(min:number, max:number)` — Call utils.randomNumber method
+    - `min` — number
+    - `max` — number
+- `api.utils.formatDate(date:string)` — Call utils.formatDate method
+    - `date` — string — ISO date string
+- `api.utils.validateJSON(json*:string)` — Call utils.validateJSON method
+    - `json` (required) — string
+- `api.utils.parseURL(url*:string)` — Call utils.parseURL method
+    - `url` (required) — string
+- `api.utils.slugify(text*:string)` — Call utils.slugify method
+    - `text` (required) — string
+
+```js
+await api.utils.qr({ text: '…' });
+```
+
+### vehicles — Vehicles API provider
+
+- **Auth:** none (keyless).
+- **Category:** utility
+
+- `api.vehicles.randomCar(—)` — Call vehicles.randomCar method
+- `api.vehicles.vinDecode(vin*:string)` — Call vehicles.vinDecode method
+    - `vin` (required) — string — 17-character VIN
+- `api.vehicles.recalls(make*:string, model*:string, year*:string)` — Call vehicles.recalls method
+    - `make` (required) — string — e.g. toyota
+    - `model` (required) — string — e.g. camry
+    - `year` (required) — string — e.g. 2020
+- `api.vehicles.makes(type:string)` — Call vehicles.makes method
+    - `type` — string — car, truck or motorcycle — default car
+- `api.vehicles.models(make*:string, year*:string)` — Call vehicles.models method
+    - `make` (required) — string — e.g. toyota
+    - `year` (required) — string — e.g. 2020
+
+```js
+await api.vehicles.randomCar({});
+```
+
+## meta
+
+### free — Free API provider
+
+- **Auth:** none (keyless).
+- **Category:** meta
+
+- `api.free.weather(lat:number, lon:number, city:string)` — Call free.weather method
+    - `lat` — number
+    - `lon` — number
+    - `city` — string
+- `api.free.wttr(city:string, format:string)` — Call free.wttr method
+    - `city` — string
+    - `format` — string
+- `api.free.exchangeRates(base:string, symbols:array)` — Call free.exchangeRates method
+    - `base` — string
+    - `symbols` — array
+- `api.free.binanceTicker(symbol*:string)` — Call free.binanceTicker method
+    - `symbol` (required) — string — e.g. BTCUSDT
+- `api.free.binanceTickers(symbols:array)` — Call free.binanceTickers method
+    - `symbols` — array — e.g. ["BTCUSDT","ETHUSDT"]
+- `api.free.football(league:string, season:string)` — Call free.football method
+    - `league` — string — e.g. bl1
+    - `season` — string — e.g. 2024
+
+```js
+await api.free.weather({});
+```
+
+### smart — Bemora's signature cross-provider auto-failover layer — never goes down because every category races multiple independent free providers with automatic fallback to stale cache
+
+- **Auth:** none (keyless).
+- **Category:** meta
+
+- `api.smart.weather(city*:string, units:string)` — Call smart.weather({ city, units? }) — auto-failover: OpenWeatherMap (if keyed) -> wttr.in -> Open-Meteo -> stale cache
+    - `city` (required) — string
+    - `units` — string
+- `api.smart.news(topic:string, limit:number)` — Call smart.news({ topic?, limit? }) — auto-failover: NewsAPI (if keyed) -> BBC/Al Jazeera/Google News RSS -> stale cache
+    - `topic` — string
+    - `limit` — number
+- `api.smart.currency(base:string, symbols:array)` — Call smart.currency({ base?, symbols? }) — auto-failover: frankfurter.app -> ExchangeRate-API (if keyed) -> stale cache
+    - `base` — string
+    - `symbols` — array
+- `api.smart.cryptoPrice(id*:string, symbol:string, currency:string)` — Call smart.cryptoPrice({ id, symbol?, currency? }) — auto-failover: CoinGecko -> Binance ticker -> stale cache
+    - `id` (required) — string — CoinGecko id, e.g. bitcoin
+    - `symbol` — string
+    - `currency` — string
+- `api.smart.ip(ip:string)` — Call smart.ip({ ip? }) — IP geolocation lookup with stale-cache safety net
+    - `ip` — string
+- `api.smart.translate(text*:string, from:string, to*:string)` — Call smart.translate({ text, from?, to }) — text translation with stale-cache safety net
+    - `text` (required) — string
+    - `from` — string
+    - `to` (required) — string
+- `api.smart.holidays(country*:string, year:number)` — Call smart.holidays({ country, year? }) — public holidays with stale-cache safety net
+    - `country` (required) — string — ISO country code, e.g. EG
+    - `year` — number
+- `api.smart.weatherAggregate(city*:string)` — Call smart.weatherAggregate({ city }) — cross-checks temperature across every reachable provider and returns the average
+    - `city` (required) — string
+
+```js
+await api.smart.weather({ city: '…' });
+```
+
+## search
+
+### search — Search API provider
+
+- **Auth:** none (keyless).
+- **Category:** search
+
+- `api.search.instant(query*:string)` — Call search.instant method
+    - `query` (required) — string
+- `api.search.web(query*:string, language:string, limit:number)` — Call search.web method
+    - `query` (required) — string
+    - `language` — string
+    - `limit` — number
+
+```js
+await api.search.instant({ query: '…' });
+```
+
+## Enterprise namespaces (available on the instance, not exposed as MCP tools)
+
+- `payments.stripe.*`, `payments.paypal.*` · `email.sendgrid|ses|resend.*` · `sms.twilio.*` · `auth.clerk|auth0.*` · `jwt.*` · `storage.s3|r2|gcs.*` · `vectordb.pinecone|qdrant|weaviate|pgvector.*` · `sentry.*` · `notifications.onesignal|pusher|fcm.*` · `maps.google|mapbox.*` · `searchEnt.algolia|meilisearch.*` · `calendar.google|calendly.*` · `captcha.recaptcha|hcaptcha|turnstile.*` · `security.hibp|virustotal|safebrowsing|urlscan.*` · `cloudflare.dns|r2|cache|workers.*`
