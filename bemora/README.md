@@ -4,7 +4,7 @@
 
 <br />
 
-[![version](https://img.shields.io/badge/version-1.0.0--alpha.9-6366f1?style=for-the-badge)](package.json)
+[![version](https://img.shields.io/badge/version-1.0.0--alpha.10-6366f1?style=for-the-badge)](package.json)
 [![license](https://img.shields.io/badge/license-MIT-06b6d4?style=for-the-badge)](LICENSE)
 [![node](https://img.shields.io/badge/node-%3E%3D18-10b981?style=for-the-badge)](package.json)
 [![CI](https://img.shields.io/badge/CI-passing-22c55e?style=for-the-badge)](.github/workflows/ci.yml)

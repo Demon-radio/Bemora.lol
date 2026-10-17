@@ -5,6 +5,19 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.0-alpha.10] - 2026-10-17
+
+### Fixed
+
+- `arxiv` provider now uses a 20s request timeout (the arXiv export API regularly exceeds the 8s library default).
+- Default HTTP timeout is now overridable via the `BEMORA_HTTP_TIMEOUT_MS` env var, so live/deploy environments can widen it without code changes.
+
+### Changed
+
+- Live integration suite hardened against network flakiness (configurable timeout + retries); CI is green on Node 20 and 22.
+
+---
+
 ## [1.0.0-alpha.9] - 2026-10-17
 
 ### Added

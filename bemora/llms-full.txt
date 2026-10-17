@@ -1,4 +1,4 @@
-# bemora — full reference (v1.0.0-alpha.9)
+# bemora — full reference (v1.0.0-alpha.10)
 
 > Unified JavaScript/TypeScript API library and MCP server. One call shape: `await api.<namespace>.<method>(params)`. Auto-generated from the MCP catalog by `scripts/generate-docs.js`; do not edit by hand.
 
