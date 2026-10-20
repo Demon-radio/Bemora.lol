@@ -162,12 +162,18 @@ export class KrakenStream extends EventEmitter {
  */
 export function getRealtimePrice({ exchange = 'binance', symbol, timeout = 5000 }) {
   return new Promise((resolve, reject) => {
+    // Declared up front: if a stream constructor throws synchronously the
+    // timeout must still be able to clean up without crashing the process.
+    let stream;
+    const finish = (fn, arg) => {
+      clearTimeout(timer);
+      try { stream?.close(); } catch (_) {}
+      fn(arg);
+    };
     const timer = setTimeout(() => {
-      stream.close();
-      reject(new Error(`Timeout waiting for price: ${symbol}`));
+      finish(reject, new Error(`Timeout waiting for price: ${symbol}`));
     }, timeout);
 
-    let stream;
     if (exchange === 'binance') {
       stream = new BinanceStream([symbol]);
     } else {
@@ -175,15 +181,11 @@ export function getRealtimePrice({ exchange = 'binance', symbol, timeout = 5000 
     }
 
     stream.once('price', (data) => {
-      clearTimeout(timer);
-      stream.close();
-      resolve(data);
+      finish(resolve, data);
     });
 
     stream.once('error', (err) => {
-      clearTimeout(timer);
-      stream.close();
-      reject(err);
+      finish(reject, err);
     });
   });
 }

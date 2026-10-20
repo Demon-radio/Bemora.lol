@@ -5,6 +5,27 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.0-alpha.11] - 2026-10-20
+
+### Added
+
+- **Provider Health monitor**: `scripts/health-check.mjs` probes every keyless provider in the MCP catalog through the real Bemora pipeline (with verified sample calls, hard caps, and ALIVE / DEGRADED / DEAD / UNKNOWN classification). Runs daily via `.github/workflows/health.yml`, publishes the report as an artifact and keeps a `provider-health` issue updated — free endpoints that die overnight get flagged the same morning instead of whenever a user trips over them.
+- **Deep imports**: `bemora/providers/*` and `bemora/core/*` subpath exports plus a `types` condition on the main entry, and `sideEffects: false` — bundlers can now tree-shake instead of loading all 157 provider modules.
+
+### Fixed
+
+- `getRealtimePrice` no longer crashes the whole process if a stream constructor throws before its cleanup timer fires (`src/providers/realtime.js`).
+
+### Repository
+
+- Removed Replit-era scaffolding from the repo root (`artifacts/`, `lib/`, root `scripts/` stubs, nx workspace config). `packages/resilify` kept.
+
+### npm
+
+- `latest` dist-tag now points at the 1.0 rewrite line instead of the stuck legacy 3.6.0; legacy 3.x versions deprecated with a migration note.
+
+---
+
 ## [1.0.0-alpha.10] - 2026-10-17
 
 ### Fixed

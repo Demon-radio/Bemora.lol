@@ -1,4 +1,4 @@
-# bemora (v1.0.0-alpha.10)
+# bemora (v1.0.0-alpha.11)
 
 > Unified JavaScript/TypeScript API library and MCP server: one call shape `api.<namespace>.<method>(params)` across 100+ APIs (weather, finance, news, science, health, government, developer tooling, AI, and more), with retries, timeouts, circuit breakers, caching, rate-limit tracking, PII redaction and multi-tenant support. Most providers are keyless and work out of the box; keyed providers throw a coded ConfigurationError until their key is set.
 
