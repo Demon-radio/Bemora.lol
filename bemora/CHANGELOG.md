@@ -22,7 +22,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### npm
 
-- `latest` dist-tag now points at the 1.0 rewrite line instead of the stuck legacy 3.6.0; legacy 3.x versions deprecated with a migration note.
+### npm
+
+- `latest` dist-tag now points at the 1.0 rewrite line instead of the stuck legacy 3.6.0; legacy 3.x versions deprecated with a migration note. (alpha.12 is published with `--tag latest` directly because the current granular npm token cannot manage dist-tags.)
 
 ---
 
