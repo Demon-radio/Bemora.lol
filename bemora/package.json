@@ -6,6 +6,11 @@
   "sideEffects": false,
   "types": "src/types/index.d.ts",
   "type": "module",
+  "pnpm": {
+    "overrides": {
+      "follow-redirects": ">=1.16.1"
+    }
+  },
   "bin": {
     "bemora": "src/cli.js",
     "bemora-mcp": "src/mcp-server/index.js"
