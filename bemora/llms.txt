@@ -2,7 +2,7 @@
 
 > Unified JavaScript/TypeScript API library and MCP server: one call shape `api.<namespace>.<method>(params)` across 100+ APIs (weather, finance, news, science, health, government, developer tooling, AI, and more), with retries, timeouts, circuit breakers, caching, rate-limit tracking, PII redaction and multi-tenant support. Most providers are keyless and work out of the box; keyed providers throw a coded ConfigurationError until their key is set.
 
-- 157 providers · 548 methods · 143 keyless (no API key).
+- 157 providers · 548 methods · 141 keyless (no API key).
 - Install: `npm install bemora`. Node >= 18, ESM.
 - Use: `import Bemora from 'bemora'; const api = new Bemora(); await api.space.issPosition();`
 - MCP: `npx bemora-mcp` — every provider becomes an MCP tool named `<provider>_<method>`.
@@ -178,10 +178,10 @@
 ### sports
 
 - `baseball` (no key): mlbTeams, mlbSchedule
-- `basketball` (no key): nbaTeams, nbaGames, nbaPlayer
+- `basketball` (requires `BEMORA_BALLDONTLIE_KEY`): nbaTeams, nbaGames, nbaPlayer
 - `football` (requires `BEMORA_FOOTBALL_KEY`): fixtures, standings, teams
 - `hockey` (no key): nhlTeams, nhlPlayer
-- `sportsdb` (no key): searchTeam, searchPlayer, leagueEvents, leagues
+- `sportsdb` (requires `BEMORA_SPORTSDB_KEY`): searchTeam, searchPlayer, leagueEvents, leagues
 
 ### travel
 

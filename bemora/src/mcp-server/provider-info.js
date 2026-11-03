@@ -268,7 +268,7 @@ const PROVIDER_INFO = {
     }
   },
   "fandom": {
-    "description": "Fandom API provider",
+    "description": "Fandom wiki search, pages and recent edits (minecraft, starwars, etc.)",
     "requiresKey": false,
     "category": "entertainment",
     "methods": {
@@ -352,7 +352,7 @@ const PROVIDER_INFO = {
     }
   },
   "jobs": {
-    "description": "Jobs API provider",
+    "description": "Remote jobs via the Remotive board (free, no key)",
     "requiresKey": false,
     "category": "business",
     "methods": {
@@ -369,8 +369,10 @@ const PROVIDER_INFO = {
     }
   },
   "basketball": {
-    "description": "Basketball API provider",
-    "requiresKey": false,
+    "description": "NBA data via balldontlie.io (the free legacy endpoint was retired; a free personal key is required)",
+    "requiresKey": true,
+    "keyName": "BEMORA_BALLDONTLIE_KEY",
+    "keyUrl": "https://balldontlie.io",
     "category": "sports",
     "methods": {
       "nbaTeams": "Call basketball.nbaTeams method",
@@ -484,7 +486,7 @@ const PROVIDER_INFO = {
     }
   },
   "politics": {
-    "description": "Politics API provider",
+    "description": "US presidents reference dataset (static, ships offline, filterable)",
     "requiresKey": false,
     "category": "news",
     "methods": {
@@ -713,8 +715,10 @@ const PROVIDER_INFO = {
     }
   },
   "sportsdb": {
-    "description": "Sportsdb API provider",
-    "requiresKey": false,
+    "description": "TheSportsDB team/player/league data (personal free test key required as of 2025)",
+    "requiresKey": true,
+    "keyName": "BEMORA_SPORTSDB_KEY",
+    "keyUrl": "https://www.thesportsdb.com/api.php",
     "category": "sports",
     "methods": {
       "searchTeam": "Call sportsdb.searchTeam method",
@@ -724,7 +728,7 @@ const PROVIDER_INFO = {
     }
   },
   "domain": {
-    "description": "Domain API provider",
+    "description": "WHOIS/RDAP lookups plus local DNS record resolution",
     "requiresKey": false,
     "category": "developer",
     "methods": {

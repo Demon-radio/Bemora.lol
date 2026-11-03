@@ -2,7 +2,12 @@ import { httpClient } from '../core/http.js';
 import { ValidationError, wrapProviderError } from '../core/errors.js';
 import * as cache from '../core/cache.js';
 
-const http = httpClient();
+// Fandom's Cloudflare layer 403s library UAs; a browser UA passes.
+const http = httpClient({
+  headers: {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36',
+  },
+});
 
 function assertValidWikiName(wiki) {
   if (!/^[a-z0-9][a-z0-9-]{0,60}$/i.test(wiki)) {

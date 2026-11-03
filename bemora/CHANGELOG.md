@@ -5,6 +5,30 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.0.0-alpha.13] - 2026-10-21
+
+### Fixed
+
+Acted on the first **Provider Health** report (issue #1: 117 alive / 23 degraded / 2 dead). Triage found most "degraded" rows were probe artifacts (empty args), but seven providers were genuinely broken or lying — all fixed:
+
+- **jobs**: the backend was the *keyed* Adzuna API (always 401 in keyless mode) while the catalog claimed keyless. Rewritten on Remotive's free remote-jobs API (same `search` interface, plus a `location` post-filter).
+- **politics**: pinged a Replit-era placeholder URL and returned an empty list. Now ships a static, filterable dataset of all 47 US presidencies (individual + non-consecutive numbering dealt with: Cleveland is 22nd & 24th) — works fully offline.
+- **basketball**: legacy `www.balldontlie.io/api/v1` is retired and 404s. Rewritten against the keyed `api.balldontlie.io/nba/v1` (`BEMORA_BALLDONTLIE_KEY`); catalog now says `requiresKey`.
+- **sportsdb**: the shared test key `3` was permanently disabled upstream (403). Requests now build `BASE/${BEMORA_SPORTSDB_KEY}/...`; catalog now says `requiresKey`.
+- **fandom**: Fandom's Cloudflare layer 403s library user-agents. Client now sends a browser UA (verified 200 against the live MediaWiki search API).
+- **domain**: rdap.org sits behind Cloudflare bot protection and exceeded the 8s client timeout. Client now uses a browser UA and a 20s timeout.
+- **health-check**: probes the second batch of arg-guarded providers with verified live samples (astronomy, demographics, dns, metno, prayer, math, postal, bluesky, social, lyrics, coinWizard, fandom, domain, location, predict, jobs) so the daily report shows real endpoint status instead of missing-argument noise; corrected `dns.resolve` sample args; drop `enriched` (keyed weather wrapper) from the keyless pass.
+
+### Testing
+
+- Added `tests/unit/provider-fixes.test.js` (12 tests) covering the Remotive rewrite, the static presidents dataset (including the Grover Cleveland 22/24 split and party/name filters), key gating + URL/header construction for basketball/sportsdb, the fandom browser-UA client, and the domain RDAP client timeout. Full unit suite: 37 files, 456 tests passing.
+
+### Docs
+
+- Regenerated `docs/api-reference.md`, `llms.txt`, `llms-full.txt`; keyless counter is now **141** (sportsdb and basketball moved to keyed). Catalog entries rewritten with real descriptions.
+
+---
+
 ## [1.0.0-alpha.11] - 2026-10-20
 
 ### Added
@@ -19,10 +43,6 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Repository
 
 - Removed Replit-era scaffolding from the repo root (`artifacts/`, `lib/`, root `scripts/` stubs, nx workspace config). `packages/resilify` kept.
-
-### npm
-
-### npm
 
 - `latest` dist-tag now points at the 1.0 rewrite line instead of the stuck legacy 3.6.0; legacy 3.x versions deprecated with a migration note. (alpha.12 is published with `--tag latest` directly because the current granular npm token cannot manage dist-tags.)
 

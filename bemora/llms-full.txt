@@ -2,7 +2,7 @@
 
 > Unified JavaScript/TypeScript API library and MCP server. One call shape: `await api.<namespace>.<method>(params)`. Auto-generated from the MCP catalog by `scripts/generate-docs.js`; do not edit by hand.
 
-Totals: 157 providers · 548 methods · 143 keyless.
+Totals: 157 providers · 548 methods · 141 keyless.
 
 ## Install & setup
 
@@ -1223,7 +1223,7 @@ await api.lobsters.hottest({});
 await api.news.headlines({});
 ```
 
-### politics — Politics API provider
+### politics — US presidents reference dataset (static, ships offline, filterable)
 
 - **Auth:** none (keyless).
 - **Category:** news
@@ -1529,7 +1529,7 @@ await api.devto.articles({});
 await api.dns.resolve({ name: '…' });
 ```
 
-### domain — Domain API provider
+### domain — WHOIS/RDAP lookups plus local DNS record resolution
 
 - **Auth:** none (keyless).
 - **Category:** developer
@@ -1942,7 +1942,7 @@ await api.comics.randomXKCD({});
 await api.deezer.search({ query: '…' });
 ```
 
-### fandom — Fandom API provider
+### fandom — Fandom wiki search, pages and recent edits (minecraft, starwars, etc.)
 
 - **Auth:** none (keyless).
 - **Category:** entertainment
@@ -2205,9 +2205,9 @@ await api.tvmaze.search({ query: '…' });
 await api.baseball.mlbTeams({});
 ```
 
-### basketball — Basketball API provider
+### basketball — NBA data via balldontlie.io (the free legacy endpoint was retired; a free personal key is required)
 
-- **Auth:** none (keyless).
+- **Auth:** requires `BEMORA_BALLDONTLIE_KEY` — get one at https://balldontlie.io
 - **Category:** sports
 
 - `api.basketball.nbaTeams(—)` — Call basketball.nbaTeams method
@@ -2251,9 +2251,9 @@ await api.football.fixtures({});
 await api.hockey.nhlTeams({});
 ```
 
-### sportsdb — Sportsdb API provider
+### sportsdb — TheSportsDB team/player/league data (personal free test key required as of 2025)
 
-- **Auth:** none (keyless).
+- **Auth:** requires `BEMORA_SPORTSDB_KEY` — get one at https://www.thesportsdb.com/api.php
 - **Category:** sports
 
 - `api.sportsdb.searchTeam(name*:string)` — Call sportsdb.searchTeam method
@@ -2589,7 +2589,7 @@ await api.religion.randomVerse({});
 
 ## business
 
-### jobs — Jobs API provider
+### jobs — Remote jobs via the Remotive board (free, no key)
 
 - **Auth:** none (keyless).
 - **Category:** business

@@ -3,7 +3,14 @@ import { wrapProviderError } from '../core/errors.js';
 import dns from 'dns/promises';
 import * as cache from '../core/cache.js';
 
-const http = httpClient();
+const http = httpClient({
+  // rdap.org sits behind Cloudflare bot protection and can take >8s to
+  // bootstrap-redirect to the registry's RDAP server.
+  timeout: 20000,
+  headers: {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36',
+  },
+});
 
 export async function whois({ domain }) {
   const cacheKey = `domain:whois:${domain}`;
